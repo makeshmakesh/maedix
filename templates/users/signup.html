@@ -1,0 +1,741 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Sign Up - MAEDIX{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Force content to not flex-grow */
+    .content {
+        flex: 0 0 auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Hide footer on signup page */
+    .footer {
+        display: none !important;
+    }
+
+    .auth-container {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+
+    .auth-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-glow);
+        padding: 3rem 2.5rem;
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .auth-card::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: var(--primary-gradient);
+        border-radius: 24px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    .auth-card:hover::after {
+        opacity: 0.1;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-logo {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-label .optional {
+        color: var(--text-muted);
+        font-weight: 400;
+        font-size: 0.85rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.7);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-input.is-invalid {
+        border-color: #ef4444;
+    }
+
+    .form-input.is-valid {
+        border-color: #22c55e;
+    }
+
+    /* iOS zoom prevention */
+    @supports (-webkit-touch-callout: none) {
+        .form-input {
+            font-size: 16px !important;
+        }
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1.1rem;
+        transition: color 0.2s ease;
+        z-index: 10;
+    }
+
+    .password-toggle:hover {
+        color: var(--text-primary);
+    }
+
+    .password-toggle:focus {
+        outline: none;
+    }
+
+    .form-input.has-toggle {
+        padding-right: 3rem;
+    }
+
+    .password-requirements {
+        list-style: none;
+        padding: 0;
+        margin-top: 0.5rem;
+    }
+
+    .password-requirements li {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .password-requirements li::before {
+        content: '○';
+        color: var(--text-muted);
+    }
+
+    .password-requirements li.valid {
+        color: #22c55e;
+    }
+
+    .password-requirements li.valid::before {
+        content: '✓';
+        color: #22c55e;
+    }
+
+    .password-requirements li.invalid {
+        color: #ef4444;
+    }
+
+    .password-requirements li.invalid::before {
+        content: '✗';
+        color: #ef4444;
+    }
+
+    .password-helper {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+        line-height: 1.5;
+        display: block;
+    }
+
+    .form-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .form-checkbox input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 0.2rem;
+        cursor: pointer;
+        accent-color: #3b82f6;
+        flex-shrink: 0;
+    }
+
+    .form-checkbox label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .form-checkbox label a {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .form-checkbox label a:hover {
+        text-decoration: underline;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: none;
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 5px 25px rgba(0, 212, 255, 0.3);
+    }
+
+    .submit-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 35px rgba(0, 212, 255, 0.5);
+    }
+
+    .submit-btn:hover::before {
+        left: 100%;
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .submit-btn.loading {
+        position: relative;
+        color: transparent;
+    }
+
+    .submit-btn.loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .auth-footer a {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .auth-footer a:hover {
+        color: #60a5fa;
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .alert-danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .alert p {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    .field-error-text {
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .auth-container {
+            padding: 1rem 0.5rem;
+        }
+
+        .auth-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .auth-logo {
+            font-size: 2rem;
+        }
+
+        .auth-subtitle {
+            font-size: 1rem;
+        }
+
+        .form-input {
+            padding: 0.875rem 1rem;
+            font-size: 16px;
+        }
+
+        .submit-btn {
+            padding: 0.875rem;
+            font-size: 0.95rem;
+        }
+
+        .form-checkbox label {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-logo">MAEDIX</h1>
+            <p class="auth-subtitle">Create your AI automation account</p>
+        </div>
+
+        {% if messages %}
+            <div class="alert alert-danger">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'signup' %}" id="signupForm">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name" 
+                        class="form-input" 
+                        placeholder="John"
+                        required
+                        value="{{ form.first_name.value|default:'' }}"
+                    >
+                    {% if form.first_name.errors %}
+                        <div class="field-error-text">{{ form.first_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name" class="form-label">
+                        Last Name <span class="optional">(optional)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name" 
+                        class="form-input" 
+                        placeholder="Doe"
+                        value="{{ form.last_name.value|default:'' }}"
+                    >
+                    {% if form.last_name.errors %}
+                        <div class="field-error-text">{{ form.last_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="your@email.com"
+                    required
+                    autocomplete="email"
+                    value="{{ form.email.value|default:'' }}"
+                >
+                {% if form.email.errors %}
+                    <div class="field-error-text">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="username" class="form-label">
+                    Username
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="form-input" 
+                    placeholder="johndoe"
+                    required
+                    value="{{ form.username.value|default:'' }}"
+                >
+                {% if form.username.errors %}
+                    <div class="field-error-text">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="password1" class="form-label">Password</label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password1" 
+                        name="password1" 
+                        class="form-input has-toggle" 
+                        placeholder="Create a strong password"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <button type="button" class="password-toggle" id="togglePassword1">
+                        👁️
+                    </button>
+                </div>
+                <ul class="password-requirements" id="passwordRequirements">
+                    <li id="req-length">At least 8 characters</li>
+                    <li id="req-uppercase">At least 1 uppercase letter</li>
+                    <li id="req-lowercase">At least 1 lowercase letter</li>
+                    <li id="req-special">At least 1 special character (!@#$%^&*)</li>
+                </ul>
+                {% if form.password1.errors %}
+                    <div class="field-error-text">{{ form.password1.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="password2" class="form-label">Confirm Password</label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password2" 
+                        name="password2" 
+                        class="form-input has-toggle" 
+                        placeholder="Re-enter your password"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <button type="button" class="password-toggle" id="togglePassword2">
+                        👁️
+                    </button>
+                </div>
+                <small class="password-helper" id="matchHelper"></small>
+                {% if form.password2.errors %}
+                    <div class="field-error-text">{{ form.password2.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-checkbox">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">
+                    I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                </label>
+            </div>
+
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit" class="submit-btn" id="signupBtn">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Email normalization
+    const emailInput = document.getElementById("email");
+    emailInput.addEventListener("input", function() {
+        this.value = this.value.toLowerCase().trim();
+    });
+
+    // Password validation
+    const password1 = document.getElementById('password1');
+    const password2 = document.getElementById('password2');
+    const signupBtn = document.getElementById('signupBtn');
+    const form = document.getElementById('signupForm');
+
+    const requirements = {
+        length: { element: document.getElementById('req-length'), regex: /.{8,}/ },
+        uppercase: { element: document.getElementById('req-uppercase'), regex: /[A-Z]/ },
+        lowercase: { element: document.getElementById('req-lowercase'), regex: /[a-z]/ },
+        special: { element: document.getElementById('req-special'), regex: /[!@#$%^&*(),.?":{}|<>]/ }
+    };
+
+    function validatePassword(password) {
+        let allValid = true;
+        
+        for (let key in requirements) {
+            const req = requirements[key];
+            const isValid = req.regex.test(password);
+            
+            if (isValid) {
+                req.element.classList.remove('invalid');
+                req.element.classList.add('valid');
+            } else {
+                req.element.classList.remove('valid');
+                req.element.classList.add('invalid');
+                allValid = false;
+            }
+        }
+        
+        return allValid;
+    }
+
+    function checkPasswordMatch() {
+        const matchHelper = document.getElementById('matchHelper');
+        
+        if (password2.value === '') {
+            matchHelper.textContent = '';
+            password2.classList.remove('is-valid', 'is-invalid');
+            return true;
+        }
+        
+        if (password1.value === password2.value) {
+            matchHelper.textContent = '✓ Passwords match';
+            matchHelper.style.color = '#22c55e';
+            password2.classList.remove('is-invalid');
+            password2.classList.add('is-valid');
+            return true;
+        } else {
+            matchHelper.textContent = '✗ Passwords do not match';
+            matchHelper.style.color = '#ef4444';
+            password2.classList.remove('is-valid');
+            password2.classList.add('is-invalid');
+            return false;
+        }
+    }
+
+    function updateSubmitButton() {
+        const isPasswordValid = validatePassword(password1.value);
+        const isPasswordMatch = password1.value === password2.value && password2.value !== '';
+        const isEmailValid = emailInput.value.includes('@') && emailInput.value.length > 3;
+        
+        if (isPasswordValid && isPasswordMatch && isEmailValid) {
+            signupBtn.disabled = false;
+        } else {
+            signupBtn.disabled = true;
+        }
+    }
+
+    password1.addEventListener('input', function() {
+        validatePassword(this.value);
+        checkPasswordMatch();
+        updateSubmitButton();
+        
+        if (validatePassword(this.value)) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+
+    password2.addEventListener('input', function() {
+        checkPasswordMatch();
+        updateSubmitButton();
+    });
+
+    emailInput.addEventListener('input', updateSubmitButton);
+
+    // Password toggle functionality
+    function setupPasswordToggle(toggleButtonId, passwordInputId) {
+        const toggleButton = document.getElementById(toggleButtonId);
+        const passwordInput = document.getElementById(passwordInputId);
+        
+        toggleButton.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            if (type === 'text') {
+                this.textContent = '🙈';
+            } else {
+                this.textContent = '👁️';
+            }
+        });
+    }
+
+    setupPasswordToggle('togglePassword1', 'password1');
+    setupPasswordToggle('togglePassword2', 'password2');
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const isPasswordValid = validatePassword(password1.value);
+        const isPasswordMatch = password1.value === password2.value;
+        
+        if (!isPasswordValid) {
+            e.preventDefault();
+            alert('Please ensure your password meets all requirements.');
+            return false;
+        }
+        
+        if (!isPasswordMatch) {
+            e.preventDefault();
+            alert('Passwords do not match.');
+            return false;
+        }
+        
+        signupBtn.classList.add('loading');
+        signupBtn.disabled = true;
+    });
+
+    // Auto-focus on first name field
+    document.getElementById('first_name').focus();
+    
+    // Initialize button state
+    updateSubmitButton();
+});
+</script>
+{% endblock %}

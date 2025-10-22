@@ -1,0 +1,45 @@
+name: Zappa Deploy/Update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-update:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1  # or your region
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Create venv, activate, and install deps
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
+          # Install essential tools
+          pip install --upgrade pip setuptools wheel
+
+          # Install project deps
+          pip install -r requirements.txt
+          pip install zappa
+
+      - name: 🚀 Deploy or Update with Zappa
+        run: |
+          source venv/bin/activate
+          if zappa status dev > /dev/null 2>&1; then
+            echo "🔄 Environment exists → running update..."
+            zappa update dev
+          else
+            echo "✨ First time deploy → running deploy..."
+            zappa deploy dev
+          fi

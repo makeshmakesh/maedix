@@ -1,0 +1,726 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Manage Listings - {{ company.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .listings-container {
+        padding: 3rem 0;
+        min-height: calc(100vh - 400px);
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
+    .listings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-content {
+        flex: 1;
+    }
+
+    .listings-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin: 0 0 0.5rem 0;
+    }
+
+    .listings-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .btn-add-listing {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.875rem 1.75rem;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        text-decoration: none;
+    }
+
+    .btn-add-listing:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 212, 255, 0.5);
+        color: white;
+        text-decoration: none;
+    }
+
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.primary {
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .stat-icon.success {
+        background: rgba(34, 197, 94, 0.1);
+    }
+
+    .stat-icon.warning {
+        background: rgba(234, 179, 8, 0.1);
+    }
+
+    .stat-icon.purple {
+        background: rgba(168, 85, 247, 0.1);
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .filters-bar {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 150px;
+    }
+
+    .filter-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-select {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.7);
+    }
+
+    .listings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .listing-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .listing-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .listing-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .listing-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-type {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .badge-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .badge-status.available {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .badge-status.sold {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .badge-status.rented {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .badge-status.unavailable {
+        background: rgba(107, 114, 128, 0.15);
+        color: #6b7280;
+    }
+
+    .instagram-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .instagram-indicator.connected {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a855f7;
+    }
+
+    .instagram-indicator.not-connected {
+        background: rgba(107, 114, 128, 0.1);
+        color: var(--text-muted);
+    }
+
+    .listing-content {
+        padding: 1.5rem;
+    }
+
+    .listing-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .listing-location {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .listing-meta {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .meta-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .meta-value.price {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.25rem;
+    }
+
+    .listing-specs {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .spec-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 8px;
+    }
+
+    .listing-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .timestamp {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .listing-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-edit:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-2px);
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 2px dashed var(--border-color);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .listings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .listings-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-add-listing {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .filters-bar {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .stats-bar {
+            grid-template-columns: 1fr;
+        }
+
+        .listing-meta {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="listings-container">
+    <div class="container">
+        <a href="{% url 'company-detail' company.id %}" class="back-button">
+            <span>←</span>
+            <span>Back to Company</span>
+        </a>
+
+        <div class="listings-header">
+            <div class="header-content">
+                <h1 class="listings-title">Property Listings Management</h1>
+                <p class="listings-subtitle">Manage your properties and connect them to Instagram posts for automated responses</p>
+            </div>
+            <a href="{% url 'create_listing' company.id %}" class="btn-add-listing">
+                <span>➕</span>
+                <span>Add New Listing</span>
+            </a>
+        </div>
+
+        <!-- Statistics Bar -->
+        {% if listings %}
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon primary">📊</div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ listings|length }}</div>
+                    <div class="stat-label">Total Listings</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon success">✓</div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ listings|length }}</div>
+                    <div class="stat-label">Available</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">📱</div>
+                <div class="stat-content">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Instagram Connected</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon warning">⚡</div>
+                <div class="stat-content">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Active Auto-Replies</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label class="filter-label">Property Type</label>
+                <select class="filter-select" id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="residential">Residential</option>
+                    <option value="commercial">Commercial</option>
+                    <option value="land">Land</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="available">Available</option>
+                    <option value="sold">Sold</option>
+                    <option value="rented">Rented</option>
+                    <option value="unavailable">Unavailable</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Instagram Status</label>
+                <select class="filter-select" id="instagramFilter">
+                    <option value="">All</option>
+                    <option value="connected">Connected</option>
+                    <option value="not-connected">Not Connected</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Listings Grid -->
+        {% if listings %}
+        <div class="listings-grid">
+            {% for listing in listings %}
+            <div class="listing-card" 
+                 data-type="{{ listing.property_type }}" 
+                 data-status="{{ listing.status }}"
+                 data-instagram="{% if listing.is_instagram_connected %}connected{% else %}not-connected{% endif %}">
+                
+                <div class="listing-header">
+                    <div class="listing-badges">
+                        <span class="badge badge-type">{{ listing.get_property_type_display }}</span>
+                        <span class="badge badge-status {{ listing.status }}">{{ listing.get_status_display }}</span>
+                    </div>
+                    <div class="instagram-indicator {% if listing.is_instagram_connected %}connected{% else %}not-connected{% endif %}">
+                        <span>{% if listing.is_instagram_connected %}✓{% else %}○{% endif %}</span>
+                        <span>Instagram</span>
+                    </div>
+                </div>
+
+                <div class="listing-content">
+                    <h3 class="listing-title">{{ listing.title }}</h3>
+                    <div class="listing-location">
+                        <span>📍</span>
+                        <span>{{ listing.location }}</span>
+                    </div>
+
+                    <div class="listing-meta">
+                        {% if listing.price %}
+                        <div class="meta-item">
+                            <span class="meta-label">Price</span>
+                            <span class="meta-value price">
+                                {% if listing.currency == 'INR' %}₹{% elif listing.currency == 'USD' %}${% elif listing.currency == 'EUR' %}€{% endif %}{{ listing.price|floatformat:0 }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="meta-item">
+                            <span class="meta-label">Price Type</span>
+                            <span class="meta-value">{{ listing.get_price_type_display }}</span>
+                        </div>
+                    </div>
+
+                    {% if listing.bedrooms or listing.bathrooms or listing.area_sqft or listing.land_area %}
+                    <div class="listing-specs">
+                        {% if listing.bedrooms %}
+                        <div class="spec-item">
+                            <span>🛏️</span>
+                            <span>{{ listing.bedrooms }} Beds</span>
+                        </div>
+                        {% endif %}
+                        {% if listing.bathrooms %}
+                        <div class="spec-item">
+                            <span>🚿</span>
+                            <span>{{ listing.bathrooms }} Baths</span>
+                        </div>
+                        {% endif %}
+                        {% if listing.area_sqft %}
+                        <div class="spec-item">
+                            <span>📏</span>
+                            <span>{{ listing.area_sqft|floatformat:0 }} sqft</span>
+                        </div>
+                        {% endif %}
+                        {% if listing.land_area %}
+                        <div class="spec-item">
+                            <span>🏞️</span>
+                            <span>{{ listing.land_area }} {{ listing.get_land_unit_display }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="listing-footer">
+                    <span class="timestamp">Updated {{ listing.updated_at|timesince }} ago</span>
+                    <div class="listing-actions">
+                        <a href="{% url 'edit_listing' company.id listing.id %}" class="btn-action btn-edit">
+                            <span>✏️</span>
+                            <span>Edit</span>
+                        </a>
+                        <button type="button" class="btn-action btn-delete" 
+                                data-delete-url="{% url 'delete_listing' company.id listing.id %}" 
+                                onclick="deleteListing(this)">
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🏠</div>
+            <h3 class="empty-title">No Property Listings Yet</h3>
+            <p class="empty-text">Create your first listing and connect it to Instagram for automated customer responses</p>
+            <a href="{% url 'create_listing' company.id %}" class="btn-add-listing">
+                <span>➕</span>
+                <span>Create First Listing</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    const typeFilter = document.getElementById('typeFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const instagramFilter = document.getElementById('instagramFilter');
+    const cards = document.querySelectorAll('.listing-card');
+
+    function filterListings() {
+        const selectedType = typeFilter.value;
+        const selectedStatus = statusFilter.value;
+        const selectedInstagram = instagramFilter.value;
+
+        cards.forEach(card => {
+            const cardType = card.dataset.type;
+            const cardStatus = card.dataset.status;
+            const cardInstagram = card.dataset.instagram;
+
+            const typeMatch = !selectedType || cardType === selectedType;
+            const statusMatch = !selectedStatus || cardStatus === selectedStatus;
+            const instagramMatch = !selectedInstagram || cardInstagram === selectedInstagram;
+
+            if (typeMatch && statusMatch && instagramMatch) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    typeFilter?.addEventListener('change', filterListings);
+    statusFilter?.addEventListener('change', filterListings);
+    instagramFilter?.addEventListener('change', filterListings);
+
+    // Delete listing
+    function deleteListing(button) {
+        if (confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = button.dataset.deleteUrl;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}

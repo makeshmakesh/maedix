@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8"><title>Instagram Auth</title></head>
+  <body>
+    <script>
+      (async function(){
+        // Parse the fragment after '#'
+        const params = new URLSearchParams(window.location.hash.substring(1));
+
+        const data = {
+          access_token: params.get('access_token'),
+          long_lived_token: params.get('long_lived_token'),
+          expires_in: params.get('expires_in'),
+          data_access_expiration_time: params.get('data_access_expiration_time'),
+          company_id: params.get('state'),
+        };
+
+        // Send the token data to your Django backend securely
+        await fetch(`/instagram/save-token/`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            ...data
+          })
+        });
+
+        document.body.innerHTML = "<h3>Instagram account connected successfully!</h3>";
+      })();
+    </script>
+  </body>
+</html>

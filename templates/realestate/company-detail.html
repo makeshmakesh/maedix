@@ -1,0 +1,677 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ company.name }} - MAEDIX{% endblock %}
+
+{% block extra_css %}
+<style>
+    .company-detail-container {
+        padding: 3rem 0;
+        min-height: calc(100vh - 400px);
+    }
+
+    /* Company Header */
+    .company-header {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .company-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .company-header-content {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .company-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        flex-shrink: 0;
+        box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .company-info {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .company-name {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .company-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-badge.active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .company-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn-header {
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-header {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-primary-header:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary-header {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary-header:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-2px);
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    /* Stats Overview */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 1.8rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-change {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .stat-change.positive {
+        color: #22c55e;
+    }
+
+    .stat-change.negative {
+        color: #ef4444;
+    }
+
+    /* Navigation Cards */
+    .navigation-section {
+        margin-bottom: 3rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .nav-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nav-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.3);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .nav-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .nav-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .nav-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .nav-description {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .nav-arrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #3b82f6;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .nav-card:hover .nav-arrow {
+        gap: 1rem;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .quick-actions-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .quick-action-btn {
+        padding: 1rem;
+        border-radius: 12px;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .quick-action-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-2px);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    /* Back Button */
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .company-detail-container {
+            padding: 2rem 0;
+        }
+
+        .company-header {
+            padding: 2rem 1.5rem;
+        }
+
+        .company-header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+        }
+
+        .company-name {
+            font-size: 1.5rem;
+        }
+
+        .company-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-header {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-container {
+            grid-template-columns: 1fr;
+        }
+
+        .nav-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .nav-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .nav-card:nth-child(1) { animation-delay: 0.1s; }
+    .nav-card:nth-child(2) { animation-delay: 0.2s; }
+    .nav-card:nth-child(3) { animation-delay: 0.3s; }
+    .nav-card:nth-child(4) { animation-delay: 0.4s; }
+    .nav-card:nth-child(5) { animation-delay: 0.5s; }
+
+    .stat-card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.1s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.2s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="company-detail-container">
+    <div class="container">
+        <!-- Back Button -->
+        <a href="{% url 'dashboard' %}" class="back-button">
+            <span>←</span>
+            <span>Back to Dashboard</span>
+        </a>
+
+        <!-- Company Header -->
+        <div class="company-header">
+            <div class="company-header-content">
+                <div class="company-logo">
+                    🏢
+                </div>
+                <div class="company-info">
+                    <h1 class="company-name">{{ company.name|default:"ABC Realty" }}</h1>
+                    <div class="company-meta">
+                        <span class="role-badge">
+                            <span>👤</span>
+                            <span>{{ membership.role|default:"Unknown" }}</span>
+                        </span>
+                        <span class="status-badge active">
+                            <span>●</span>
+                            <span>Active</span>
+                        </span>
+                    </div>
+                    {% comment %} <div class="company-actions">
+                        <a href="#" class="btn-header btn-primary-header">
+                            <span>⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                        <a href="#" class="btn-header btn-secondary-header">
+                            <span>📊</span>
+                            <span>Analytics</span>
+                        </a>
+                    </div> {% endcomment %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">👥</span>
+                </div>
+                <div class="stat-label">Total Leads</div>
+                <div class="stat-value">{{ company.leads_count|default:"0" }}</div>
+                {% comment %} <div class="stat-change positive">↑ 12% this month</div> {% endcomment %}
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">🤖</span>
+                </div>
+                <div class="stat-label">Active Bots</div>
+                <div class="stat-value">{{ company.active_bots|default:"0" }}</div>
+                {% comment %} <div class="stat-change positive">↑ 1 new bot</div> {% endcomment %}
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">💬</span>
+                </div>
+                <div class="stat-label">Conversations</div>
+                <div class="stat-value">{{ company.conversations|default:"0" }}</div>
+                {% comment %} <div class="stat-change positive">↑ 8% this week</div> {% endcomment %}
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">👨‍💼</span>
+                </div>
+                <div class="stat-label">Team Members</div>
+                <div class="stat-value">{{ company.members_count|default:"0" }}</div>
+                {% comment %} <div class="stat-change">No change</div> {% endcomment %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h3 class="quick-actions-title">Quick Actions</h3>
+            <div class="quick-actions-grid">
+                <a href="{% url 'instagram_connect' company.id %}" class="quick-action-btn">
+                    <span>📱</span>
+                    <span>Connect Instagram</span>
+                </a>
+                <a href="{% url 'listings' company.id %}" class="quick-action-btn">
+                    <span>📄</span>
+                    <span>View Listings</span>
+                </a>
+                <a href="#" class="quick-action-btn">
+                    <span>➕</span>
+                    <span>Add Team Member</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Navigation Section -->
+        <div class="navigation-section">
+            <h2 class="section-title">Manage Company</h2>
+            <div class="nav-grid">
+                <!-- View Leads -->
+                <a href="#" class="nav-card">
+                    <div class="nav-icon">👥</div>
+                    <h3 class="nav-title">View Leads</h3>
+                    <p class="nav-description">
+                        Browse and manage all captured leads, filter by status, and track conversion rates.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>View all leads</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- Edit Company -->
+                <a href="#" class="nav-card">
+                    <div class="nav-icon">✏️</div>
+                    <h3 class="nav-title">Edit Company</h3>
+                    <p class="nav-description">
+                        Update company information, branding, AI settings, and automation preferences.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>Edit settings</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- Connect Instagram -->
+                <a href="{% url 'instagram_connect' company.id %}" class="nav-card">
+                    <div class="nav-icon">📱</div>
+                    <h3 class="nav-title">Connect Instagram</h3>
+                    <p class="nav-description">
+                        Link your Instagram account to automatically capture and respond to DMs and comments.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>Connect now</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- View Members -->
+                <a href="#" class="nav-card">
+                    <div class="nav-icon">👨‍💼</div>
+                    <h3 class="nav-title">View Members</h3>
+                    <p class="nav-description">
+                        Manage team members, assign roles, and control access permissions for your company.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>Manage team</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- Upload Company Documents -->
+                <a href="#" class="nav-card">
+                    <div class="nav-icon">📄</div>
+                    <h3 class="nav-title">Upload Company Documents</h3>
+                    <p class="nav-description">
+                        Upload property brochures, training materials, and documents for AI reference.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>Upload files</span>
+                        <span>→</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add click animation to cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.nav-card, .stat-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Add subtle scale effect
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends 'core/base.html' %}
+
+{% block title %}MAEDIX - Privacy Policy{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Legal Pages Specific Styles */
+    .legal-section {
+        padding: 4rem 0;
+        position: relative;
+    }
+
+    .legal-header {
+        text-align: center;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .legal-title {
+        font-size: clamp(2.5rem, 7vw, 4rem);
+        font-weight: 900;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #fff 0%, #00d4ff 50%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .legal-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+    }
+
+    .legal-content {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        padding: 3rem;
+        box-shadow: var(--shadow-glow);
+    }
+
+    .legal-section-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+        padding-top: 1rem;
+        border-top: 2px solid var(--border-color);
+    }
+
+    .legal-section-title:first-child {
+        margin-top: 0;
+        border-top: none;
+    }
+
+    .legal-subsection {
+        margin-bottom: 2rem;
+    }
+
+    .legal-subsection h4 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .legal-content p {
+        color: var(--text-secondary);
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+
+    .legal-content ul {
+        color: var(--text-secondary);
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .legal-content li {
+        margin-bottom: 0.75rem;
+        line-height: 1.7;
+    }
+
+    .legal-content strong {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .highlight-box {
+        background: rgba(59, 130, 246, 0.1);
+        border-left: 4px solid #3b82f6;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+    }
+
+    .highlight-box p {
+        margin-bottom: 0;
+    }
+
+    .last-updated {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .legal-content {
+            padding: 2rem 1.5rem;
+        }
+
+        .legal-section-title {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Legal Header -->
+<section class="legal-header fade-in">
+    <div class="container">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+        <h1 class="legal-title">Privacy Policy</h1>
+        <p class="legal-subtitle">How we protect your data</p>
+    </div>
+</section>
+
+<!-- Privacy Policy Content -->
+<section class="legal-section">
+    <div class="container">
+        <div class="legal-content">
+            <p class="last-updated"><strong>Last Updated:</strong> October 2025</p>
+
+            <div class="legal-subsection">
+                <h4>1. Introduction</h4>
+                <p>
+                    MAEDIX ("Company," "we," "us," "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform and services, including our website and mobile application (collectively, the "Service").
+                </p>
+                <p>
+                    MAEDIX provides AI-powered automation for real estate agencies by integrating with Instagram and other social platforms to automate direct messages and comments related to property inquiries.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>2. Information We Collect</h4>
+                <p><strong>A. Account Information:</strong></p>
+                <ul>
+                    <li>Email address</li>
+                    <li>Name and contact information</li>
+                    <li>Company/Agency details</li>
+                    <li>Payment and billing information</li>
+                </ul>
+                
+                <p><strong>B. Instagram Integration Data:</strong></p>
+                <ul>
+                    <li>Instagram business account credentials (OAuth tokens)</li>
+                    <li>Direct messages and comments on your property listings</li>
+                    <li>Follower engagement data related to property posts</li>
+                    <li>Property listing details shared through Instagram</li>
+                    <li>Customer inquiry data and conversation history</li>
+                </ul>
+
+                <p><strong>C. Usage Data:</strong></p>
+                <ul>
+                    <li>IP address and device information</li>
+                    <li>Browser type and version</li>
+                    <li>Pages visited and time spent</li>
+                    <li>Analytics on lead engagement and conversion</li>
+                </ul>
+
+                <p><strong>D. Lead Data:</strong></p>
+                <ul>
+                    <li>Buyer inquiries and qualification responses</li>
+                    <li>Property preferences and budget information</li>
+                    <li>Contact information collected through AI conversations</li>
+                </ul>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>3. How We Use Your Information</h4>
+                <ul>
+                    <li>To provide and maintain MAEDIX services</li>
+                    <li>To process payments and send billing information</li>
+                    <li>To automate responses to property inquiries on Instagram</li>
+                    <li>To qualify and categorize buyer leads for your agents</li>
+                    <li>To improve our AI models and service accuracy</li>
+                    <li>To send service updates, support messages, and newsletters (with your consent)</li>
+                    <li>To comply with legal obligations and prevent fraud</li>
+                    <li>To analyze service usage and improve platform functionality</li>
+                </ul>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>4. Data Sharing & Third Parties</h4>
+                <p>
+                    We do not sell your personal data to third parties. However, we may share information with:
+                </p>
+                <ul>
+                    <li><strong>Instagram/Meta:</strong> We access your data through official Instagram Graph API to retrieve messages and post comments on your behalf.</li>
+                    <li><strong>Service Providers:</strong> Cloud hosting providers, payment processors, and analytics platforms that assist in delivering our service.</li>
+                    <li><strong>Legal Requirements:</strong> When required by law, court order, or government request.</li>
+                </ul>
+
+                <div class="highlight-box">
+                    <p><strong>Important:</strong> Your buyer lead data remains your property. We use it to power our AI qualification system, but you retain full ownership and can export or delete your data at any time.</p>
+                </div>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>5. Data Security</h4>
+                <p>
+                    We implement industry-standard security measures including encryption, secure servers, and regular security audits to protect your data. However, no transmission over the internet is 100% secure. You are responsible for maintaining the confidentiality of your account credentials.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>6. Instagram Data & OAuth</h4>
+                <p>
+                    To use MAEDIX, you authorize us to access your Instagram business account through OAuth. This allows us to:
+                </p>
+                <ul>
+                    <li>Read direct messages related to your listings</li>
+                    <li>Respond to comments on your property posts</li>
+                    <li>Send automated qualifying messages</li>
+                </ul>
+                <p>
+                    You can revoke this access at any time through Instagram Settings or within your MAEDIX account. Revoking access will stop our automation but will not delete previously collected data unless you request deletion.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>7. Cookies & Tracking</h4>
+                <p>
+                    We use cookies to enhance your experience, remember your preferences, and analyze website traffic. You can disable cookies through your browser settings, but some features may not function properly.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>8. Your Rights</h4>
+                <ul>
+                    <li><strong>Access:</strong> Request a copy of your data</li>
+                    <li><strong>Correction:</strong> Update inaccurate information</li>
+                    <li><strong>Deletion:</strong> Request removal of your data (subject to legal requirements)</li>
+                    <li><strong>Opt-Out:</strong> Unsubscribe from marketing communications</li>
+                    <li><strong>Data Portability:</strong> Export your data in a standard format</li>
+                </ul>
+                <p>To exercise these rights, contact us at <strong>privacy@maedix.com</strong></p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>9. GDPR & International Compliance</h4>
+                <p>
+                    If you are located in the European Union or other jurisdictions with data protection laws, you have additional rights. We comply with GDPR and similar regulations. For EU residents, we have a Data Processing Agreement available upon request.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>10. Data Retention</h4>
+                <p>
+                    We retain your account data and lead information as long as your account is active. If you delete your account, we retain data for 30 days before permanent deletion, unless legally required to retain it longer.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>11. Changes to This Policy</h4>
+                <p>
+                    We may update this Privacy Policy periodically. We will notify you of significant changes via email or a prominent notice on our website. Your continued use of MAEDIX constitutes acceptance of the updated policy.
+                </p>
+            </div>
+
+            <div class="legal-subsection">
+                <h4>12. Contact Us</h4>
+                <p>
+                    If you have questions about this Privacy Policy or our data practices:<br><br>
+                    <strong>Support:</strong> support@maedix.com<br>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,647 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Connect Instagram - {{ company.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscription-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.subscription-status.active {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.subscription-status.inactive {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.btn-subscribe {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+}
+
+.btn-subscribe:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(0, 212, 255, 0.6);
+    color: white;
+    text-decoration: none;
+}
+    .instagram-container {
+        padding: 3rem 0;
+        min-height: calc(100vh - 400px);
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
+    .instagram-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        padding: 3rem;
+        max-width: 700px;
+        margin: 0 auto;
+        box-shadow: var(--shadow-glow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .instagram-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+    }
+
+    .instagram-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .instagram-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 10px 30px rgba(131, 58, 180, 0.4);
+    }
+
+    .instagram-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .instagram-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .connection-status {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .connection-status.connected {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .connection-status.error {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .status-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .status-icon {
+        font-size: 1.5rem;
+    }
+
+    .status-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .status-message {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-left: 2.5rem;
+    }
+
+    .connected-account {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 12px;
+        margin-top: 1rem;
+    }
+
+    .account-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .account-info {
+        flex: 1;
+    }
+
+    .account-name {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .account-username {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .features-list {
+        margin: 2rem 0;
+    }
+
+    .features-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .feature-item:hover {
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .feature-icon {
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .feature-text {
+        flex: 1;
+    }
+
+    .feature-text strong {
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .feature-text span {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .btn-instagram {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: none;
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        margin-top: 1rem;
+    }
+
+    .btn-connect {
+        background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+        color: white;
+        box-shadow: 0 8px 25px rgba(131, 58, 180, 0.4);
+    }
+
+    .btn-connect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(131, 58, 180, 0.6);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-disconnect {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-disconnect:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+        color: #ef4444;
+        text-decoration: none;
+    }
+
+    .btn-reconnect {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-reconnect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(0, 212, 255, 0.6);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-instagram:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .help-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+    }
+
+    .help-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .help-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .help-link:hover {
+        color: #60a5fa;
+        text-decoration: underline;
+    }
+
+    .requirements-box {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .requirements-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        color: #fbbf24;
+        margin-bottom: 1rem;
+    }
+
+    .requirements-list {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.8;
+        padding-left: 1.5rem;
+    }
+
+    /* Loading state */
+    .btn-instagram.loading {
+        position: relative;
+        color: transparent;
+    }
+
+    .btn-instagram.loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .instagram-container {
+            padding: 2rem 0;
+        }
+
+        .instagram-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .instagram-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+        }
+
+        .instagram-title {
+            font-size: 1.6rem;
+        }
+
+        .instagram-subtitle {
+            font-size: 1rem;
+        }
+
+        .feature-item {
+            padding: 0.75rem;
+        }
+
+        .connected-account {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .instagram-card {
+            padding: 1.5rem 1rem;
+        }
+
+        .feature-item {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="instagram-container">
+    <div class="container">
+        <!-- Back Button -->
+        <a href="{% url 'company-detail' company.id %}" class="back-button">
+            <span>←</span>
+            <span>Back to Company</span>
+        </a>
+
+        <div class="instagram-card">
+            <!-- Header -->
+            <div class="instagram-header">
+                <div class="instagram-icon">📱</div>
+                <h1 class="instagram-title">Connect Instagram</h1>
+                <p class="instagram-subtitle">
+                    Automate your Instagram DMs and comments with AI-powered responses
+                </p>
+            </div>
+
+            <!-- Connection Status -->
+            {% if instagram_connected %}
+            <div class="connection-status connected">
+                <div class="status-header">
+                    <span class="status-icon">✅</span>
+                    <h3 class="status-title">Instagram Connected</h3>
+                </div>
+                <p class="status-message">
+                    Your Instagram account is successfully connected and active. Maedix is monitoring your DMs and comments.
+                </p>
+                
+                {% if instagram_account %}
+                <div class="connected-account">
+                    <div class="account-avatar">📷</div>
+                    <div class="account-info">
+                        <div class="account-name">{{ instagram_account.name }}</div>
+                        <div class="account-username">@{{ instagram_account.username }}</div>
+                    </div>
+                </div>
+                <div class="subscription-status {% if instagram_account.webhook_subscribed %}active{% else %}inactive{% endif %}">
+            <span>{% if instagram_account.webhook_subscribed %}✓{% else %}✗{% endif %}</span>
+            <span>Webhook Events: {% if instagram_account.webhook_subscribed %}Active{% else %}Inactive{% endif %}</span>
+        </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="connection-status">
+                <div class="status-header">
+                    <span class="status-icon">ℹ️</span>
+                    <h3 class="status-title">Not Connected</h3>
+                </div>
+                <p class="status-message">
+                    Connect your Instagram Business account to start automating lead capture and responses.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Requirements -->
+            {% if not instagram_connected %}
+            <div class="requirements-box">
+                <div class="requirements-title">
+                    <span>⚠️</span>
+                    <span>Requirements</span>
+                </div>
+                <ul class="requirements-list">
+                    <li>Instagram Business or Creator account</li>
+                    <li>Facebook Page connected to your Instagram account</li>
+                    <li>Admin access to the Facebook Page</li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Features List -->
+            <div class="features-list">
+                <h3 class="features-title">What you'll get:</h3>
+                
+                <div class="feature-item">
+                    <span class="feature-icon">💬</span>
+                    <div class="feature-text">
+                        <strong>Auto-respond to DMs</strong>
+                        <span>Instantly reply to direct messages with AI-powered responses</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">💭</span>
+                    <div class="feature-text">
+                        <strong>Comment Management</strong>
+                        <span>Capture and respond to property inquiries in comments</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">🎯</span>
+                    <div class="feature-text">
+                        <strong>Lead Qualification</strong>
+                        <span>Automatically qualify prospects based on their responses</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="feature-icon">📊</span>
+                    <div class="feature-text">
+                        <strong>Analytics Dashboard</strong>
+                        <span>Track engagement metrics and response rates</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            {% if instagram_connected %}
+                <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectInstagram()">
+                    <span>🔌</span>
+                    <span>Disconnect Instagram</span>
+                </button>
+                    {% if instagram_account and not instagram_account.webhook_subscribed %}
+    <button type="button" class="btn-instagram btn-subscribe" onclick="subscribeToMessages()">
+        <span>🔔</span>
+        <span>Subscribe to Webhook Events</span>
+    </button>
+    {% endif %}
+            {% else %}
+                <form method="post" action="{% url 'instagram_oauth' company.id %}" id="connectForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-instagram btn-connect" id="connectBtn">
+                        <span>📱</span>
+                        <span>Connect with Instagram</span>
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Connect form submission
+    document.getElementById('connectForm')?.addEventListener('submit', function(e) {
+        const btn = document.getElementById('connectBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+    });
+
+
+    // Subscribe to message events
+function subscribeToMessages() {
+    const btn = event.target.closest('button');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    
+    fetch("{% url 'event-subscribe' company.id %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Successfully subscribed to message events!');
+            window.location.reload();
+        } else {
+            alert('Failed to subscribe: ' + (data.error || 'Unknown error'));
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    });
+}
+
+    // Disconnect Instagram
+    function disconnectInstagram() {
+        if (confirm('Are you sure you want to disconnect Instagram? This will stop all automated responses.')) {
+            // Add loading state
+            const btn = event.target.closest('button');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            // Make disconnect request
+            fetch("{% url 'instagram_disconnect' company.id %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to disconnect Instagram. Please try again.');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            });
+        }
+    }
+
+    // Reconnect Instagram
+    function reconnectInstagram() {
+        const btn = event.target.closest('button');
+        btn.classList.add('loading');
+        btn.disabled = true;
+        
+        // Redirect to Instagram OAuth
+        window.location.href = "{% url 'instagram_connect' company.id %}";
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,419 @@
+{% extends 'core/base.html' %}
+
+{% block title %}MAEDIX - Contact Us{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Contact Page Styles */
+    .contact-section {
+        padding: 4rem 0;
+        position: relative;
+    }
+
+    .contact-header {
+        text-align: center;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .contact-title {
+        font-size: clamp(2.5rem, 7vw, 4rem);
+        font-weight: 900;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #fff 0%, #00d4ff 50%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .contact-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .contact-desc {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.8;
+    }
+
+    /* Contact Container */
+    .contact-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        margin-top: 3rem;
+    }
+
+    /* Contact Info Cards */
+    .contact-info {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        padding: 3rem;
+        box-shadow: var(--shadow-glow);
+    }
+
+    .info-item {
+        margin-bottom: 2.5rem;
+    }
+
+    .info-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .info-label {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-content {
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-content a {
+        color: #3b82f6;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .info-content a:hover {
+        color: #60a5fa;
+        text-decoration: underline;
+    }
+
+    .info-subtext {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    /* Contact Form */
+    .contact-form {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        padding: 3rem;
+        box-shadow: var(--shadow-glow);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.7);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 150px;
+        font-family: inherit;
+    }
+
+    .form-submit {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 25px rgba(0, 212, 255, 0.3);
+    }
+
+    .form-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 35px rgba(0, 212, 255, 0.5);
+    }
+
+    .form-submit:active {
+        transform: translateY(0);
+    }
+
+    /* Social Links */
+    .social-links {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .social-link {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        font-size: 1.5rem;
+        text-decoration: none;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .social-link:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    /* FAQ Section */
+    .faq-section {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
+        border-radius: 24px;
+        padding: 4rem 3rem;
+        margin-top: 4rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .faq-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .faq-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .faq-item {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .faq-question {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .faq-answer {
+        color: var(--text-secondary);
+        line-height: 1.7;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .contact-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .contact-info,
+        .contact-form,
+        .faq-section {
+            padding: 2rem 1.5rem;
+        }
+
+        .contact-title {
+            font-size: 2.5rem;
+        }
+
+        .faq-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Contact Header -->
+<section class="contact-header fade-in">
+    <div class="container">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📞</div>
+        <h1 class="contact-title">Get in Touch</h1>
+        <p class="contact-subtitle">We'd love to hear from you</p>
+        <p class="contact-desc">
+            Have questions about MAEDIX? Our team is here to help. Reach out to us through any of these channels and we'll get back to you as soon as possible.
+        </p>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact-section">
+    <div class="container">
+        <div class="contact-container">
+            <!-- Contact Info -->
+            <div class="contact-info">
+                <h2 style="font-size: 1.8rem; color: var(--text-primary); margin-bottom: 2rem; font-weight: 700;">Contact Information</h2>
+                
+                <div class="info-item">
+                    <span class="info-icon">✉️</span>
+                    <div class="info-label">Email</div>
+                    <div class="info-content">
+                        <a href="mailto:hello@maedix.com">hello@maedix.com</a>
+                    </div>
+                    <div class="info-subtext">General inquiries and partnership</div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-icon">🤝</span>
+                    <div class="info-label">Support</div>
+                    <div class="info-content">
+                        <a href="mailto:support@maedix.com">support@maedix.com</a>
+                    </div>
+                    <div class="info-subtext">Technical support and account help</div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-icon">📱</span>
+                    <div class="info-label">Phone</div>
+                    <div class="info-content">
+                        <a href="tel:+1-800-MAEDIX">+1 (800) MAEDIX</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="contact-form">
+                <h2 style="font-size: 1.8rem; color: var(--text-primary); margin-bottom: 2rem; font-weight: 700;">Quick Links</h2>
+                
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+
+                    <div style="padding: 2rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Business Hours</div>
+                        <div style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem; line-height: 1.8;">
+                            Monday - Friday<br>
+                            9:00 AM - 6:00 PM IST<br><br>
+                            <span style="color: var(--text-secondary); font-weight: normal;">Weekend: Closed</span>
+                        </div>
+                    </div>
+
+                    <div style="padding: 2rem; background: rgba(124, 58, 237, 0.1); border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Average Response Time</div>
+                        <div style="color: var(--text-primary); font-weight: 600; font-size: 1.1rem;">
+                            ⚡ Within 24 Hours
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="contact-section">
+    <div class="container">
+        <div class="faq-section">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">What is the response time?</div>
+                    <div class="faq-answer">We typically respond to inquiries within 24 hours during business days. For urgent support, please call our hotline.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">How do I set up MAEDIX?</div>
+                    <div class="faq-answer">Setup takes just 5 minutes. Connect your Instagram business account, configure your preferences, and you're ready to start capturing leads.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Do you offer a free trial?</div>
+                    <div class="faq-answer">Yes! We offer a 14-day free trial with full access to all features. No credit card required to get started.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I cancel anytime?</div>
+                    <div class="faq-answer">Absolutely. You can cancel your subscription at any time through your account settings with no penalties.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Is my data secure?</div>
+                    <div class="faq-answer">Yes, we use industry-standard encryption and security protocols. Your data is never shared with third parties without your consent.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What payment methods do you accept?</div>
+                    <div class="faq-answer">We accept all major credit cards, bank transfers, and other payment methods. Billing is done securely through industry-standard processors.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

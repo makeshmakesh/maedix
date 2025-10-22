@@ -1,0 +1,558 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Listing - {{ listing.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-listing-container {
+        padding: 3rem 0;
+        min-height: calc(100vh - 400px);
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
+    .form-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        padding: 3rem;
+        max-width: 900px;
+        margin: 0 auto;
+        box-shadow: var(--shadow-glow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .form-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        background: var(--secondary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+    }
+
+    .form-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    .form-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row.triple {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .form-row.single {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .form-label .required {
+        color: #ef4444;
+        margin-left: 0.25rem;
+    }
+
+    .form-label .optional {
+        color: var(--text-muted);
+        font-weight: 400;
+        font-size: 0.85rem;
+        margin-left: 0.5rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.875rem 1.25rem;
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.7);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .form-help {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        color: #3b82f6;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: none;
+        background: var(--secondary-gradient);
+        color: white;
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(124, 58, 237, 0.6);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-cancel {
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 2px solid rgba(239, 68, 68, 0.3);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+        color: #ef4444;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .edit-listing-container {
+            padding: 2rem 0;
+        }
+
+        .form-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .form-row, .form-row.triple {
+            grid-template-columns: 1fr;
+        }
+
+        .form-title {
+            font-size: 1.6rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-listing-container">
+    <div class="container">
+        <a href="{% url 'listings' company.id %}" class="back-button">
+            <span>←</span>
+            <span>Back to Listings</span>
+        </a>
+
+        <div class="form-card">
+            <div class="form-header">
+                <div class="form-icon">✏️</div>
+                <h1 class="form-title">Edit Listing</h1>
+                <p class="form-subtitle">Update property information</p>
+            </div>
+
+            <div class="info-badge">
+                <span>ℹ️</span>
+                <span>Created on {{ listing.created_at|date:"M d, Y" }} • Last updated {{ listing.updated_at|date:"M d, Y" }}</span>
+            </div>
+
+            <form method="post" action="{% url 'edit_listing' company.id listing.id %}">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Property Title<span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="title" 
+                            class="form-input" 
+                            value="{{ listing.title }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Description<span class="optional">(optional)</span>
+                        </label>
+                        <textarea 
+                            name="description" 
+                            class="form-textarea"
+                        >{{ listing.description }}</textarea>
+                        <p class="form-help">Provide detailed information to help attract potential buyers</p>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Property Type<span class="required">*</span>
+                            </label>
+                            <select name="property_type" id="property_type" class="form-select" required>
+                                <option value="residential" {% if listing.property_type == 'residential' %}selected{% endif %}>Residential</option>
+                                <option value="commercial" {% if listing.property_type == 'commercial' %}selected{% endif %}>Commercial</option>
+                                <option value="land" {% if listing.property_type == 'land' %}selected{% endif %}>Land</option>
+                                <option value="other" {% if listing.property_type == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Status<span class="required">*</span>
+                            </label>
+                            <select name="status" class="form-select" required>
+                                <option value="available" {% if listing.status == 'available' %}selected{% endif %}>Available</option>
+                                <option value="sold" {% if listing.status == 'sold' %}selected{% endif %}>Sold</option>
+                                <option value="rented" {% if listing.status == 'rented' %}selected{% endif %}>Rented</option>
+                                <option value="unavailable" {% if listing.status == 'unavailable' %}selected{% endif %}>Unavailable</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Land Details -->
+                <div class="form-section" id="land-details-section">
+                    <h3 class="section-title">Land Details</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Land Unit<span class="optional">(optional)</span>
+                            </label>
+                            <select name="land_unit" class="form-select">
+                                <option value="">Select Unit</option>
+                                <option value="cent" {% if listing.land_unit == 'cent' %}selected{% endif %}>Cent</option>
+                                <option value="acre" {% if listing.land_unit == 'acre' %}selected{% endif %}>Acre</option>
+                                <option value="sqft" {% if listing.land_unit == 'sqft' %}selected{% endif %}>Square Feet</option>
+                                <option value="sqm" {% if listing.land_unit == 'sqm' %}selected{% endif %}>Square Meter</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Land Area<span class="optional">(optional)</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                name="land_area" 
+                                class="form-input" 
+                                value="{{ listing.land_area }}"
+                                placeholder="e.g., 5.5"
+                                step="0.01"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location & Pricing -->
+                <div class="form-section">
+                    <h3 class="section-title">Location & Pricing</h3>
+                    
+                    <div class="form-row triple">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Price Type<span class="optional">(optional)</span>
+                            </label>
+                            <select name="price_type" id="price_type" class="form-select">
+                                <option value="total" {% if listing.price_type == 'total' %}selected{% endif %}>Total Price</option>
+                                <option value="per_unit" {% if listing.price_type == 'per_unit' %}selected{% endif %}>Per Unit Rate</option>
+                            </select>
+                            <p class="form-help" id="price-type-help">
+                                {% if listing.price_type == 'per_unit' %}
+                                Price per unit (sqft, acre, cent, etc.)
+                                {% else %}
+                                Total property price
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Price<span class="optional">(optional)</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                name="price" 
+                                id="price"
+                                class="form-input" 
+                                value="{{ listing.price }}"
+                                step="0.01"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Currency<span class="optional">(optional)</span>
+                            </label>
+                            <select name="currency" class="form-select">
+                                <option value="INR" {% if listing.currency == 'INR' %}selected{% endif %}>₹ INR</option>
+                                <option value="USD" {% if listing.currency == 'USD' %}selected{% endif %}>$ USD</option>
+                                <option value="EUR" {% if listing.currency == 'EUR' %}selected{% endif %}>€ EUR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Location<span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="location" 
+                            class="form-input" 
+                            value="{{ listing.location }}"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- Property Details (Residential/Commercial) -->
+                <div class="form-section" id="building-details-section">
+                    <h3 class="section-title">Property Details</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Bedrooms<span class="optional">(optional)</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                name="bedrooms" 
+                                class="form-input" 
+                                value="{{ listing.bedrooms }}"
+                                min="0"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Bathrooms<span class="optional">(optional)</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                name="bathrooms" 
+                                class="form-input" 
+                                value="{{ listing.bathrooms }}"
+                                min="0"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Built-up Area (sqft)<span class="optional">(optional)</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            name="area_sqft" 
+                            class="form-input" 
+                            value="{{ listing.area_sqft }}"
+                            step="0.01"
+                        >
+                        <p class="form-help">Built-up area of the property</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Amenities<span class="optional">(optional)</span>
+                        </label>
+                        <textarea 
+                            name="amenities" 
+                            class="form-textarea" 
+                            rows="3"
+                        >{{ listing.amenities }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Additional Information</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Instagram Post ID<span class="optional">(optional)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="instagram_post_id" 
+                            class="form-input" 
+                            value="{{ listing.instagram_post_id }}"
+                        >
+                        <p class="form-help">Link this listing to an Instagram post for automated responses</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            AI Context Notes<span class="optional">(optional)</span>
+                        </label>
+                        <textarea 
+                            name="ai_context_notes" 
+                            class="form-textarea" 
+                            rows="4"
+                        >{{ listing.ai_context_notes }}</textarea>
+                        <p class="form-help">These notes help the AI assistant provide better responses about this property</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <a href="{% url 'listings' company.id %}" class="btn-cancel">
+                    <span>✕</span>
+                    <span>Cancel</span>
+                </a>
+                <button type="submit" class="btn-submit">
+                    <span>💾</span>
+                    <span>Save Changes</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const priceTypeSelect = document.getElementById('price_type');
+    const priceTypeHelp = document.getElementById('price-type-help');
+
+    function updatePriceTypeHelp() {
+        const priceType = priceTypeSelect.value;
+        if (priceType === 'per_unit') {
+            priceTypeHelp.textContent = 'Price per unit (sqft, acre, cent, etc.)';
+        } else {
+            priceTypeHelp.textContent = 'Total property price';
+        }
+    }
+
+    priceTypeSelect.addEventListener('change', updatePriceTypeHelp);
+
+    // Auto-format price input
+    const priceInput = document.getElementById('price');
+    if (priceInput) {
+        priceInput.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,497 @@
+{% extends 'core/base.html' %}
+
+{% block title %}MAEDIX - AI That Works for Your Business{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 4rem 0;
+        position: relative;
+    }
+
+    .hero-compass {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 7vw, 5rem);
+        font-weight: 900;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #fff 0%, #00d4ff 50%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-tagline {
+        font-size: clamp(1.3rem, 3vw, 2rem);
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .hero-subtext {
+        font-size: clamp(1rem, 2vw, 1.3rem);
+        color: var(--text-secondary);
+        max-width: 800px;
+        margin: 0 auto 3rem;
+        line-height: 1.8;
+    }
+
+    .hero-cta {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Section Styles */
+    .section {
+        padding: 6rem 0;
+        position: relative;
+    }
+
+    .section-title {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #fff 0%, #00d4ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.3;
+    }
+
+    .section-subtitle {
+        font-size: clamp(1.1rem, 2vw, 1.5rem);
+        color: var(--text-secondary);
+        margin-bottom: 4rem;
+        line-height: 1.8;
+        max-width: 900px;
+    }
+
+    /* Problem Section */
+    .problem-section {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border-radius: 24px;
+        padding: 4rem 3rem;
+        margin-bottom: 4rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .problem-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Solution Section */
+    .solution-section {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+
+    .solution-box {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        padding: 3rem;
+        border: 1px solid var(--border-color);
+        margin-top: 3rem;
+        transition: all 0.3s ease;
+    }
+
+    .solution-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Features Grid */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .feature-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        padding: 2.5rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
+    }
+
+    .feature-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        display: block;
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: var(--text-secondary);
+        line-height: 1.7;
+    }
+
+    /* Why Maedix Section */
+    .why-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .why-item {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .why-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .why-text {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+    }
+
+    /* Future Section */
+    .future-section {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+        border-radius: 24px;
+        padding: 4rem 3rem;
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+
+    /* Newsletter Section */
+    .newsletter-section {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        padding: 4rem 3rem;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        margin-top: 4rem;
+    }
+
+    .newsletter-form {
+        max-width: 500px;
+        margin: 2rem auto 0;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .newsletter-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 1rem 1.5rem;
+        border-radius: 30px;
+        border: 2px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.5);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .newsletter-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.7);
+    }
+
+    .newsletter-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    /* Stats Section */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin: 4rem 0;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 2rem;
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            min-height: 80vh;
+            padding: 3rem 0;
+        }
+
+        .section {
+            padding: 4rem 0;
+        }
+
+        .problem-section,
+        .solution-box,
+        .future-section,
+        .newsletter-section {
+            padding: 2.5rem 1.5rem;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .newsletter-form {
+            flex-direction: column;
+        }
+
+        .newsletter-input {
+            min-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section fade-in">
+    <div class="container">
+        <div class="hero-compass">🧭</div>
+        <h1 class="hero-title">MAEDIX</h1>
+        <p class="hero-tagline">AI Built Exclusively for Real Estate</p>
+        <p class="hero-subtext">
+            Automate property inquiries. Capture and qualify buyers — instantly.<br>
+            We're not trying to solve every industry. We're laser-focused on real estate. Maedix transforms how agents and agencies connect with prospects — automating lead response, buyer qualification, and follow-ups with real estate intelligence.
+        </p>
+    </div>
+</section>
+
+<!-- Problem Section -->
+<section class="section">
+    <div class="container">
+        <div class="problem-section">
+            <div class="problem-icon">🧩</div>
+            <h2 class="section-title">The Problem</h2>
+            <p class="section-subtitle">
+                Real estate agents lose qualified buyers every day. A property inquiry comes in at 9 PM — by the time you respond the next morning, they've already connected with three other agents.
+            </p>
+            <p class="section-subtitle" style="margin-bottom: 0;">
+                In real estate, speed is everything. The first agent to respond gets the listing. Your buyers expect instant answers about properties, pricing, and availability.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Solution Section -->
+<section class="section" style="padding-top: 0;">
+    <div class="container">
+        <div class="solution-section">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+            <h2 class="section-title">The Solution — Maedix Real Estate AI</h2>
+            <div class="solution-box">
+                <p style="font-size: 1.2rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem;">
+                    Maedix connects directly with your Instagram, WhatsApp, or website, detects every property inquiry, comment, or DM — and replies instantly with real estate-specific intelligence about listings, neighborhoods, pricing, and availability.
+                </p>
+                <p style="font-size: 1.2rem; color: var(--text-primary); font-weight: 600; margin-bottom: 0;">
+                    It doesn't just reply — it qualifies buyers. Our AI asks about budget, preferred locations, timeline, and financing — then scores and routes hot leads directly to your agents. Built by real estate professionals, for real estate professionals.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section" id="features">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+            <h2 class="section-title">Key Features</h2>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🏠</span>
+                <h3 class="feature-title">Real Estate AI Qualification</h3>
+                <p class="feature-description">Automatically qualifies buyers by asking about budget, location preferences, timeline, and financing. Trained on real estate conversations.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">📱</span>
+                <h3 class="feature-title">Property Inquiry Capture</h3>
+                <p class="feature-description">Works seamlessly with Instagram DMs, comments, and WhatsApp. Captures every "Is this available?" message instantly.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🔄</span>
+                <h3 class="feature-title">Smart Buyer Follow-Up</h3>
+                <p class="feature-description">Re-engages interested buyers who went silent. Sends property updates, price drops, and new listings that match their criteria.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3 class="feature-title">Agent Dashboard</h3>
+                <p class="feature-description">View all leads scored by buying intent. Assign hot prospects to your agents. See which properties generate the most inquiries.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">📈</span>
+                <h3 class="feature-title">Real Estate Analytics</h3>
+                <p class="feature-description">Track which listings get engagement, response times, and conversion rates. Optimize your marketing based on real data.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h3 class="feature-title">Instant Property Response</h3>
+                <p class="feature-description">Answer property questions in seconds. Share listing details, schedule viewings, and capture buyer information — all automatically.</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Why Maedix Section -->
+<section class="section" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%); padding: 6rem 0;">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
+            <h2 class="section-title">Why Maedix</h2>
+        </div>
+        
+        <div class="why-grid">
+            <div class="why-item">
+                <div class="why-icon">🎯</div>
+                <p class="why-text">Built exclusively for real estate — not a generic chatbot adapted for properties</p>
+            </div>
+
+            <div class="why-item">
+                <div class="why-icon">🔬</div>
+                <p class="why-text">Trained on thousands of real buyer-agent conversations and real estate terminology</p>
+            </div>
+
+            <div class="why-item">
+                <div class="why-icon">🌙</div>
+                <p class="why-text">Captures property inquiries 24/7 — never lose a lead to slow response times again</p>
+            </div>
+
+            <div class="why-item">
+                <div class="why-icon">📈</div>
+                <p class="why-text">Scales with your agency — from solo agents to large brokerages, no tech skills needed</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Future Vision Section -->
+<section class="section">
+    <div class="container">
+        <div class="future-section">
+            <div style="font-size: 3rem; margin-bottom: 1.5rem;">🏗️</div>
+            <h2 class="section-title">Designed for Real Estate's Future</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 800px; margin: 0 auto; line-height: 1.8;">
+                We're not spreading ourselves thin across multiple industries. Maedix is 100% focused on solving real estate challenges. Every feature we build is designed specifically for agents, brokers, and property developers. When you choose Maedix, you're choosing a partner that speaks your language and understands your business.
+            </p>
+            <div style="margin-top: 2rem;">
+                <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">Get Started with Maedix</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section" id="about">
+    <div class="container">
+        <div style="text-align: center; max-width: 900px; margin: 0 auto;">
+            <div style="font-size: 3rem; margin-bottom: 1.5rem;">⚙️</div>
+            <h2 class="section-title">About Us</h2>
+            <p class="section-subtitle" style="margin-bottom: 0;">
+                Maedix is an AI company built by real estate professionals who understand the industry's challenges. We're not building generic automation — we're creating intelligent tools specifically for agents and agencies. Our focus is singular: make real estate professionals more efficient at capturing, qualifying, and converting buyers through AI-powered conversations.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
