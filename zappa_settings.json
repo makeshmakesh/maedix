@@ -1,7 +1,7 @@
 {
     "dev": {
         "aws_region": "us-east-1",
-        "django_settings": "maedix.settings",
+        "django_settings": "maedix_core.settings",
         "exclude": [
             "boto3",
             "dateutil",
