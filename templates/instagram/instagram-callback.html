@@ -1,31 +1,203 @@
-<!DOCTYPE html>
-<html>
-  <head><meta charset="utf-8"><title>Instagram Auth</title></head>
-  <body>
-    <script>
-      (async function(){
-        // Parse the fragment after '#'
-        const params = new URLSearchParams(window.location.hash.substring(1));
+{% extends 'core/base.html' %}
 
-        const data = {
-          access_token: params.get('access_token'),
-          long_lived_token: params.get('long_lived_token'),
-          expires_in: params.get('expires_in'),
-          data_access_expiration_time: params.get('data_access_expiration_time'),
-          company_id: params.get('state'),
-        };
+{% block title %}Instagram Authorization - MAEDIX{% endblock %}
 
-        // Send the token data to your Django backend securely
-        await fetch(`/instagram/save-token/`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({
-            ...data
-          })
-        });
+{% block extra_css %}
+<style>
+    .auth-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        padding: 2rem;
+    }
 
-        document.body.innerHTML = "<h3>Instagram account connected successfully!</h3>";
-      })();
-    </script>
-  </body>
-</html>
+    .auth-card {
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .spinner-container {
+        margin-bottom: 2rem;
+    }
+
+    .spinner {
+        border: 4px solid rgba(59, 130, 246, 0.1);
+        border-top: 4px solid #3b82f6;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .auth-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .success-message {
+        display: none;
+    }
+
+    .success-message.show {
+        display: block;
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: bounceIn 0.8s ease forwards;
+    }
+
+    @keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        50% {
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .success-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #22c55e;
+        margin-bottom: 1rem;
+    }
+
+    .success-text {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        font-size: 1.05rem;
+    }
+
+    .redirect-button {
+        margin-top: 1.5rem;
+    }
+
+    .loading-state {
+        display: block;
+    }
+
+    .loading-state.hide {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card auth-card">
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+            </div>
+            <h2 class="auth-title">Connecting Instagram</h2>
+            <p class="auth-subtitle">Please wait while we authenticate your Instagram Business Account...</p>
+        </div>
+
+        <!-- Success State -->
+        <div class="success-message" id="successMessage">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Connected Successfully!</h2>
+            <p class="success-text">Your Instagram Business account has been connected to MAEDIX. You're all set to start automating your lead capture and engagement.</p>
+            
+            <div class="redirect-button">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                    Please wait, redirecting to dashboard...
+                </a>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div class="alert alert-danger" id="errorMessage" style="display: none;">
+            <h5>Connection Failed</h5>
+            <p id="errorText"></p>
+            <a href="javascript:history.back()" class="btn btn-outline-primary mt-2">Go Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (async function(){
+        try {
+            // Parse the fragment after '#'
+            const params = new URLSearchParams(window.location.hash.substring(1));
+
+            const data = {
+                access_token: params.get('access_token'),
+                long_lived_token: params.get('long_lived_token'),
+                expires_in: params.get('expires_in'),
+                data_access_expiration_time: params.get('data_access_expiration_time'),
+                company_id: params.get('state'),
+            };
+
+            // Validate required tokens
+            if (!data.access_token) {
+                throw new Error('No access token received from Instagram');
+            }
+
+            // Send the token data to your Django backend securely
+            const response = await fetch(`/instagram/save-token/`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(data)
+            });
+
+            // Check if response is successful (200-299)
+            if (response.ok) {
+                // Hide loading state
+                document.getElementById('loadingState').classList.add('hide');
+                
+                // Show success message
+                const successMessage = document.getElementById('successMessage');
+                successMessage.classList.add('show');
+
+                // Optional: Redirect after 3 seconds
+                setTimeout(() => {
+                     window.location.href = "{% url 'dashboard' %}";
+                 }, 3000);
+            } else {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+        } catch (error) {
+            console.error('Auth error:', error);
+            
+            // Hide loading state
+            document.getElementById('loadingState').classList.add('hide');
+            
+            // Show error message
+            const errorMessage = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = error.message || 'An unexpected error occurred. Please try again.';
+            errorMessage.style.display = 'block';
+        }
+    })();
+</script>
+{% endblock %}

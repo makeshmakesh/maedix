@@ -286,8 +286,8 @@ class ConversationMessage(models.Model):
 
     sender_type = CharField(
         choices=[
-            ("customer", "Customer"),
-            ("ai_bot", "AI Bot"),
+            ("user", "User"),
+            ("assistant", "AI Assistant"),
             ("human_agent", "Human Agent"),
         ]
     )
@@ -317,7 +317,7 @@ class ConversationMessage(models.Model):
         ordering = ["timestamp"]
 
     def __str__(self):
-        return str(self.lead.instagram_conversation_id) if self.lead.instagram_conversation_id else "Unknown"
+        return "Unknown"
 
 class QualificationQuestion(models.Model):
     """Questions AI asks to qualify leads"""

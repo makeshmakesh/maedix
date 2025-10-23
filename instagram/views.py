@@ -17,10 +17,81 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
 import urllib.parse
+import os
 
 logger = logging.getLogger(__name__)
 from realestate.models import Company, Lead
 from django.utils import timezone
+from typing import List, Optional
+from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync
+from agents import Agent, Runner
+
+
+class MyCustomSession:
+    """Custom session backed by the ConversationMessage model."""
+
+    def __init__(self, conversation_id: str):
+        self.conversation_id = conversation_id
+
+    async def get_items(self, limit: Optional[int] = None) -> List[dict]:
+        """Retrieve messages for this conversation."""
+        queryset = ConversationMessage.objects.filter(
+            conversation_id=self.conversation_id
+        ).order_by("timestamp")
+        if limit:
+            queryset = queryset[:limit]
+        messages = await sync_to_async(list)(queryset)
+        res = []
+        for m in messages:
+            if m.message_text:
+                res.append({"role": m.sender_type, "content": m.message_text})
+        return res
+
+    async def add_items(self, items: List[dict]) -> None:
+        """Store new messages."""
+        objs = []
+        for item in items:
+            objs.append(
+                ConversationMessage(
+                    conversation_id=self.conversation_id,
+                    sender_type=item.get("sender_type", "assistant"),
+                    message_text=item.get("message_text", ""),
+                    message_type=item.get("message_type", "follow_up"),
+                    extracted_data=item.get("extracted_data", {}),
+                    confidence_score=item.get("confidence_score"),
+                    is_from_instagram=item.get("is_from_instagram", False),
+                )
+            )
+        await sync_to_async(ConversationMessage.objects.bulk_create)(objs)
+
+    async def pop_item(self) -> Optional[dict]:
+        """Remove and return the latest message."""
+        latest = await sync_to_async(
+            lambda: ConversationMessage.objects.filter(
+                conversation_id=self.conversation_id
+            )
+            .order_by("-timestamp")
+            .first()
+        )()
+        if not latest:
+            return None
+        data = {
+            "sender_type": latest.sender_type,
+            "message_text": latest.message_text,
+            "timestamp": latest.timestamp.isoformat(),
+            "message_type": latest.message_type,
+        }
+        await sync_to_async(latest.delete)()
+        return data
+
+    async def clear_session(self) -> None:
+        """Delete all messages for this conversation."""
+        await sync_to_async(
+            lambda: ConversationMessage.objects.filter(
+                conversation_id=self.conversation_id
+            ).delete()
+        )()
 
 
 def parse_instagram_payload(data: dict):
@@ -64,13 +135,38 @@ class InstagramWebHookView(View):
             return HttpResponse(challenge)
         return HttpResponse("Invalid verification token", status=403)
 
-    def form_llm_context(self, conversation_id):
-        convos = ConversationMessage.objects.filter(conversation_id=conversation_id)
-        response = []
-        for convo in convos:
-            data = {"message": convo.message_text, "role": convo.sender_type}
-            response.append(data)
-        return response
+    async def get_reply_from_llm_async(self, conversation_id, user_message):
+        """Uses OpenAI Agent to get a contextual LLM reply."""
+        session = MyCustomSession(conversation_id)
+        messages = await session.get_items()
+        print("History going to LLM:", messages)
+        agent = Agent(
+            name="Instagram Real estate Assistant",
+            model="gpt-4",
+            instructions="Reply very concisely.",
+        )
+        result = await Runner.run(agent, input=user_message, session=session)
+        return result.final_output
+
+    def get_reply_from_llm(self, conversation_id, user_message):
+        return async_to_sync(self.get_reply_from_llm_async)(
+            conversation_id, user_message
+        )
+
+    def reply_to_message(
+        self, company_business_ig_id, recipient_ig_id, message, access_token
+    ):
+        url = f"https://graph.instagram.com/v24.0/{company_business_ig_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
+        data = {"recipient": {"id": recipient_ig_id}, "message": {"text": message}}
+
+        response = requests.post(url, json=data, headers=headers)
+        return response.json()
+
+        return {}
 
     def handle_message(self, data: dict):
         if not data["recipient"]:
@@ -84,9 +180,8 @@ class InstagramWebHookView(View):
             pass
         try:
             company_instagram_account = InstagramAccount.objects.get(
-                instagram_business_account_id=data["recipient"]
+                fb_data__instagram_business_account_id=data["recipient"]
             )
-            print("111111111111111", company_instagram_account, data["recipient"])
         except InstagramAccount.DoesNotExist:
             return {}
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
@@ -102,50 +197,54 @@ class InstagramWebHookView(View):
                 "last_interaction_at": timezone.now(),
             },
         )
-        conversation_message = ConversationMessage.objects.create(
-            lead=lead,
-            conversation_id=conversation_id,
-            sender_type="Customer",
-            message_text=str(data["message"]),
-            message_type="initial_inquiry",
-            instagram_message_id=data["message_id"],
+
+        # Initialize the custom session
+        session = MyCustomSession(conversation_id)
+        # Store the user's message via session abstraction
+        async_to_sync(session.add_items)(
+            [
+                {
+                    "sender_type": "user",
+                    "message_text": str(data["message"]),
+                    "message_type": "initial_inquiry",
+                    "extracted_data": {},
+                    "confidence_score": None,
+                    "is_from_instagram": True,
+                }
+            ]
         )
-        context = self.form_llm_context(conversation_id=conversation_id)
+        reply_message = self.get_reply_from_llm(conversation_id, data["message"])
 
-    def handle_comment_without_listing(self, data: dict):
-        print("Handling a comment ,which does not have a listing with maedix")
-        return {}
+        # Send reply via Instagram API
+        response_to_user = self.reply_to_message(
+            recipient_ig_id=data["sender"],
+            company_business_ig_id=data["recipient"],
+            message=reply_message,
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+        print("Response to user", response_to_user)
 
-    def reply_to_comment(self, ig_comment_id, message, access_token):
-        url = f"https://graph.facebook.com/v24.0/{ig_comment_id}/replies"
-        headers = {"Content-Type": "application/json"}
-        payload = {"message": message, "access_token": access_token}
-
-        response = requests.post(url, json=payload, headers=headers)
-        return response.json()
-
-    def handle_comments(self, data: dict):
-        print("Comment data", data)
-        post_id = data.get("post_id", "")
-        if not post_id:
-            return {}
-        company_listing_of_post_id = None
-        try:
-            company_listing_of_post_id = PropertyListing.objects.get(
-                instagram_post_id=post_id
-            )
-        except PropertyListing.DoesNotExist:
-            return self.handle_comment_without_listing(data=data)
-        print("User commented on listing", company_listing_of_post_id.title)
-        return self.reply_to_comment()
+        # Store assistant reply
+        async_to_sync(session.add_items)(
+            [
+                {
+                    "sender_type": "assistant",
+                    "message_text": reply_message,
+                    "message_type": "follow_up",
+                    "extracted_data": {},
+                    "confidence_score": 1.0,
+                    "is_from_instagram": True,
+                }
+            ]
+        )
 
     def post(self, request):
         print("Webhook data", request.body)
         data = parse_instagram_payload(json.loads(request.body))
         if data["webhook_type"] == "message":
             response = self.handle_message(data=data)
-        if data["webhook_type"] == "comment":
-            response = self.handle_comments(data=data)
+        # if data["webhook_type"] == "comment":
+        #     response = self.handle_comments(data=data)
         return JsonResponse({"status": "received"})
 
 
@@ -163,28 +262,28 @@ class InstagramWebHookSubscribe(View):
                     status=400,
                 )
 
-            if not instagram_account.access_token:
+            if not instagram_account.instagram_data["access_token"]:
                 return JsonResponse(
                     {"success": False, "error": "No access token available"}, status=400
                 )
 
             # Call Instagram Graph API to subscribe to messages
-            page_id = instagram_account.page_data["id"]
-            access_token = instagram_account.page_data["access_token"]
-            if not page_id or not access_token:
+            user_id = instagram_account.instagram_data["instagram_app_user_id"]
+            access_token = instagram_account.instagram_data["access_token"]
+            if not user_id or not access_token:
                 return JsonResponse(
                     {"success": False, "error": "Invalid page data"}, status=400
                 )
 
-            url = f"https://graph.facebook.com/v21.0/{page_id}/subscribed_apps"
+            url = f"https://graph.instagram.com/v24.0/{user_id}/subscribed_apps"
 
             params = {
-                "subscribed_fields": "feed,messages",
+                "subscribed_fields": "comments,messages",
                 "access_token": access_token,
             }
 
             logger.info(
-                f"Subscribing to message events for Instagram account: {page_id}"
+                f"Subscribing to message events for Instagram account: {user_id}"
             )
 
             response = requests.post(url, params=params, timeout=10)
@@ -194,8 +293,8 @@ class InstagramWebHookSubscribe(View):
 
             if response.status_code == 200 and response_data.get("success"):
                 # Update the webhook_subscribed field
-                instagram_account.webhook_subscribed = True
-                instagram_account.save(update_fields=["webhook_subscribed"])
+                instagram_account.instagram_data["webhook_subscribed"] = True
+                instagram_account.save(update_fields=["instagram_data"])
 
                 return JsonResponse(
                     {
@@ -228,18 +327,30 @@ class InstagramConnectView(LoginRequiredMixin, View):
 
     def get(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
-
-        # Check if Instagram is already connected
-        instagram_connected = (
-            hasattr(company, "instagram_account")
-            and company.instagram_account.is_active
+        instagram_data = (
+            company.instagram_account.instagram_data
+            if company and hasattr(company, "instagram_account")
+            else None
         )
+        fb_data = (
+            company.instagram_account.fb_data
+            if company and hasattr(company, "instagram_account")
+            else None
+        )
+        fb_connected = fb_data is not None
+        instagram_connected = instagram_data is not None
         instagram_account = company.instagram_account if instagram_connected else None
 
         context = {
             "company": company,
             "instagram_connected": instagram_connected,
             "instagram_account": instagram_account,
+            "fb_connected": fb_connected,
+            "webhook_subscribed": (
+                instagram_account.instagram_data.get("webhook_subscribed")
+                if instagram_connected
+                else False
+            ),
         }
 
         return render(request, "instagram/connect-instagram.html", context)
@@ -253,7 +364,7 @@ class InstagramOAuthRedirectView(LoginRequiredMixin, View):
         )
         data = {conf.key: conf.value for conf in configs}
 
-        redirect_uri = f"{data["app_root_url"]}/instagram/callback"
+        redirect_uri = f"{data["app_root_url"]}/instagram/callback/instagram"
 
         scopes = [
             "instagram_business_basic",
@@ -284,18 +395,16 @@ class FBOAuthRedirectView(LoginRequiredMixin, View):
         configs = Configuration.objects.filter(key__in=["app_root_url", "fb_app_id"])
         data = {conf.key: conf.value for conf in configs}
 
-        redirect_uri = f"{data["app_root_url"]}/instagram/callback"
+        redirect_uri = f"{data["app_root_url"]}/instagram/callback/fb"
 
         scopes = [
             "instagram_basic",
-            "instagram_content_publish",
             "instagram_manage_comments",
             "instagram_manage_messages",
-            "pages_show_list",
             "pages_read_engagement",
             "business_management",
-            "pages_messaging",
-            "pages_manage_metadata"
+            "pages_show_list",
+            "instagram_manage_insights",
         ]
 
         params = {
@@ -305,6 +414,7 @@ class FBOAuthRedirectView(LoginRequiredMixin, View):
             "scope": ",".join(scopes),
             "force_reauth": True,
             "state": company_id,
+            "auth_type": "rerequest",
         }
 
         oauth_url = "https://www.facebook.com/dialog/oauth?" + urllib.parse.urlencode(
@@ -318,44 +428,50 @@ VERIFY_TOKEN = "Speed#123"
 
 @csrf_exempt
 def instagram_save_token(request):
-    payload = json.loads(request.body.decode())
-    long_lived_token = payload.get("long_lived_token")
-    token_expires_at = datetime.now() + timedelta(seconds=5184000)
-    company_id = payload.get("company_id")
-    url = "https://graph.facebook.com/v24.0/me/accounts"
-    params = {
-        "fields": "id,name,access_token,instagram_business_account",
-        "access_token": long_lived_token,
-    }
+    try:
+        payload = json.loads(request.body.decode())
+        long_lived_token = payload.get("long_lived_token")
+        token_expires_at = datetime.now() + timedelta(seconds=5184000)
+        company_id = payload.get("company_id")
+        url = "https://graph.facebook.com/v24.0/me/accounts"
+        params = {
+            "fields": "id,name,access_token,instagram_business_account",
+            "access_token": long_lived_token,
+        }
 
-    response = requests.get(url, params=params)
-    user_data = response.json()
-    company = get_object_or_404(Company, id=company_id)
-    response_data = user_data.get("data", [])
-    if not response_data:
-        return JsonResponse(
-            {"status": "error", "message": "Failed to fetch user data"}, status=400
-        )
-    user_info = response_data[0].get("instagram_business_account", {})
-    if not user_info:
-        return JsonResponse(
-            {"status": "error", "message": "No Instagram business account found"},
-            status=400,
-        )
-    instagram_business_account_id = user_info.get("id", "")
-    print("Connected user info", instagram_business_account_id, company_id)
-    instagram_account, created = InstagramAccount.objects.update_or_create(
-        company=company,
-        defaults={
+        response = requests.get(url, params=params)
+        user_data = response.json()
+        print("Facebook page data", user_data)
+        company = get_object_or_404(Company, id=company_id)
+        response_data = user_data.get("data", [])
+        if not response_data:
+            return JsonResponse(
+                {"status": "error", "message": "Failed to fetch user data"}, status=400
+            )
+        user_info = response_data[0].get("instagram_business_account", {})
+        if not user_info:
+            return JsonResponse(
+                {"status": "error", "message": "No Instagram business account found"},
+                status=400,
+            )
+        instagram_business_account_id = user_info.get("id", "")
+        print("Connected user info", instagram_business_account_id, company_id)
+        fb_data = {
             "instagram_business_account_id": instagram_business_account_id,
             "username": user_info.get("username", ""),
             "access_token": long_lived_token,
-            "token_expires_at": token_expires_at,
+            "token_expires_at": str(token_expires_at),
             "is_active": True,
-            "page_data" : response_data[0],
-        },
-    )
-    return JsonResponse({"status": "ok"})
+            "page_data": response_data[0],
+        }
+        instagram_account, created = InstagramAccount.objects.update_or_create(
+            company=company,
+            defaults={"fb_data": fb_data},
+        )
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        print("Error saving Instagram token", str(e))
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 class FBCallbackView(LoginRequiredMixin, View):
@@ -395,7 +511,9 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             messages.error(request, f"Missing configuration: {', '.join(missing_keys)}")
             return redirect("instagram_connect", company_id=company_id)
 
-        redirect_uri = f"{config_data['app_root_url'].rstrip('/')}/instagram/callback"
+        redirect_uri = (
+            f"{config_data['app_root_url'].rstrip('/')}/instagram/callback/instagram"
+        )
 
         try:
             # ---- Step 1: Exchange code for short-lived token ----
@@ -443,7 +561,7 @@ class InstagramCallbackView(LoginRequiredMixin, View):
 
             # ---- Step 3: Fetch IG user details ----
             user_info_response = requests.get(
-                "https://graph.instagram.com/v21.0/me/accounts",
+                "https://graph.instagram.com/v21.0/me",
                 params={
                     "fields": "id,username",
                     "access_token": access_token,
@@ -459,15 +577,16 @@ class InstagramCallbackView(LoginRequiredMixin, View):
             print("Connected user info", user_info)
 
             # ---- Step 4: Update or create InstagramAccount ----
+            instagram_data = {
+                "instagram_app_user_id": user_info.get("id", ""),
+                "username": user_info.get("username", ""),
+                "access_token": access_token,
+                "token_expires_at": str(token_expires_at),
+                "is_active": True,
+            }
             instagram_account, created = InstagramAccount.objects.update_or_create(
                 company=company,
-                defaults={
-                    "instagram_business_account_id": user_info.get("id", ""),
-                    "username": user_info.get("username", ""),
-                    "access_token": access_token,
-                    "token_expires_at": token_expires_at,
-                    "is_active": True,
-                },
+                defaults={"instagram_data": instagram_data},
             )
 
             action = "connected" if created else "updated"
@@ -521,3 +640,31 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
         return JsonResponse(
             {"success": False, "error": "Method not allowed"}, status=405
         )
+
+        """def handle_comment_without_listing(self, data: dict):
+        print("Handling a comment ,which does not have a listing with maedix")
+        return {}
+
+    def reply_to_comment(self, ig_comment_id, message, access_token):
+        url = f"https://graph.facebook.com/v24.0/{ig_comment_id}/replies"
+        headers = {"Content-Type": "application/json"}
+        payload = {"message": message, "access_token": access_token}
+
+        response = requests.post(url, json=payload, headers=headers)
+        return response.json()
+
+    def handle_comments(self, data: dict):
+        print("Comment data", data)
+        post_id = data.get("post_id", "")
+        if not post_id:
+            return {}
+        company_listing_of_post_id = None
+        try:
+            company_listing_of_post_id = PropertyListing.objects.get(
+                instagram_post_id=post_id
+            )
+        except PropertyListing.DoesNotExist:
+            return self.handle_comment_without_listing(data=data)
+        print("User commented on listing", company_listing_of_post_id.title)
+        return self.reply_to_comment()
+        """

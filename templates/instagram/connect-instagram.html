@@ -461,9 +461,9 @@
                         <div class="account-username">@{{ instagram_account.username }}</div>
                     </div>
                 </div>
-                <div class="subscription-status {% if instagram_account.webhook_subscribed %}active{% else %}inactive{% endif %}">
-            <span>{% if instagram_account.webhook_subscribed %}✓{% else %}✗{% endif %}</span>
-            <span>Webhook Events: {% if instagram_account.webhook_subscribed %}Active{% else %}Inactive{% endif %}</span>
+                <div class="subscription-status {% if webhook_subscribed %}active{% else %}inactive{% endif %}">
+            <span>{% if webhook_subscribed %}✓{% else %}✗{% endif %}</span>
+            <span>Webhook Events: {% if webhook_subscribed %}Active{% else %}Inactive{% endif %}</span>
         </div>
                 {% endif %}
             </div>
@@ -537,7 +537,7 @@
                     <span>🔌</span>
                     <span>Disconnect Instagram</span>
                 </button>
-                    {% if instagram_account and not instagram_account.webhook_subscribed %}
+                    {% if instagram_account and not webhook_subscribed %}
     <button type="button" class="btn-instagram btn-subscribe" onclick="subscribeToMessages()">
         <span>🔔</span>
         <span>Subscribe to Webhook Events</span>
@@ -549,6 +549,23 @@
                     <button type="submit" class="btn-instagram btn-connect" id="connectBtn">
                         <span>📱</span>
                         <span>Connect with Instagram</span>
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if fb_connected %}
+                <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectInstagram()">
+                    <span>🔌</span>
+                    <span>Disconnect FB</span>
+                </button>
+                    {% if instagram_account and not instagram_account.webhook_subscribed %}
+    {% endif %}
+            {% else %}
+                <form method="post" action="{% url 'fb_oauth' company.id %}" id="connectForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-instagram btn-connect" id="connectBtn">
+                        <span>📱</span>
+                        <span>Connect with FB</span>
                     </button>
                 </form>
             {% endif %}
