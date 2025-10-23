@@ -13,7 +13,7 @@ from django.db.models import (
     ForeignKey,
     FloatField
 )
-
+from pgvector.django import VectorField
 
 class PropertyListing(models.Model):
     PROPERTY_TYPES = [
@@ -51,7 +51,7 @@ class PropertyListing(models.Model):
     company = models.ForeignKey(
         "Company", on_delete=models.CASCADE, related_name="properties"
     )
-
+    embedding = VectorField(dimensions=3072, null=True)
     # Core property details
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -278,7 +278,7 @@ class Lead(models.Model):
         return self.instagram_username
 
 
-class ConversationMessage(models.Model):
+class ConversationMessage(models.Model): 
     """Track every message in the qualification conversation"""
 
     lead = ForeignKey(Lead, related_name="messages",null=True, on_delete=models.SET_NULL)

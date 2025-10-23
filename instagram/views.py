@@ -26,13 +26,15 @@ from typing import List, Optional
 from asgiref.sync import sync_to_async
 from asgiref.sync import async_to_sync
 from agents import Agent, Runner
-
+import threading
+from .utils import extract_lead_data_async
 
 class MyCustomSession:
     """Custom session backed by the ConversationMessage model."""
 
-    def __init__(self, conversation_id: str):
+    def __init__(self, conversation_id: str, lead):
         self.conversation_id = conversation_id
+        self.lead = lead
 
     async def get_items(self, limit: Optional[int] = None) -> List[dict]:
         """Retrieve messages for this conversation."""
@@ -52,8 +54,11 @@ class MyCustomSession:
         """Store new messages."""
         objs = []
         for item in items:
+            if not item.get("message_text", ""):
+                continue
             objs.append(
                 ConversationMessage(
+                    lead=self.lead,
                     conversation_id=self.conversation_id,
                     sender_type=item.get("sender_type", "assistant"),
                     message_text=item.get("message_text", ""),
@@ -61,6 +66,7 @@ class MyCustomSession:
                     extracted_data=item.get("extracted_data", {}),
                     confidence_score=item.get("confidence_score"),
                     is_from_instagram=item.get("is_from_instagram", False),
+                    instagram_message_id=item.get("instagram_message_id", None)
                 )
             )
         await sync_to_async(ConversationMessage.objects.bulk_create)(objs)
@@ -126,8 +132,26 @@ def parse_instagram_payload(data: dict):
         return {}
 
 
+from .utils import find_relevant_properties
+
+
 @method_decorator(csrf_exempt, name="dispatch")
 class InstagramWebHookView(View):
+    
+    
+    def update_lead_from_ai(self, lead, update_data: dict):
+        changed = False
+        for field, value in update_data.items():
+            if value is not None and hasattr(lead, field):
+                setattr(lead, field, value)
+                changed = True
+
+        # Optionally update summary and timestamp
+        if update_data.get("summary"):
+            lead.ai_conversation_summary = update_data["summary"]
+        if changed:
+            lead.last_interaction_at = timezone.now()
+            lead.save()
     def get(self, request):
         token_sent = request.GET.get("hub.verify_token")
         challenge = request.GET.get("hub.challenge")
@@ -137,13 +161,52 @@ class InstagramWebHookView(View):
 
     async def get_reply_from_llm_async(self, conversation_id, user_message):
         """Uses OpenAI Agent to get a contextual LLM reply."""
-        session = MyCustomSession(conversation_id)
+        session = MyCustomSession(conversation_id, self.lead)
+        context_snippets = await sync_to_async(find_relevant_properties)(user_message)
+        context_text = "\n".join(context_snippets)
         messages = await session.get_items()
         print("History going to LLM:", messages)
         agent = Agent(
-            name="Instagram Real estate Assistant",
-            model="gpt-4",
-            instructions="Reply very concisely.",
+            name="Instagram Real Estate Assistant",
+            model="gpt-4-turbo",
+            instructions=f"""
+        You are a friendly, proactive real estate assistant for {self.company.name}, 
+        chatting with potential buyers via Instagram DMs. 
+        Your tone should be warm, conversational, and helpful — like a real person from the company, 
+        not a scripted bot.
+
+        Your goal is to pre-qualify the lead by naturally collecting key details:
+        • Name (if not already known)
+        • Preferred location or neighborhood
+        • Budget range (minimum and maximum if possible)
+        • Property type (apartment, villa, land, etc.)
+        • Number of bedrooms or other requirements
+        • Purchase timeline (immediate, 1–3 months, 3–6 months, or just browsing)
+        • Payment method (cash, home loan, or both)
+        • Whether they already own or are selling another property
+        • Contact number (and optionally email) for follow-up
+
+        Ask questions one at a time, in a natural conversational way — never like a form. 
+        If the user is vague (“looking for something affordable”), politely ask clarifying questions 
+        (“Got it! To suggest the right options, may I know roughly what budget range you have in mind?”).
+
+        Once you gather enough details, suggest the most relevant property listings from the context below 
+        and explain *why* each might be a good fit. Mention specific features like location, price, 
+        or amenities that match their preferences.
+
+        If the user shows strong buying intent (e.g., shares budget and timeline), 
+        update their qualification stage to “qualified” and encourage them to share a phone number 
+        for the agent to reach out.
+
+        If they’re unsure or just browsing, remain polite and informative — 
+        offer to share a few listings they can look at later.
+
+        Always stay concise, friendly, and responsive to their tone. 
+        Avoid repeating the same questions. Be genuinely helpful.
+
+        Property data for reference:
+        {context_text}
+        """,
         )
         result = await Runner.run(agent, input=user_message, session=session)
         return result.final_output
@@ -185,6 +248,7 @@ class InstagramWebHookView(View):
         except InstagramAccount.DoesNotExist:
             return {}
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
+        self.company = company_instagram_account.company
         lead, created = Lead.objects.update_or_create(
             instagram_conversation_id=conversation_id,
             defaults={
@@ -197,9 +261,10 @@ class InstagramWebHookView(View):
                 "last_interaction_at": timezone.now(),
             },
         )
+        self.lead= lead
 
         # Initialize the custom session
-        session = MyCustomSession(conversation_id)
+        session = MyCustomSession(conversation_id, self.lead)
         # Store the user's message via session abstraction
         async_to_sync(session.add_items)(
             [
@@ -210,6 +275,7 @@ class InstagramWebHookView(View):
                     "extracted_data": {},
                     "confidence_score": None,
                     "is_from_instagram": True,
+                    "instagram_message_id": message_id,
                 }
             ]
         )
@@ -223,7 +289,11 @@ class InstagramWebHookView(View):
             access_token=company_instagram_account.instagram_data["access_token"],
         )
         print("Response to user", response_to_user)
-
+        threading.Thread(
+    target=extract_lead_data_async,
+    args=(self.lead.id,),
+    daemon=True
+).start()
         # Store assistant reply
         async_to_sync(session.add_items)(
             [
@@ -234,6 +304,7 @@ class InstagramWebHookView(View):
                     "extracted_data": {},
                     "confidence_score": 1.0,
                     "is_from_instagram": True,
+                    "instagram_message_id": response_to_user.get("message_id"),
                 }
             ]
         )
