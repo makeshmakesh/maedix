@@ -1,13 +1,14 @@
 # pylint:disable=all
 from django.views import View
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Membership, Company, PropertyListing
+from .models import Membership, Company, PropertyListing, Lead
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.contrib import messages
 import requests
 from django.contrib.auth.decorators import login_required
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 
 def calculate_lead_score(lead):
@@ -78,7 +79,114 @@ class ListingsView(LoginRequiredMixin, View):
 
         return render(request, "realestate/listings.html", context)
 
+class LeadsView(LoginRequiredMixin, View):
+    paginate_by = 15  # Leads per page
+    
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
 
+        # Start with all leads for this company
+        leads = Lead.objects.filter(company=company).order_by("-created_at")
+
+        # Apply filters
+        leads = self._apply_filters(leads, request)
+
+        # Calculate lead scores
+        leads_list = list(leads)
+        for lead in leads_list:
+            lead.lead_score = calculate_lead_score(lead)
+
+        # Pagination
+        paginator = Paginator(leads_list, self.paginate_by)
+        page = request.GET.get('page', 1)
+
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        # Calculate stats
+        leads_count = len(leads_list)
+        qualified_count = sum(
+            1 for lead in leads_list 
+            if lead.status in ['qualified_hot', 'qualified_warm', 'qualified_cold']
+        )
+        hot_count = sum(1 for lead in leads_list if lead.status == 'qualified_hot')
+
+        context = {
+            "company": company,
+            "page_obj": page_obj,
+            "paginator": paginator,
+            "is_paginated": paginator.num_pages > 1,
+            "leads_count": leads_count,
+            "qualified_count": qualified_count,
+            "hot_count": hot_count,
+            "leads": leads_list
+        }
+
+        return render(request, "realestate/leads.html", context)
+
+    def _apply_filters(self, queryset, request):
+        """Apply filtering based on query parameters"""
+        
+        # Status filter
+        status = request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # Intent level filter
+        intent = request.GET.get('intent')
+        if intent:
+            queryset = queryset.filter(intent_level=intent)
+
+        # Source filter
+        # Search filter (username or email)
+        search = request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(instagram_username__icontains=search) |
+                Q(email__icontains=search) |
+                Q(customer_name__icontains=search)
+            )
+        return queryset
+class LeadDetailView(LoginRequiredMixin, View):
+    def get(self, request, company_id, lead_id):
+        company = get_object_or_404(Company, id=company_id)
+        lead = get_object_or_404(Lead, id=lead_id, company=company)
+
+        # Calculate lead score
+        lead.score = calculate_lead_score(lead)
+
+        context = {
+            "company": company,
+            "lead": lead,
+        }
+
+        return render(request, "realestate/lead-detail.html", context)
+    
+    def post(self, request, company_id, lead_id):
+        lead = get_object_or_404(Lead, id=lead_id, company_id=company_id)
+        
+        # Update fields
+        lead.customer_name = request.POST.get('customer_name', lead.customer_name)
+        lead.email = request.POST.get('email', lead.email)
+        lead.phone_number = request.POST.get('phone_number', lead.phone_number)
+        lead.qualification_status = request.POST.get('qualification_status', lead.qualification_status)
+        lead.status = request.POST.get('status', lead.status)
+        lead.intent_level = request.POST.get('intent_level', lead.intent_level)
+        lead.budget_min = request.POST.get('budget_min') or None
+        lead.budget_max = request.POST.get('budget_max') or None
+        lead.timeline = request.POST.get('timeline') or None
+        lead.payment_method = request.POST.get('payment_method', lead.payment_method)
+        lead.preferred_location = request.POST.get('preferred_location', lead.preferred_location)
+        lead.is_first_time_buyer = 'is_first_time_buyer' in request.POST
+        lead.has_property_to_sell = 'has_property_to_sell' in request.POST
+        lead.agent_notes = request.POST.get('agent_notes', lead.agent_notes)
+        lead.save()
+        
+        return redirect('lead-detail', company_id=company_id, lead_id=lead_id)
 class ListingCreateView(LoginRequiredMixin, View):
     def post(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)

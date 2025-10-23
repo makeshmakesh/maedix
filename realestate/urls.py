@@ -38,6 +38,18 @@ urlpatterns = [
         name="get_instagram_posts",
     ),
     path('company/<int:company_id>/listing/<int:listing_id>/delete/', views.ListingDeleteView.as_view(), name='delete_listing'),
+    
+        path(
+        "company/<int:company_id>/leads/",
+        views.LeadsView.as_view(),
+        name="leads",
+    ),
+    path(
+        "company/<int:company_id>/lead-detail/<int:lead_id>",
+        views.LeadDetailView.as_view(),
+        name="lead-detail",
+    ),
+        
 ]
 
 
