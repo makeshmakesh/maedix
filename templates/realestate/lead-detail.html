@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block title %}Lead: {{ lead.instagram_username }} - MAEDIX{% endblock %}
+{% block title %}Edit Lead: {{ lead.instagram_username }} - MAEDIX{% endblock %}
 
 {% block content %}
 <div class="lead-detail-container">
@@ -10,31 +10,68 @@
             <a href="{% url 'leads' lead.company.id %}" class="back-link">← Back to Leads</a>
         </div>
         <div class="header-title">
-            <h1>@{{ lead.instagram_username }}</h1>
+            <h1>Edit Lead: @{{ lead.instagram_username }}</h1>
             <span class="status-badge status-{{ lead.status }}">{{ lead.get_status_display }}</span>
-            <button class="btn btn-secondary btn-sm" id="edit-toggle">Edit Lead</button>
         </div>
     </div>
 
-    <!-- Edit Form (Hidden by default) -->
-    <div id="edit-form" class="edit-form-container" style="display: none;">
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+        <div class="stat-item">
+            <div class="stat-icon" style="color: #00d4ff;">⭐</div>
+            <div class="stat-info">
+                <div class="stat-label">Lead Score</div>
+                <div class="stat-value">{{ score }}/100</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon" style="color: #22c55e;">🎯</div>
+            <div class="stat-info">
+                <div class="stat-label">Intent Level</div>
+                <div class="stat-value">{{ lead.get_intent_level_display }}</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon" style="color: #3b82f6;">📱</div>
+            <div class="stat-info">
+                <div class="stat-label">Source</div>
+                <div class="stat-value">{% if lead.source_type == 'instagram_dm' %}Instagram DM{% else %}Instagram Comment{% endif %}</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon" style="color: #f59e0b;">📅</div>
+            <div class="stat-info">
+                <div class="stat-label">Created</div>
+                <div class="stat-value">{{ lead.created_at|date:"M d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form (Shown by default) -->
+    <div class="edit-form-container">
         <form method="post" id="lead-edit-form">
             {% csrf_token %}
+            
             <div class="edit-form-grid">
                 <!-- Customer Info Section -->
                 <div class="form-section">
                     <h3>Customer Information</h3>
                     <div class="form-group">
-                        <label for="customer_name">Name</label>
-                        <input type="text" id="customer_name" name="customer_name" value="{{ lead.customer_name|default:'' }}" class="form-input">
+                        <label for="customer_name">Full Name</label>
+                        <input type="text" id="customer_name" name="customer_name" value="{{ lead.customer_name|default:'' }}" class="form-input" placeholder="Enter customer name">
                     </div>
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" value="{{ lead.email|default:'' }}" class="form-input">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ lead.email|default:'' }}" class="form-input" placeholder="customer@example.com">
                     </div>
                     <div class="form-group">
-                        <label for="phone_number">Phone</label>
-                        <input type="tel" id="phone_number" name="phone_number" value="{{ lead.phone_number|default:'' }}" class="form-input">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="tel" id="phone_number" name="phone_number" value="{{ lead.phone_number|default:'' }}" class="form-input" placeholder="+1 (555) 000-0000">
+                    </div>
+                    <div class="form-group">
+                        <label for="instagram_username">Instagram Username</label>
+                        <input type="text" id="instagram_username" name="instagram_username" value="{{ lead.instagram_username }}" class="form-input" readonly>
+                        <small class="form-hint">Username cannot be changed</small>
                     </div>
                 </div>
 
@@ -81,16 +118,16 @@
                     <h3>Budget & Timeline</h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="budget_min">Min Budget ($)</label>
-                            <input type="number" id="budget_min" name="budget_min" value="{{ lead.budget_min|default:'' }}" step="1000" class="form-input">
+                            <label for="budget_min">Minimum Budget ($)</label>
+                            <input type="number" id="budget_min" name="budget_min" value="{{ lead.budget_min|default:'' }}" step="1000" class="form-input" placeholder="50000">
                         </div>
                         <div class="form-group">
-                            <label for="budget_max">Max Budget ($)</label>
-                            <input type="number" id="budget_max" name="budget_max" value="{{ lead.budget_max|default:'' }}" step="1000" class="form-input">
+                            <label for="budget_max">Maximum Budget ($)</label>
+                            <input type="number" id="budget_max" name="budget_max" value="{{ lead.budget_max|default:'' }}" step="1000" class="form-input" placeholder="500000">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="timeline">Timeline</label>
+                        <label for="timeline">Purchase Timeline</label>
                         <select id="timeline" name="timeline" class="form-select">
                             <option value="">Not Specified</option>
                             <option value="immediate" {% if lead.timeline == 'immediate' %}selected{% endif %}>Immediate (0-2 weeks)</option>
@@ -116,7 +153,7 @@
                     <h3>Property Information</h3>
                     <div class="form-group">
                         <label for="preferred_location">Preferred Location</label>
-                        <input type="text" id="preferred_location" name="preferred_location" value="{{ lead.preferred_location|default:'' }}" class="form-input">
+                        <input type="text" id="preferred_location" name="preferred_location" value="{{ lead.preferred_location|default:'' }}" class="form-input" placeholder="e.g., Downtown, Suburb Area">
                     </div>
                     <div class="form-group">
                         <label>Buyer Type</label>
@@ -132,332 +169,140 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Human Agent Handoff Section -->
+                <div class="form-section">
+                    <h3>Human Agent Handoff</h3>
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="requires_human" name="requires_human" {% if lead.requires_human %}checked{% endif %}>
+                            Requires Human Agent Follow-up
+                        </label>
+                    </div>
+                    
+                    <div id="agent-assignment" class="agent-assignment-section" style="display: {% if lead.requires_human %}block{% else %}none{% endif %};">
+                        <div class="form-group">
+                            <label for="human_agent_assigned">Assign to Agent</label>
+                            <select id="human_agent_assigned" name="human_agent_assigned" class="form-select">
+                                <option value="">-- Select Agent --</option>
+                                {% for agent in available_agents %}
+                                    <option value="{{ agent.user.id }}" {% if lead.human_agent_assigned.id == agent.user.id %}selected{% endif %}>
+                                        {{ agent.user.first_name }} {{ agent.user.last_name }} ({{ agent.user.email }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="handoff_reason">Handoff Reason</label>
+                            <textarea id="handoff_reason" name="handoff_reason" class="form-textarea" placeholder="Explain why this lead requires human agent follow-up..." style="min-height: 100px;">{{ lead.handoff_reason }}</textarea>
+                        </div>
+
+                        <div class="form-group info-box">
+                            <span class="info-icon">ℹ️</span>
+                            <span>Handoff date will be automatically set to current time when assigned.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Notes Section -->
             <div class="form-section full-width">
                 <h3>Agent Notes</h3>
-                <textarea id="agent_notes" name="agent_notes" class="form-textarea" placeholder="Add notes about this lead...">{{ lead.agent_notes }}</textarea>
+                <textarea id="agent_notes" name="agent_notes" class="form-textarea" placeholder="Add internal notes about this lead, follow-up actions, or important details...">{{ lead.agent_notes }}</textarea>
             </div>
+
+            <!-- Conversation Summary (Read-only) -->
+            {% if conversations_formatted %}
+            <div class="form-section full-width">
+                <h3>Conversation History (Read-only)</h3>
+                <div class="summary-box">
+                    {{ conversations_formatted|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Form Actions -->
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-                <button type="button" class="btn btn-outline-primary" id="cancel-edit">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span> Save Changes
+                </button>
+                <a href="{% url 'leads' lead.company.id %}" class="btn btn-outline-primary">
+                    <span>✕</span> Cancel
+                </a>
             </div>
         </form>
     </div>
 
-    <!-- Display View (Shown by default) -->
-    <div id="display-view">
-        <div class="quick-stats">
-            <div class="stat-item">
-                <div class="stat-icon" style="color: #00d4ff;">⭐</div>
-                <div class="stat-info">
-                    <div class="stat-label">Lead Score</div>
-                    <div class="stat-value">{{ lead.lead_score }}/100</div>
-                </div>
+    <!-- Activity Timeline Sidebar -->
+    <div class="timeline-sidebar">
+        <div class="detail-card">
+            <div class="card-header">
+                <h2>Activity Timeline</h2>
             </div>
-            <div class="stat-item">
-                <div class="stat-icon" style="color: #22c55e;">🎯</div>
-                <div class="stat-info">
-                    <div class="stat-label">Intent Level</div>
-                    <div class="stat-value">{{ lead.get_intent_level_display }}</div>
+            <div class="card-content timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Lead Created</div>
+                        <div class="timeline-time">{{ lead.created_at|date:"M d, Y H:i" }}</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon" style="color: #3b82f6;">📱</div>
-                <div class="stat-info">
-                    <div class="stat-label">Source</div>
-                    <div class="stat-value">{% if lead.source_type == 'instagram_dm' %}Instagram DM{% else %}Instagram Comment{% endif %}</div>
+
+                {% if lead.last_interaction_at %}
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Last Interaction</div>
+                        <div class="timeline-time">{{ lead.last_interaction_at|date:"M d, Y H:i" }}</div>
+                    </div>
                 </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-icon" style="color: #f59e0b;">💬</div>
-                <div class="stat-info">
-                    <div class="stat-label">Messages</div>
-                    <div class="stat-value">{{ lead.total_messages }}</div>
+                {% endif %}
+
+                {% if lead.qualified_at %}
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background: #22c55e;"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Qualified</div>
+                        <div class="timeline-time">{{ lead.qualified_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Last Updated</div>
+                        <div class="timeline-time">{{ lead.updated_at|date:"M d, Y H:i" }}</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="detail-grid">
-            <!-- Left Column: Main Information -->
-            <div class="detail-main">
-                <!-- Customer Information -->
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Customer Information</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Name</span>
-                                <span class="info-value">{{ lead.customer_name|default:"Not Provided" }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Username</span>
-                                <span class="info-value">@{{ lead.instagram_username }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Email</span>
-                                <span class="info-value">
-                                    {% if lead.email %}
-                                        <a href="mailto:{{ lead.email }}">{{ lead.email }}</a>
-                                    {% else %}
-                                        Not Provided
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Phone</span>
-                                <span class="info-value">
-                                    {% if lead.phone_number %}
-                                        <a href="tel:{{ lead.phone_number }}">{{ lead.phone_number }}</a>
-                                    {% else %}
-                                        Not Provided
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Qualification Details -->
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Qualification Details</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Qualification Status</span>
-                                <span class="info-value">
-                                    <span class="status-badge status-{{ lead.qualification_status }}">
-                                        {{ lead.get_qualification_status_display }}
-                                    </span>
-                                </span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Timeline</span>
-                                <span class="info-value">{{ lead.get_timeline_display|default:"Not Specified" }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Budget Range</span>
-                                <span class="info-value">
-                                    {% if lead.budget_min and lead.budget_max %}
-                                        ${{ lead.budget_min|floatformat:0 }} - ${{ lead.budget_max|floatformat:0 }}
-                                    {% else %}
-                                        Not Specified
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Payment Method</span>
-                                <span class="info-value">{{ lead.get_payment_method_display }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Preferred Location</span>
-                                <span class="info-value">{{ lead.preferred_location|default:"Not Specified" }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">First-time Buyer</span>
-                                <span class="info-value">
-                                    {% if lead.is_first_time_buyer %}Yes{% elif lead.is_first_time_buyer == False %}No{% else %}Unknown{% endif %}
-                                </span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Property to Sell</span>
-                                <span class="info-value">
-                                    {% if lead.has_property_to_sell %}Yes{% elif lead.has_property_to_sell == False %}No{% else %}Unknown{% endif %}
-                                </span>
-                            </div>
-                        </div>
-
-                        {% if lead.property_requirements %}
-                        <div class="requirements-box">
-                            <h4>Property Requirements</h4>
-                            <div class="requirements-list">
-                                {% for key, value in lead.property_requirements.items %}
-                                    <div class="requirement-item">
-                                        <span class="req-key">{{ key|title }}:</span>
-                                        <span class="req-value">{{ value }}</span>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Conversation History -->
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Conversation Summary</h2>
-                    </div>
-                    <div class="card-content">
-                        {% if lead.ai_conversation_summary %}
-                            <div class="summary-box">
-                                {{ lead.ai_conversation_summary|linebreaks }}
-                            </div>
-                        {% else %}
-                            <div class="empty-box">
-                                <p>No conversation summary available yet.</p>
-                            </div>
-                        {% endif %}
-
-                        {% if lead.last_customer_message or lead.last_bot_message %}
-                        <div class="last-messages">
-                            <div class="message-section">
-                                <h4>Last Customer Message</h4>
-                                <div class="message-box customer-message">
-                                    {{ lead.last_customer_message|default:"No messages yet" }}
-                                </div>
-                            </div>
-                            <div class="message-section">
-                                <h4>Last Bot Response</h4>
-                                <div class="message-box bot-message">
-                                    {{ lead.last_bot_message|default:"No responses yet" }}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Agent Notes -->
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Agent Notes</h2>
-                    </div>
-                    <div class="card-content">
-                        {% if lead.agent_notes %}
-                            <div class="notes-box">
-                                {{ lead.agent_notes|linebreaks }}
-                            </div>
-                        {% else %}
-                            <div class="empty-box">
-                                <p>No notes added yet.</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
+        {% if lead.human_agent_assigned or lead.requires_human %}
+        <div class="detail-card">
+            <div class="card-header">
+                <h2>Human Agent</h2>
             </div>
-
-            <!-- Right Column: Sidebar -->
-            <div class="detail-sidebar">
-                <!-- Timeline & Activity -->
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Activity Timeline</h2>
-                    </div>
-                    <div class="card-content timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-marker"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-date">Lead Created</div>
-                                <div class="timeline-time">{{ lead.created_at|date:"M d, Y H:i" }}</div>
-                            </div>
-                        </div>
-
-                        {% if lead.last_interaction_at %}
-                        <div class="timeline-item">
-                            <div class="timeline-marker"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-date">Last Interaction</div>
-                                <div class="timeline-time">{{ lead.last_interaction_at|date:"M d, Y H:i" }}</div>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        {% if lead.qualified_at %}
-                        <div class="timeline-item">
-                            <div class="timeline-marker" style="background: #22c55e;"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-date">Qualified</div>
-                                <div class="timeline-time">{{ lead.qualified_at|date:"M d, Y H:i" }}</div>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <div class="timeline-item">
-                            <div class="timeline-marker"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-date">Last Updated</div>
-                                <div class="timeline-time">{{ lead.updated_at|date:"M d, Y H:i" }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Human Agent Info -->
-                {% if lead.human_agent_assigned or lead.requires_human %}
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Human Agent</h2>
-                    </div>
-                    <div class="card-content">
-                        {% if lead.human_agent_assigned %}
-                            <div class="agent-info">
-                                <div class="agent-name">{{ lead.human_agent_assigned.first_name }} {{ lead.human_agent_assigned.last_name }}</div>
-                                <div class="agent-email">{{ lead.human_agent_assigned.email }}</div>
-                                {% if lead.handoff_at %}
-                                <div class="agent-date">Assigned: {{ lead.handoff_at|date:"M d, Y H:i" }}</div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-
-                        {% if lead.handoff_reason %}
-                        <div class="handoff-reason">
-                            <strong>Handoff Reason:</strong>
-                            <p>{{ lead.handoff_reason }}</p>
-                        </div>
-                        {% endif %}
-
-                        {% if lead.requires_human %}
-                        <div class="alert alert-info" style="margin-top: 1rem;">
-                            ⚠️ This lead requires human agent follow-up.
-                        </div>
+            <div class="card-content">
+                {% if lead.human_agent_assigned %}
+                    <div class="agent-info">
+                        <div class="agent-name">{{ lead.human_agent_assigned.first_name }} {{ lead.human_agent_assigned.last_name }}</div>
+                        <div class="agent-email">{{ lead.human_agent_assigned.email }}</div>
+                        {% if lead.handoff_at %}
+                        <div class="agent-date">Assigned: {{ lead.handoff_at|date:"M d, Y H:i" }}</div>
                         {% endif %}
                     </div>
-                </div>
                 {% endif %}
 
-                <!-- Tags -->
-                {% if lead.tags %}
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Tags</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="tags-container">
-                            {% for tag in lead.tags %}
-                                <span class="tag">{{ tag }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Linked Property -->
-                {% if lead.listing %}
-                <div class="detail-card">
-                    <div class="card-header">
-                        <h2>Linked Property</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="property-info">
-                            <h4>{{ lead.listing.title }}</h4>
-                            <p class="property-location">📍 {{ lead.listing.address }}</p>
-                            {% if lead.listing.price %}
-                            <p class="property-price">${{ lead.listing.price|floatformat:0 }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
+                {% if lead.requires_human %}
+                <div class="alert alert-info">
+                    ⚠️ This lead requires human agent follow-up.
                 </div>
                 {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
@@ -465,10 +310,40 @@
     .lead-detail-container {
         position: relative;
         z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+        grid-template-areas:
+            "header header"
+            "stats stats"
+            "form sidebar";
     }
 
     .detail-header {
+        grid-area: header;
+        margin-bottom: 1rem;
+    }
+
+    .quick-stats {
+        grid-area: stats;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
         margin-bottom: 2rem;
+    }
+
+    .edit-form-container {
+        grid-area: form;
+    }
+
+    .timeline-sidebar {
+        grid-area: sidebar;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        position: sticky;
+        top: 2rem;
+        align-self: start;
     }
 
     .header-nav {
@@ -500,12 +375,48 @@
         font-size: 2.5rem;
         font-weight: 900;
         margin: 0;
-        color: #f1f5f9;
+        background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    .btn-sm {
-        padding: 0.5rem 1.2rem;
-        font-size: 0.85rem;
+    .stat-item {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+    }
+
+    .stat-icon {
+        font-size: 1.5rem;
+    }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #64748b;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #f1f5f9;
     }
 
     /* Edit Form Styles */
@@ -515,19 +426,7 @@
         border: 2px solid rgba(0, 212, 255, 0.3);
         border-radius: 15px;
         padding: 2rem;
-        margin-bottom: 2rem;
-        animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
     }
 
     .edit-form-grid {
@@ -588,6 +487,18 @@
         outline: none;
     }
 
+    .form-input[readonly] {
+        background: rgba(3, 7, 18, 0.5);
+        color: #64748b;
+        cursor: not-allowed;
+    }
+
+    .form-hint {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-style: italic;
+    }
+
     .form-textarea {
         background: rgba(3, 7, 18, 0.8);
         color: #f1f5f9;
@@ -634,6 +545,62 @@
         grid-column: 1 / -1;
     }
 
+    .agent-assignment-section {
+        padding: 1.2rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 8px;
+        border-left: 3px solid #3b82f6;
+        margin-top: 1rem;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .agent-assignment-section .form-group {
+        gap: 0.4rem;
+    }
+
+    .agent-assignment-section .form-group label {
+        font-size: 0.85rem;
+    }
+
+    .info-box {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.8rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        margin-top: 0.5rem;
+    }
+
+    .info-icon {
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .summary-box {
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 10px;
+        padding: 1.2rem;
+        border-left: 4px solid #3b82f6;
+        color: #cbd5e1;
+        line-height: 1.6;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
     .form-actions {
         display: flex;
         gap: 1rem;
@@ -643,133 +610,12 @@
 
     .form-actions .btn {
         flex: 1;
-    }
-
-    /* Display View Styles */
-    .quick-stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-item {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 12px;
-        padding: 1rem;
         display: flex;
         align-items: center;
-        gap: 1rem;
-    }
-
-    .stat-icon {
-        font-size: 1.5rem;
-    }
-
-    .stat-info {
-        flex: 1;
-    }
-
-    .stat-label {
-        font-size: 0.8rem;
-        color: #64748b;
-        text-transform: uppercase;
-        font-weight: 600;
-    }
-
-    .stat-value {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #f1f5f9;
-    }
-
-    .detail-grid {
-        display: grid;
-        grid-template-columns: 1fr 350px;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .detail-main {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .detail-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .detail-card {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .detail-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.2);
-    }
-
-    .card-header {
-        background: rgba(3, 7, 18, 0.8);
-        padding: 1.5rem;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    .card-header h2 {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #f1f5f9;
-        margin: 0;
-    }
-
-    .card-content {
-        padding: 1.5rem;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-    }
-
-    .info-item {
-        display: flex;
-        flex-direction: column;
+        justify-content: center;
         gap: 0.5rem;
-    }
-
-    .info-label {
-        font-size: 0.85rem;
-        color: #64748b;
-        text-transform: uppercase;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-    }
-
-    .info-value {
-        font-size: 1rem;
-        color: #f1f5f9;
-        font-weight: 500;
-    }
-
-    .info-value a {
-        color: #3b82f6;
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .info-value a:hover {
-        color: #60a5fa;
+        font-weight: 700;
+        padding: 1rem 2rem;
     }
 
     .status-badge {
@@ -800,103 +646,31 @@
         color: #cbd5e1;
     }
 
-    .requirements-box {
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid rgba(59, 130, 246, 0.2);
+    /* Sidebar Styles */
+    .detail-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
     }
 
-    .requirements-box h4 {
-        font-size: 1rem;
+    .card-header {
+        background: rgba(3, 7, 18, 0.8);
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .card-header h2 {
+        font-size: 1.2rem;
         font-weight: 700;
         color: #f1f5f9;
-        margin-bottom: 1rem;
+        margin: 0;
     }
 
-    .requirements-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.8rem;
-    }
-
-    .requirement-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.8rem;
-        background: rgba(59, 130, 246, 0.05);
-        border-radius: 8px;
-        border-left: 3px solid #3b82f6;
-    }
-
-    .req-key {
-        color: #cbd5e1;
-        font-weight: 600;
-    }
-
-    .req-value {
-        color: #f1f5f9;
-        font-weight: 500;
-    }
-
-    .summary-box {
-        background: rgba(59, 130, 246, 0.05);
-        border-radius: 10px;
-        padding: 1.2rem;
-        border-left: 4px solid #3b82f6;
-        color: #cbd5e1;
-        line-height: 1.6;
-    }
-
-    .empty-box {
-        background: rgba(59, 130, 246, 0.05);
-        border-radius: 10px;
+    .card-content {
         padding: 1.5rem;
-        text-align: center;
-        color: #64748b;
-    }
-
-    .last-messages {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    .message-section h4 {
-        font-size: 0.9rem;
-        color: #cbd5e1;
-        font-weight: 600;
-        margin-bottom: 0.8rem;
-    }
-
-    .message-box {
-        background: rgba(59, 130, 246, 0.05);
-        border-radius: 8px;
-        padding: 1rem;
-        border-left: 3px solid #3b82f6;
-        color: #cbd5e1;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        word-break: break-word;
-    }
-
-    .customer-message {
-        border-left-color: #22c55e;
-        background: rgba(34, 197, 94, 0.05);
-    }
-
-    .bot-message {
-        border-left-color: #3b82f6;
-    }
-
-    .notes-box {
-        background: rgba(245, 158, 11, 0.05);
-        border-radius: 10px;
-        padding: 1.2rem;
-        border-left: 4px solid #f59e0b;
-        color: #cbd5e1;
-        line-height: 1.6;
-        white-space: pre-wrap;
     }
 
     .timeline {
@@ -977,74 +751,32 @@
         margin-top: 0.5rem;
     }
 
-    .handoff-reason {
+    .alert {
         margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    .handoff-reason strong {
-        color: #f1f5f9;
-    }
-
-    .handoff-reason p {
-        color: #cbd5e1;
-        margin: 0.5rem 0 0 0;
-        line-height: 1.5;
-    }
-
-    .tags-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.7rem;
-    }
-
-    .tag {
-        display: inline-block;
-        background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(0, 102, 255, 0.2) 100%);
-        color: #60a5fa;
-        border: 1px solid rgba(59, 130, 246, 0.4);
-        border-radius: 20px;
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-    .property-info {
-        background: rgba(124, 58, 237, 0.05);
-        border-radius: 10px;
         padding: 1rem;
-        border-left: 3px solid #7c3aed;
-    }
-
-    .property-info h4 {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #f1f5f9;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .property-location {
-        color: #cbd5e1;
+        border-radius: 8px;
         font-size: 0.9rem;
-        margin: 0.5rem 0;
     }
 
-    .property-price {
-        color: #22c55e;
-        font-weight: 700;
-        font-size: 1rem;
-        margin: 0.5rem 0 0 0;
+    .alert-info {
+        background: rgba(59, 130, 246, 0.1);
+        border-left: 3px solid #3b82f6;
+        color: #cbd5e1;
     }
 
     /* Responsive */
     @media (max-width: 1200px) {
-        .detail-grid {
+        .lead-detail-container {
             grid-template-columns: 1fr;
+            grid-template-areas:
+                "header"
+                "stats"
+                "form"
+                "sidebar";
         }
 
-        .quick-stats {
-            grid-template-columns: repeat(2, 1fr);
+        .timeline-sidebar {
+            position: static;
         }
 
         .edit-form-grid {
@@ -1067,42 +799,71 @@
             grid-template-columns: 1fr;
         }
 
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .last-messages {
-            grid-template-columns: 1fr;
-        }
-
         .form-row {
             grid-template-columns: 1fr;
+        }
+
+        .edit-form-container {
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
         }
     }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const editToggle = document.getElementById('edit-toggle');
-        const cancelEdit = document.getElementById('cancel-edit');
-        const editForm = document.getElementById('edit-form');
-        const displayView = document.getElementById('display-view');
         const leadEditForm = document.getElementById('lead-edit-form');
+        const requiresHumanCheckbox = document.getElementById('requires_human');
+        const agentAssignmentSection = document.getElementById('agent-assignment');
 
-        editToggle.addEventListener('click', function() {
-            editForm.style.display = editForm.style.display === 'none' ? 'block' : 'none';
-            displayView.style.display = displayView.style.display === 'block' ? 'none' : 'block';
+        // Toggle agent assignment section
+        requiresHumanCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                agentAssignmentSection.style.display = 'block';
+            } else {
+                agentAssignmentSection.style.display = 'none';
+                // Clear agent selection when unchecking
+                document.getElementById('human_agent_assigned').value = '';
+                document.getElementById('handoff_reason').value = '';
+            }
         });
 
-        cancelEdit.addEventListener('click', function() {
-            editForm.style.display = 'none';
-            displayView.style.display = 'block';
-        });
-
+        // Form validation
         leadEditForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            // The form will be handled by Django
-            this.submit();
+            const budgetMin = document.getElementById('budget_min').value;
+            const budgetMax = document.getElementById('budget_max').value;
+
+            if (budgetMin && budgetMax && parseFloat(budgetMin) > parseFloat(budgetMax)) {
+                e.preventDefault();
+                alert('Minimum budget cannot be greater than maximum budget.');
+                return false;
+            }
+
+            // Validate human agent assignment if required
+            if (requiresHumanCheckbox.checked) {
+                const agentSelected = document.getElementById('human_agent_assigned').value;
+                if (!agentSelected) {
+                    e.preventDefault();
+                    alert('Please select an agent for handoff.');
+                    return false;
+                }
+            }
+        });
+
+        // Auto-save indication (optional)
+        const formInputs = leadEditForm.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.id !== 'requires_human') {
+                    this.style.borderColor = '#f59e0b';
+                    setTimeout(() => {
+                        this.style.borderColor = '';
+                    }, 1000);
+                }
+            });
         });
     });
 </script>

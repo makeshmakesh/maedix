@@ -8,7 +8,7 @@ from django.conf import settings
 from django.urls import reverse
 from datetime import datetime, timedelta
 from .models import InstagramAccount
-from realestate.models import Company, Lead, ConversationMessage, PropertyListing
+from realestate.models import Company, Lead, ConversationMessage, PropertyListing, Membership
 from core.models import Configuration
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
@@ -398,6 +398,10 @@ class InstagramConnectView(LoginRequiredMixin, View):
 
     def get(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        if membership.role not in ['admin']:
+            messages.warning(request, "You do not have permission to connect Instagram for this company, only admin can connect instagram.")
+            return redirect('company-detail', company_id=company_id)
         instagram_data = (
             company.instagram_account.instagram_data
             if company and hasattr(company, "instagram_account")

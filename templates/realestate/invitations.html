@@ -1,0 +1,524 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Invite User - {{ company.name }} - MAEDIX{% endblock %}
+
+{% block content %}
+<div class="invite-container">
+    <!-- Header -->
+    <div class="invite-header">
+        <div class="header-content">
+            <a href="{% url 'company-detail' company.id %}" class="back-link">← Back to {{ company.name }}</a>
+            <h1 class="page-title">Invite Team Members</h1>
+            <p class="page-subtitle">{{ company.name }} - Add new members to your team</p>
+        </div>
+    </div>
+
+    <div class="invite-grid">
+        <!-- Invitation Form -->
+        <div class="invite-form-section">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2>Send Invitation</h2>
+                    <p>Invite a new member to join your team</p>
+                </div>
+
+                <form method="post" id="invite-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <span class="form-error">{{ form.email.errors.0 }}</span>
+                        {% endif %}
+                        <small class="form-hint">The email address of the person you want to invite</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.role.id_for_label }}">Role</label>
+                        {{ form.role }}
+                        {% if form.role.errors %}
+                            <span class="form-error">{{ form.role.errors.0 }}</span>
+                        {% endif %}
+                        <small class="form-hint">Choose the role this member will have in your company</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <span>✉️</span> Send Invitation
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pending Invitations -->
+        <div class="pending-invitations-section">
+            <div class="invitations-card">
+                <div class="card-header">
+                    <h2>Pending Invitations ({{ pending_invitations.count }})</h2>
+                </div>
+
+                <div class="card-content">
+                    {% if pending_invitations %}
+                        <div class="invitations-list">
+                            {% for invitation in pending_invitations %}
+                                <div class="invitation-item">
+                                    <div class="invitation-info">
+                                        <div class="invitation-email">{{ invitation.invited_email }}</div>
+                                        <div class="invitation-details">
+                                            <span class="role-badge role-{{ invitation.role }}">{{ invitation.get_role_display }}</span>
+                                            <span class="invitation-date">Sent {{ invitation.created_at|date:"M d, Y" }}</span>
+                                        </div>
+                                        {% if invitation.is_expired %}
+                                            <span class="status-badge expired">Expired</span>
+                                        {% else %}
+                                            <span class="status-badge pending">Pending</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="invitation-actions">
+                                        {% if not invitation.is_expired %}
+                                            <button class="btn-icon" title="Resend invitation" onclick="alert('Resend functionality coming soon')">🔄</button>
+                                            <button class="btn-icon delete" title="Delete invitation" onclick="alert('Delete functionality coming soon')">🗑️</button>
+                                        {% else %}
+                                            <span class="text-muted">Expired</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">📬</div>
+                            <p>No pending invitations</p>
+                            <small>Invitations you send will appear here</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Team Members</div>
+                    <div class="stat-value">{{ company.memberships.count }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Invites</div>
+                    <div class="stat-value">{{ pending_invitations.count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .invite-container {
+        position: relative;
+        z-index: 1;
+    }
+
+    .invite-header {
+        margin-bottom: 2rem;
+    }
+
+    .back-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #60a5fa;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+        color: #cbd5e1;
+    }
+
+    .invite-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .form-card, .invitations-card, .role-info-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-card:hover, .invitations-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.2);
+    }
+
+    .form-header, .card-header {
+        background: rgba(3, 7, 18, 0.8);
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .form-header h2, .card-header h2, .role-header h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .form-header p {
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: #cbd5e1;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        background: rgba(3, 7, 18, 0.8);
+        color: #f1f5f9;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: #3b82f6;
+        background: rgba(3, 7, 18, 0.95);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-hint {
+        display: block;
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-top: 0.4rem;
+        font-style: italic;
+    }
+
+    .form-error {
+        display: block;
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-top: 0.4rem;
+    }
+
+    .form-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        color: #cbd5e1;
+    }
+
+    .info-icon {
+        font-size: 1.2rem;
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+
+    .role-info-card {
+        margin-bottom: 2rem;
+    }
+
+    .role-header {
+        background: rgba(3, 7, 18, 0.8);
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .role-list {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .role-item {
+        padding: 1rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-left: 3px solid #3b82f6;
+        border-radius: 8px;
+    }
+
+    .role-name {
+        font-weight: 700;
+        color: #f1f5f9;
+        font-size: 0.95rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .role-desc {
+        color: #cbd5e1;
+        font-size: 0.85rem;
+    }
+
+    .invitations-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .invitation-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 8px;
+        border-left: 3px solid #3b82f6;
+    }
+
+    .invitation-info {
+        flex: 1;
+    }
+
+    .invitation-email {
+        font-weight: 600;
+        color: #f1f5f9;
+        margin-bottom: 0.5rem;
+    }
+
+    .invitation-details {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .role-owner {
+        background: rgba(168, 85, 247, 0.2);
+        color: #d8b4fe;
+    }
+
+    .role-admin {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+    }
+
+    .role-manager {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+    }
+
+    .role-team_lead {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+    }
+
+    .role-agent {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+    }
+
+    .invitation-date {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .status-badge.pending {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+    }
+
+    .status-badge.expired {
+        background: rgba(107, 114, 128, 0.2);
+        color: #d1d5db;
+    }
+
+    .invitation-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: transform 0.2s ease;
+        padding: 0.5rem;
+    }
+
+    .btn-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .btn-icon.delete:hover {
+        color: #ef4444;
+    }
+
+    .text-muted {
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #cbd5e1;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .empty-state small {
+        color: #64748b;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .stat-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    @media (max-width: 1024px) {
+        .invite-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.6rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.7rem 0.9rem;
+            font-size: 0.9rem;
+        }
+
+        .form-card, .invitations-card, .role-info-card {
+            padding: 1rem;
+        }
+
+        .invitation-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .invitation-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

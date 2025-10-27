@@ -28,18 +28,13 @@ urlpatterns = [
         name="company-detail",
     ),
     path(
-        "connect-instagram/<int:company_id>/",
-        views.CompanyDetailView.as_view(),
-        name="connect-instagram",
-    ),
-    path(
         "company/<int:company_id>/instagram/posts/",
         views.get_instagram_posts,
         name="get_instagram_posts",
     ),
     path('company/<int:company_id>/listing/<int:listing_id>/delete/', views.ListingDeleteView.as_view(), name='delete_listing'),
     
-        path(
+    path(
         "company/<int:company_id>/leads/",
         views.LeadsView.as_view(),
         name="leads",
@@ -48,6 +43,21 @@ urlpatterns = [
         "company/<int:company_id>/lead-detail/<int:lead_id>",
         views.LeadDetailView.as_view(),
         name="lead-detail",
+    ),
+    path(
+        "company/<int:company_id>/invitations/",
+        views.InvitationsView.as_view(),
+        name="invitations",
+    ),
+    path(
+        "my-invitations/",
+        views.MyInvitationsView.as_view(),
+        name="my-invitations",
+    ),
+    path(
+        "accept-invitation/<int:invitation_id>",
+        views.AcceptInvitationView.as_view(),
+        name="accept-invitation",
     ),
         
 ]

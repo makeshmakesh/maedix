@@ -16,10 +16,19 @@ import json
 
 from asgiref.sync import async_to_sync
 
+
+def format_conversation_messages(messages):
+    formatted_strings = []
+    for msg in messages:
+        formatted_strings.append(
+            f"[{msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {msg.sender_type}: {msg.message_text}"
+        )
+    return "\n".join(formatted_strings)
+
 def extract_lead_data_async(lead_id, lead=None):
     lead = lead if lead else Lead.objects.get(id=lead_id)
     messages = ConversationMessage.objects.filter(conversation_id=lead.instagram_conversation_id).order_by("timestamp")
-    conversation_text = "\n".join([m.message_text for m in messages])
+    conversation_text = format_conversation_messages(messages)
 
     agent = Agent(
         name="Lead Data Extractor",
@@ -92,16 +101,21 @@ def extract_lead_data_async(lead_id, lead=None):
 
 
 def summarize_property(listing: PropertyListing) -> str:
-    """Create a concise text summary for LLM context."""
+    """Create a concise but complete text summary for LLM context."""
     summary = (
         f"🏡 {listing.title}\n"
-        f"Type: {listing.property_type}, Status: {listing.status}\n"
+        f"Type: {listing.get_property_type_display()} | Status: {listing.get_status_display()}\n"
         f"Location: {listing.location}\n"
-        f"Price: {listing.price} {listing.currency} ({listing.price_type})\n"
-        f"Bedrooms: {listing.bedrooms or '-'}, Bathrooms: {listing.bathrooms or '-'}\n"
+        f"Company: {listing.company.name if hasattr(listing, 'company') else '-'}\n"
+        f"Price: {listing.price or '-'} {listing.currency} ({listing.get_price_type_display()})\n"
+        f"Bedrooms: {listing.bedrooms or '-'} | Bathrooms: {listing.bathrooms or '-'}\n"
         f"Area: {listing.area_sqft or '-'} sqft\n"
-        f"Amenities: {listing.amenities or '-'}\n"
-        f"Description: {listing.description[:300] if listing.description else '-'}"
+        f"Land Area: {listing.land_area or '-'} {listing.land_unit or '-'}\n"
+        f"Amenities: {listing.amenities or '-'}\n\n"
+        f"Description: {(listing.description[:400] + '...') if listing.description and len(listing.description) > 400 else (listing.description or '-')}\n\n"
+        f"Additional Info: {listing.ai_context_notes or '-'}\n"
+        f"Created: {listing.created_at.strftime('%Y-%m-%d %H:%M:%S') if listing.created_at else '-'} | "
+        f"Updated: {listing.updated_at.strftime('%Y-%m-%d %H:%M:%S') if listing.updated_at else '-'}"
     )
     return summary
 

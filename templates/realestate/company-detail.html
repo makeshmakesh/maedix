@@ -532,26 +532,17 @@
                     <span class="stat-icon">👥</span>
                 </div>
                 <div class="stat-label">Total Leads</div>
-                <div class="stat-value">{{ company.leads_count|default:"0" }}</div>
+                <div class="stat-value">{{ leads_count|default:"0" }}</div>
                 {% comment %} <div class="stat-change positive">↑ 12% this month</div> {% endcomment %}
             </div>
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-icon">🤖</span>
+                    <span class="stat-icon">📊</span>
                 </div>
-                <div class="stat-label">Active Bots</div>
-                <div class="stat-value">{{ company.active_bots|default:"0" }}</div>
+                <div class="stat-label">Total Listings</div>
+                <div class="stat-value">{{ listings_count|default:"0" }}</div>
                 {% comment %} <div class="stat-change positive">↑ 1 new bot</div> {% endcomment %}
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">💬</span>
-                </div>
-                <div class="stat-label">Conversations</div>
-                <div class="stat-value">{{ company.conversations|default:"0" }}</div>
-                {% comment %} <div class="stat-change positive">↑ 8% this week</div> {% endcomment %}
             </div>
 
             <div class="stat-card">
@@ -559,7 +550,7 @@
                     <span class="stat-icon">👨‍💼</span>
                 </div>
                 <div class="stat-label">Team Members</div>
-                <div class="stat-value">{{ company.members_count|default:"0" }}</div>
+                <div class="stat-value">{{ members_count|default:"0" }}</div>
                 {% comment %} <div class="stat-change">No change</div> {% endcomment %}
             </div>
         </div>
@@ -573,12 +564,12 @@
                     <span>Connect Instagram</span>
                 </a>
                 <a href="{% url 'listings' company.id %}" class="quick-action-btn">
-                    <span>📄</span>
+                    <span>📊</span>
                     <span>View Listings</span>
                 </a>
-                <a href="#" class="quick-action-btn">
-                    <span>➕</span>
-                    <span>Add Team Member</span>
+                <a href="{% url 'leads' company.id %}" class="quick-action-btn">
+                    <span>👥</span>
+                    <span>View Leads</span>
                 </a>
             </div>
         </div>
@@ -601,17 +592,6 @@
                 </a>
 
                 <!-- Edit Company -->
-                <a href="#" class="nav-card">
-                    <div class="nav-icon">✏️</div>
-                    <h3 class="nav-title">Edit Company</h3>
-                    <p class="nav-description">
-                        Update company information, branding, AI settings, and automation preferences.
-                    </p>
-                    <span class="nav-arrow">
-                        <span>Edit settings</span>
-                        <span>→</span>
-                    </span>
-                </a>
 
                 <!-- Connect Instagram -->
                 <a href="{% url 'instagram_connect' company.id %}" class="nav-card">
@@ -626,31 +606,18 @@
                     </span>
                 </a>
 
-                <!-- View Members -->
-                <a href="#" class="nav-card">
-                    <div class="nav-icon">👨‍💼</div>
-                    <h3 class="nav-title">View Members</h3>
+                <a href="{% url 'invitations' company.id %}" class="nav-card">
+                    <div class="nav-icon">📩</div>
+                    <h3 class="nav-title">Invitations</h3>
                     <p class="nav-description">
-                        Manage team members, assign roles, and control access permissions for your company.
+                        Invite company members.
                     </p>
                     <span class="nav-arrow">
-                        <span>Manage team</span>
+                        <span>Invite now</span>
                         <span>→</span>
                     </span>
                 </a>
 
-                <!-- Upload Company Documents -->
-                <a href="#" class="nav-card">
-                    <div class="nav-icon">📄</div>
-                    <h3 class="nav-title">Upload Company Documents</h3>
-                    <p class="nav-description">
-                        Upload property brochures, training materials, and documents for AI reference.
-                    </p>
-                    <span class="nav-arrow">
-                        <span>Upload files</span>
-                        <span>→</span>
-                    </span>
-                </a>
             </div>
         </div>
     </div>

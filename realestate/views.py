@@ -1,7 +1,8 @@
 # pylint:disable=all
 from django.views import View
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Membership, Company, PropertyListing, Lead
+from users.models import CustomUser
+from .models import Membership, Company, PropertyListing, Lead, ConversationMessage, CompanyInvitation
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.contrib import messages
@@ -9,13 +10,14 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
 
-
-def calculate_lead_score(lead):
+def calculate_lead_score(lead : Lead):
     score = 0
-    
     # Budget signals (max 30 points)
     if lead.budget_max:
+
         if lead.listing and lead.budget_max >= lead.listing.price:
             score += 30
         elif lead.budget_max >= 5000000:  # High budget
@@ -42,7 +44,7 @@ def calculate_lead_score(lead):
     # Requirements match (max 10 points)
     if lead.property_requirements:
         score += 10
-    
+    print("Final Score:", score)
     return min(score, 100)
 # Create your views here.
 class DashboardView(LoginRequiredMixin, View):
@@ -50,6 +52,105 @@ class DashboardView(LoginRequiredMixin, View):
         memberships = Membership.objects.filter(user=request.user)
         context = {"memberships": memberships}
         return render(request, "realestate/dashboard.html", context)
+from django import forms
+class InviteUserForm(forms.Form):
+    """Form to invite a user to company"""
+    email = forms.EmailField(label="Email Address")
+    role = forms.ChoiceField(
+        choices=Membership.ROLE_CHOICES,
+        label="Role"
+    )
+    message = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}),
+        label="Message (Optional)",
+        required=False
+    )
+
+
+class AcceptInvitationView(LoginRequiredMixin, View):
+    """User accepts an invitation"""
+    
+    def post(self, request, invitation_id):
+        invitation = get_object_or_404(CompanyInvitation, id=invitation_id)
+        
+        # Verify the invitation is for this user
+        if invitation.invited_email != request.user.email:
+            messages.error(request, "This invitation is not for you")
+            return redirect('my-invitations')
+        
+        try:
+            membership = invitation.accept_invitation(request.user)
+            messages.success(
+                request,
+                f"You have successfully joined {invitation.company.name} as {membership.get_role_display()}"
+            )
+        except Exception as e:
+            messages.error(request, f"Error accepting invitation: {str(e)}")
+        
+        return redirect('my-invitations')
+class MyInvitationsView(LoginRequiredMixin, View):
+    def get(self, request):
+        invitations = CompanyInvitation.objects.filter(invited_email=request.user.email, status="pending").order_by('-created_at')
+        context = {
+            "invitations": invitations,
+        }
+        return render(request, "realestate/my-invitations.html", context)
+class InvitationsView(LoginRequiredMixin, View):
+    def get(self, request, company_id):
+        membership = get_object_or_404(Membership, user=request.user, company_id=company_id)
+        if membership.role not in ['admin', 'manager']:
+            messages.warning(request, "You do not have permission to view invitations for this company.")
+            return redirect('company-detail', company_id=company_id)
+        company = get_object_or_404(Company, id=company_id)
+        form = InviteUserForm()
+        pending_invitations = CompanyInvitation.objects.filter(status='pending').order_by('-created_at')
+        context = {
+            "company": company,
+            "form": form,
+            "pending_invitations": pending_invitations,
+        }
+        return render(request, "realestate/invitations.html", context)
+    
+    def post(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id, created_by=request.user)
+        form = InviteUserForm(request.POST)
+        
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            role = form.cleaned_data['role']
+            
+            # Check if user is already a member
+            if Membership.objects.filter(
+                company=company,
+                user__email=email
+            ).exists():
+                messages.warning(request, f"User {email} is already a member of {company.name}")
+                return redirect('invitations', company_id=company_id)
+            
+            # Create invitation
+            invitation, created = CompanyInvitation.objects.get_or_create(
+                company=company,
+                invited_email=email,
+                status='pending',
+                defaults={
+                    'invited_by': request.user,
+                    'role': role,
+                    'expires_at': timezone.now() + timedelta(days=7)  # Expires in 7 days
+                }
+            )
+            
+            if created:
+                messages.success(request, f"Invitation sent to {email}")
+            else:
+                messages.info(request, f"Invitation already exists for {email}")
+            
+            return redirect('invitations', company_id=company_id)
+        
+        context = {
+            'company': company,
+            'form': form,
+        }
+        return render(request, 'realestate/invitations.html', context)
 
 
 class CompanyDetailView(LoginRequiredMixin, View):
@@ -58,7 +159,10 @@ class CompanyDetailView(LoginRequiredMixin, View):
         for membership in memberships:
             if company_id == membership.company.id:
                 company = Company.objects.get(id=company_id)
-                context = {"company": company, "membership" : membership}
+                leads_count = Lead.objects.filter(company=company).count()
+                listings_count = PropertyListing.objects.filter(company=company).count()
+                members_count = Membership.objects.filter(company=company).count()
+                context = {"company": company, "membership" : membership, "leads_count": leads_count, "listings_count": listings_count, "members_count": members_count}
                 return render(request, "realestate/company-detail.html", context)
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
@@ -86,7 +190,13 @@ class LeadsView(LoginRequiredMixin, View):
         company = get_object_or_404(Company, id=company_id)
 
         # Start with all leads for this company
-        leads = Lead.objects.filter(company=company).order_by("-created_at")
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        if membership.role not in ['admin', 'agent', "manager"]:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        if membership.role == 'agent':
+            leads = Lead.objects.filter(company=company, human_agent_assigned=request.user).order_by("-created_at")
+        else:
+            leads = Lead.objects.filter(company=company).order_by("-created_at")
 
         # Apply filters
         leads = self._apply_filters(leads, request)
@@ -152,23 +262,35 @@ class LeadsView(LoginRequiredMixin, View):
             )
         return queryset
 class LeadDetailView(LoginRequiredMixin, View):
+    def format_conversation_messages(self, messages):
+        formatted_strings = []
+        for msg in messages:
+            formatted_strings.append(
+                f"[{msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {msg.sender_type}: {msg.message_text}"
+            )
+        return "\n".join(formatted_strings)
     def get(self, request, company_id, lead_id):
         company = get_object_or_404(Company, id=company_id)
         lead = get_object_or_404(Lead, id=lead_id, company=company)
 
         # Calculate lead score
-        lead.score = calculate_lead_score(lead)
-
+        score = calculate_lead_score(lead)
+        conversations = ConversationMessage.objects.filter(lead=lead).order_by('timestamp')
+        conversations_formatted = self.format_conversation_messages(conversations)
+        available_agents = Membership.objects.filter(company=company)
         context = {
             "company": company,
             "lead": lead,
+            "score" :score,
+            "conversations_formatted": conversations_formatted,
+            "available_agents": available_agents,
         }
 
         return render(request, "realestate/lead-detail.html", context)
     
     def post(self, request, company_id, lead_id):
         lead = get_object_or_404(Lead, id=lead_id, company_id=company_id)
-        
+        company = get_object_or_404(Company, id=company_id)
         # Update fields
         lead.customer_name = request.POST.get('customer_name', lead.customer_name)
         lead.email = request.POST.get('email', lead.email)
@@ -184,6 +306,26 @@ class LeadDetailView(LoginRequiredMixin, View):
         lead.is_first_time_buyer = 'is_first_time_buyer' in request.POST
         lead.has_property_to_sell = 'has_property_to_sell' in request.POST
         lead.agent_notes = request.POST.get('agent_notes', lead.agent_notes)
+        
+        
+        lead.requires_human = 'requires_human' in request.POST
+        
+        if lead.requires_human:
+            agent_id = request.POST.get('human_agent_assigned')
+            if agent_id:
+                try:
+                    agent = CustomUser.objects.get(id=agent_id)
+                    lead.human_agent_assigned = agent
+                    lead.handoff_at = timezone.now()  # Set to current time
+                except CustomUser.DoesNotExist:
+                    pass
+            
+            lead.handoff_reason = request.POST.get('handoff_reason', lead.handoff_reason)
+        else:
+            # Clear handoff info if unchecked
+            lead.human_agent_assigned = None
+            lead.handoff_reason = ''
+            lead.handoff_at = None
         lead.save()
         
         return redirect('lead-detail', company_id=company_id, lead_id=lead_id)

@@ -346,9 +346,9 @@
         <!-- Dashboard Actions -->
         <div class="dashboard-actions">
             <h2 class="section-title">My Companies</h2>
-            <a href="#" class="btn-create-company">
-                <span>➕</span>
-                <span>Create New Company</span>
+            <a href="{% url 'my-invitations' %}" class="btn-create-company">
+                <span>📩</span>
+                <span>My Invitations</span>
             </a>
         </div>
 
@@ -367,7 +367,7 @@
                         {{ company.description|default:"AI-powered lead automation for real estate" }}
                     </p>
                     <div class="company-stats">
-                        <div class="stat-item">
+                        {% comment %} <div class="stat-item">
                             <span class="stat-value">{{ company.leads_count|default:0 }}</span>
                             <span class="stat-label">Leads</span>
                         </div>
@@ -378,7 +378,7 @@
                         <div class="stat-item">
                             <span class="stat-value">{{ company.active_bots|default:0 }}</span>
                             <span class="stat-label">Active Bots</span>
-                        </div>
+                        </div> {% endcomment %}
                     </div>
                 </div>
             </a>

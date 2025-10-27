@@ -14,6 +14,9 @@ from django.db.models import (
     FloatField
 )
 from pgvector.django import VectorField
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+
 
 class PropertyListing(models.Model):
     PROPERTY_TYPES = [
@@ -134,14 +137,15 @@ class Company(models.Model):
 
 
 # Role choices
-ROLE_CHOICES = [
+
+
+class Membership(models.Model):
+    ROLE_CHOICES = [
     ("admin", "Admin"),
     ("manager", "Manager"),
     ("agent", "Agent"),
 ]
 
-
-class Membership(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="memberships"
     )
@@ -362,3 +366,112 @@ class QualificationQuestion(models.Model):
 
     class Meta:
         ordering = ["question_order"]
+
+
+
+class CompanyInvitation(models.Model):
+    """Invitation requests for users to join a company"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('expired', 'Expired'),
+    ]
+    
+    # Invitation details
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='invitations')
+    invited_email = models.EmailField(help_text="Email of the user being invited")
+    
+    # Who invited
+    invited_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='invitations_sent')
+    
+    # Role to assign when accepted
+    role = models.CharField(
+        max_length=20,
+        choices=Membership.ROLE_CHOICES,
+        default='agent',
+        help_text="Role that will be assigned when invitation is accepted"
+    )
+    
+    # Invitation message/notes
+    message = models.TextField(blank=True, help_text="Custom message for the invited user")
+    
+    # Status
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    
+    # If invitation is accepted, link to the membership
+    accepted_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invitations_accepted'
+    )
+    membership = models.OneToOneField(
+        Membership,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='invitation'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(help_text="Invitation expiry date")
+    
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('company', 'invited_email', 'status')  # One active invitation per email per company
+        verbose_name_plural = 'Company Invitations'
+    
+    def __str__(self):
+        return f"Invitation to {self.invited_email} for {self.company.name} ({self.status})"
+    
+    def is_expired(self):
+        """Check if invitation has expired"""
+        return timezone.now() > self.expires_at
+    
+    def can_accept(self):
+        """Check if invitation can be accepted"""
+        return (
+            self.status == 'pending' and
+            not self.is_expired()
+        )
+    
+    def accept_invitation(self, user):
+        """Accept invitation and create membership"""
+        if not self.can_accept():
+            raise ValidationError("This invitation cannot be accepted")
+        
+        if user.email != self.invited_email:
+            raise ValidationError("Invitation email does not match user email")
+        
+        # Create membership
+        membership, created = Membership.objects.get_or_create(
+            user=user,
+            company=self.company,
+            defaults={'role': self.role}
+        )
+        
+        # Update invitation
+        self.status = 'accepted'
+        self.accepted_by = user
+        self.accepted_at = timezone.now()
+        self.membership = membership
+        self.save()
+        
+        return membership
+    
+    def reject_invitation(self):
+        """Reject invitation"""
+        if self.status != 'pending':
+            raise ValidationError("Only pending invitations can be rejected")
+        
+        self.status = 'rejected'
+        self.save()
