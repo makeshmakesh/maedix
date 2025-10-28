@@ -1,0 +1,266 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Pricing Plans - Maedix{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Plans Hero Section */
+    .plans-hero {
+        text-align: center;
+        padding: 4rem 0 3rem;
+        margin-bottom: 3rem;
+    }
+
+    .plans-hero h1 {
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+    }
+
+    .plans-hero p {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Pricing Cards Container */
+    .pricing-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+        align-items: stretch;
+    }
+
+    /* Pricing Card */
+    .pricing-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        padding: 2.5rem;
+        position: relative;
+        transition: all 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 70px rgba(59, 130, 246, 0.5);
+        border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .pricing-card.featured {
+        border: 2px solid #3b82f6;
+        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.4);
+    }
+
+    .pricing-card.featured::before {
+        content: 'MOST POPULAR';
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.4rem 1.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    /* Plan Header */
+    .plan-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-description {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    .plan-price {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .currency {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .amount {
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .period {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-left: 0.2rem;
+    }
+
+    .plan-messages {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+    }
+
+    .plan-rate {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    /* Features List */
+    .plan-features {
+        flex-grow: 1;
+        margin-bottom: 2rem;
+    }
+
+    .plan-features ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .plan-features li {
+        padding: 0.75rem 0;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .plan-features li::before {
+        content: '✓';
+        color: #22c55e;
+        font-weight: 700;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    /* Plan CTA Button */
+    .plan-cta {
+        margin-top: auto;
+    }
+
+    .plan-cta .btn {
+        width: 100%;
+        padding: 1rem 2rem;
+        font-size: 1.05rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .pricing-container {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .plans-hero h1 {
+            font-size: 2.5rem;
+        }
+
+        .plans-hero p {
+            font-size: 1.1rem;
+        }
+
+        .amount {
+            font-size: 2.8rem;
+        }
+
+        .period {
+            font-size: 1rem;
+        }
+
+        .pricing-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="plans-hero fade-in">
+    <h1>Simple, Transparent Pricing</h1>
+</div>
+
+<!-- Pricing Cards -->
+<div class="pricing-container">
+    {% for plan in plans %}
+    <div class="pricing-card {% if plan.featured %}featured{% endif %} fade-in" style="animation-delay: {{ forloop.counter0|floatformat:1|add:'0.1' }}s;">
+        <div class="plan-header">
+            <h2 class="plan-name">{{ plan.name }}</h2>
+            <p class="plan-description">{{ plan.description }}</p>
+            <div class="plan-price">
+                <span class="currency">{{ plan.currency_symbol }}</span>
+                <span class="amount">{{ plan.display_price }}</span>
+                <span class="period">/{{ plan.duration_period }}</span>
+            </div>
+            <div class="plan-messages">upto {{ plan.leads_count_display }} Leads</div>
+        </div>
+
+        <div class="plan-features">
+            <ul>
+                {% for feature in plan.features %}
+                <li>{{ feature }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="plan-cta">
+            <a href="{% url 'signup' %}" class="btn {{ plan.button_class }}">Get Started</a>
+        </div>
+    </div>
+        {% endfor %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Stagger animation for cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.fade-in');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+    });
+</script>
+{% endblock %}

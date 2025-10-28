@@ -14,4 +14,5 @@ urlpatterns = [
     path('save-token/', views.instagram_save_token, name='instagram_save_token'),
     path('event-subscribe/<int:company_id>/', views.InstagramWebHookSubscribe.as_view(), name="event-subscribe"),
     path('company/<int:company_id>/instagram/disconnect/', views.InstagramDisconnectView.as_view(), name='instagram_disconnect'),
+    path('company/<int:company_id>/fb/disconnect/', views.FBDisconnectView.as_view(), name='fb_disconnect'),
 ]

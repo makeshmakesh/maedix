@@ -8,7 +8,13 @@ from django.conf import settings
 from django.urls import reverse
 from datetime import datetime, timedelta
 from .models import InstagramAccount
-from realestate.models import Company, Lead, ConversationMessage, PropertyListing, Membership
+from realestate.models import (
+    Company,
+    Lead,
+    ConversationMessage,
+    PropertyListing,
+    Membership,
+)
 from core.models import Configuration
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
@@ -28,6 +34,7 @@ from asgiref.sync import async_to_sync
 from agents import Agent, Runner
 import threading
 from .utils import extract_lead_data_async
+
 
 class MyCustomSession:
     """Custom session backed by the ConversationMessage model."""
@@ -66,7 +73,7 @@ class MyCustomSession:
                     extracted_data=item.get("extracted_data", {}),
                     confidence_score=item.get("confidence_score"),
                     is_from_instagram=item.get("is_from_instagram", False),
-                    instagram_message_id=item.get("instagram_message_id", None)
+                    instagram_message_id=item.get("instagram_message_id", None),
                 )
             )
         await sync_to_async(ConversationMessage.objects.bulk_create)(objs)
@@ -102,7 +109,7 @@ class MyCustomSession:
 
 def parse_instagram_payload(data: dict):
     try:
-        response = {}
+        response = {"webhook_type": "unknown"}
         entry = data.get("entry", [])
         if not entry:
             return response
@@ -129,7 +136,7 @@ def parse_instagram_payload(data: dict):
         return response
     except Exception as error:
         print("Error on webhook data parse", error)
-        return {}
+        return {"webhook_type": "unknown"}
 
 
 from .utils import find_relevant_properties
@@ -137,8 +144,7 @@ from .utils import find_relevant_properties
 
 @method_decorator(csrf_exempt, name="dispatch")
 class InstagramWebHookView(View):
-    
-    
+
     def update_lead_from_ai(self, lead, update_data: dict):
         changed = False
         for field, value in update_data.items():
@@ -152,6 +158,7 @@ class InstagramWebHookView(View):
         if changed:
             lead.last_interaction_at = timezone.now()
             lead.save()
+
     def get(self, request):
         token_sent = request.GET.get("hub.verify_token")
         challenge = request.GET.get("hub.challenge")
@@ -167,47 +174,118 @@ class InstagramWebHookView(View):
         messages = await session.get_items()
         print("History going to LLM:", messages)
         agent = Agent(
-            name="Instagram Real Estate Assistant",
-            model="gpt-4-turbo",
-            instructions=f"""
-        You are a friendly, proactive real estate assistant for {self.company.name}, 
-        chatting with potential buyers via Instagram DMs. 
-        Your tone should be warm, conversational, and helpful — like a real person from the company, 
-        not a scripted bot.
+    name="Instagram Real Estate Assistant",
+    model="gpt-4-turbo",
+    instructions=f"""
+You are a friendly, helpful real estate assistant for {self.company.name}, 
+chatting with potential buyers on Instagram DMs.
 
-        Your goal is to pre-qualify the lead by naturally collecting key details:
-        • Name (if not already known)
-        • Preferred location or neighborhood
-        • Budget range (minimum and maximum if possible)
-        • Property type (apartment, villa, land, etc.)
-        • Number of bedrooms or other requirements
-        • Purchase timeline (immediate, 1–3 months, 3–6 months, or just browsing)
-        • Payment method (cash, home loan, or both)
-        • Whether they already own or are selling another property
-        • Contact number (and optionally email) for follow-up
+YOUR PERSONALITY:
+- Warm, conversational, and genuine — like a real team member, not a bot
+- Keep responses short and natural (2-3 sentences max per message)
+- Mirror the user's energy and tone
+- Use their name when they share it
+- Be helpful and proactive, not pushy
 
-        Ask questions one at a time, in a natural conversational way — never like a form. 
-        If the user is vague (“looking for something affordable”), politely ask clarifying questions 
-        (“Got it! To suggest the right options, may I know roughly what budget range you have in mind?”).
+YOUR GOAL:
+Have a natural conversation while collecting these key details naturally:
+- Name
+- Phone number (priority — ask once early , if not shared, ask again in different way later in conversation, but don't miss it)
+- Budget range
+- Preferred location/neighborhood
+- Property type and requirements (bedrooms, sqft, amenities)
+- Timeline (when they want to buy)
+- Payment method (cash/loan/both)
+- First-time buyer status
+- Whether they own/need to sell another property
+- Email (optional, for follow-up)
 
-        Once you gather enough details, suggest the most relevant property listings from the context below 
-        and explain *why* each might be a good fit. Mention specific features like location, price, 
-        or amenities that match their preferences.
+CONVERSATION FLOW (ONE QUESTION AT A TIME):
 
-        If the user shows strong buying intent (e.g., shares budget and timeline), 
-        update their qualification stage to “qualified” and encourage them to share a phone number 
-        for the agent to reach out.
+**Message 1-2: Greeting**
+- Welcome them warmly
+- Example: "Hey! Thanks for reaching out! 👋 what is your name?"
 
-        If they’re unsure or just browsing, remain polite and informative — 
-        offer to share a few listings they can look at later.
+**Message 3: Phone Number (ASK ONCE)**
+- After they told name, naturally ask for phone
+- Example: "Love it! To make sure we can follow up with you quickly, could I grab your phone number?"
+- If they ignore this and answer your next question instead, ask again un different way.
+- Move forward with conversation naturally
 
-        Always stay concise, friendly, and responsive to their tone. 
-        Avoid repeating the same questions. Be genuinely helpful.
+**Message 4+: Understand Their Needs**
+Ask one question at a time based on what's missing:
 
-        Property data for reference:
-        {context_text}
-        """,
-        )
+Location:
+- "What area are you interested in? chennai, banglore, delhi, noida, or a specific neighborhood?"
+- "Which neighborhoods sound good to you?"
+
+Property Type:
+- "What type are you looking for — apartment, villa, or land?"
+- "How many bedrooms do you need?"
+
+Budget:
+- "What's your budget range?"
+- "Great! And what's the upper limit you're comfortable with?"
+
+Timeline:
+- "When are you looking to buy — soon or taking your time?"
+- "Are you thinking this month, next quarter, or further out?"
+
+Payment Method:
+- "Will you be paying with cash or planning to home loan?"
+- "Are you open to both options?"
+
+Buyer Status:
+- "Is this your first property purchase?"
+- "Do you currently own a property?"
+
+**Message 5+: Suggest & Engage**
+- Once you understand their basics, suggest relevant properties
+- Explain WHY each fits their needs
+- Keep them engaged with property details
+- Reference what they told you ("You mentioned budget of X and like Y area...")
+
+HANDLING COMMON SCENARIOS:
+
+"Just browsing":
+→ "No worries! Happy to show you what's available. What kind of property interests you?"
+
+"Not sure about budget":
+→ "That's totally fine! Just roughly — are you thinking under 50L, 50-100L, or above?"
+
+"Looking for something nice":
+→ "Perfect! To narrow it down — what would your ideal budget be?"
+
+"Can they negotiate?":
+→ "Great question! Let me check what options we have in your budget. First, what's your range?"
+
+Don't know location:
+→ "Which part of the city are you thinking? Or what matters most — proximity to work, schools, etc.?"
+
+TONE & STYLE:
+- Use casual language ("Love it!", "Perfect!", "Great question!")
+- Use emojis occasionally but not excessively
+- Reference their answers ("You mentioned...")
+- Compliment their choices ("Smart thinking!")
+- Be genuine, not scripted
+- Keep it conversational — this is a chat, not a form
+
+IMPORTANT RULES:
+- NEVER ask 2 questions in one message
+- ALWAYS wait for their response before asking next question
+- Ask phone number ONCE early — if ignored, try again in different way.
+- Don't repeat questions they've already answered
+- If they're vague, ask ONE clarifying question, not multiple
+- Keep messages 2-3 sentences max
+- Share your personality — be warm and helpful
+- Listen and respond to what they say, not just follow a script
+
+Property listings context:
+{context_text}
+
+Remember: This is a real conversation with a real person. They might take tangents, ask random questions, or ignore something you ask. That's okay! Go with the flow, answer their questions, and naturally work toward understanding their needs. The goal is to build trust and help them find the right property.
+""",
+)
         result = await Runner.run(agent, input=user_message, session=session)
         return result.final_output
 
@@ -261,7 +339,7 @@ class InstagramWebHookView(View):
                 "last_interaction_at": timezone.now(),
             },
         )
-        self.lead= lead
+        self.lead = lead
 
         # Initialize the custom session
         session = MyCustomSession(conversation_id, self.lead)
@@ -290,10 +368,8 @@ class InstagramWebHookView(View):
         )
         print("Response to user", response_to_user)
         threading.Thread(
-    target=extract_lead_data_async,
-    args=(self.lead.id,),
-    daemon=True
-).start()
+            target=extract_lead_data_async, args=(self.lead.id,), daemon=True
+        ).start()
         # Store assistant reply
         async_to_sync(session.add_items)(
             [
@@ -399,9 +475,12 @@ class InstagramConnectView(LoginRequiredMixin, View):
     def get(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
         membership = get_object_or_404(Membership, user=request.user, company=company)
-        if membership.role not in ['admin']:
-            messages.warning(request, "You do not have permission to connect Instagram for this company, only admin can connect instagram.")
-            return redirect('company-detail', company_id=company_id)
+        if membership.role not in ["admin"]:
+            messages.warning(
+                request,
+                "You do not have permission to connect Instagram for this company, only admin can connect instagram.",
+            )
+            return redirect("company-detail", company_id=company_id)
         instagram_data = (
             company.instagram_account.instagram_data
             if company and hasattr(company, "instagram_account")
@@ -412,8 +491,8 @@ class InstagramConnectView(LoginRequiredMixin, View):
             if company and hasattr(company, "instagram_account")
             else None
         )
-        fb_connected = fb_data is not None
-        instagram_connected = instagram_data is not None
+        fb_connected = True if fb_data else False
+        instagram_connected = True if instagram_data else False
         instagram_account = company.instagram_account if instagram_connected else None
 
         context = {
@@ -692,8 +771,8 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
         try:
             if hasattr(company, "instagram_account"):
                 instagram_account = company.instagram_account
-                instagram_account.is_active = False
-                instagram_account.save(update_fields=["is_active"])
+                instagram_account.instagram_data = {}
+                instagram_account.save(update_fields=["instagram_data"])
 
                 messages.success(
                     request, "Instagram account disconnected successfully."
@@ -743,3 +822,36 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
         print("User commented on listing", company_listing_of_post_id.title)
         return self.reply_to_comment()
         """
+
+
+class FBDisconnectView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def post(self, request, company_id):
+        """Disconnect FB account"""
+        company = get_object_or_404(Company, id=company_id)
+
+        try:
+            if hasattr(company, "instagram_account"):
+                instagram_account = company.instagram_account
+                instagram_account.fb_data = {}
+                instagram_account.save(update_fields=["fb_data"])
+
+                messages.success(request, "FB account disconnected successfully.")
+                return JsonResponse(
+                    {"success": True, "message": "Disconnected successfully."}
+                )
+            else:
+                return JsonResponse(
+                    {"success": False, "error": "No FB account connected."},
+                    status=404,
+                )
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+    def get(self, request, *args, **kwargs):
+        """Reject GET requests explicitly"""
+        return JsonResponse(
+            {"success": False, "error": "Method not allowed"}, status=405
+        )

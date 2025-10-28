@@ -554,7 +554,7 @@
             {% endif %}
 
             {% if fb_connected %}
-                <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectInstagram()">
+                <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectFB()">
                     <span>🔌</span>
                     <span>Disconnect FB</span>
                 </button>
@@ -626,6 +626,40 @@ function subscribeToMessages() {
             
             // Make disconnect request
             fetch("{% url 'instagram_disconnect' company.id %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to disconnect Instagram. Please try again.');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            });
+        }
+    }
+
+    function disconnectFB() {
+        if (confirm('Are you sure you want to disconnect FB? This will stop all automated responses.')) {
+            // Add loading state
+            const btn = event.target.closest('button');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            // Make disconnect request
+            fetch("{% url 'fb_disconnect' company.id %}", {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',

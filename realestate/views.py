@@ -13,6 +13,205 @@ from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
 
+
+
+from django.utils import timezone
+from datetime import timedelta
+from .models import Lead
+
+
+def calculate_lead_score(lead: Lead) -> int:
+    """
+    Calculate lead quality score (0-100) based on multiple factors.
+    
+    Scoring breakdown:
+    - Budget alignment: 25 points
+    - Timeline urgency: 20 points
+    - Contact information: 20 points
+    - Engagement quality: 20 points
+    - Intent level: 10 points
+    - Payment method clarity: 5 points
+    """
+    score = 0
+    
+    # ============================================
+    # 1. BUDGET ALIGNMENT (max 25 points)
+    # ============================================
+    if lead.budget_max:
+        # Exact match with listing (best case)
+        if lead.listing and lead.budget_max >= lead.listing.price:
+            score += 25
+        # High budget signals strong buying power
+        elif lead.budget_max >= 10000000:  # 1 crore+
+            score += 25
+        elif lead.budget_max >= 5000000:  # 50L+
+            score += 20
+        elif lead.budget_max >= 2000000:  # 20L+
+            score += 12
+        else:
+            score += 5  # Some budget provided
+    elif lead.budget_min:
+        # At least minimum provided
+        if lead.budget_min >= 5000000:
+            score += 15
+        else:
+            score += 5
+    
+    # ============================================
+    # 2. TIMELINE URGENCY (max 20 points)
+    # ============================================
+    if lead.timeline == 'immediate':
+        score += 20  # Buying ASAP
+    elif lead.timeline == 'short':
+        score += 15  # 1-3 months
+    elif lead.timeline == 'medium':
+        score += 8   # 3-6 months
+    elif lead.timeline == 'long':
+        score += 3   # 6+ months
+    elif lead.timeline == 'just_browsing':
+        score += 1   # Very low priority
+    
+    # ============================================
+    # 3. CONTACT INFORMATION (max 20 points)
+    # ============================================
+    contact_score = 0
+    if lead.phone_number:
+        contact_score += 15  # Phone = most important for follow-up
+    if lead.email:
+        contact_score += 5   # Email = secondary contact
+    
+    # Bonus: Both provided = maximum follow-up potential
+    if lead.phone_number and lead.email:
+        contact_score = 20
+    
+    score += contact_score
+    
+    # ============================================
+    # 4. ENGAGEMENT QUALITY (max 20 points)
+    # ============================================
+    engagement_score = 0
+    
+    # Message count indicates interaction
+    if lead.total_messages >= 10:
+        engagement_score += 15
+    elif lead.total_messages >= 6:
+        engagement_score += 12
+    elif lead.total_messages >= 3:
+        engagement_score += 8
+    elif lead.total_messages >= 1:
+        engagement_score += 3
+    
+    # Recency bonus: Fresh conversations are more likely to convert
+    if lead.last_interaction_at:
+        time_since_last = timezone.now() - lead.last_interaction_at
+        if time_since_last < timedelta(hours=1):
+            engagement_score += 5  # Hot conversation
+        elif time_since_last < timedelta(days=1):
+            engagement_score += 3  # Recent
+        elif time_since_last > timedelta(days=7):
+            engagement_score -= 3  # Stale lead
+    
+    score += min(engagement_score, 20)  # Cap at 20
+    
+    # ============================================
+    # 5. INTENT LEVEL (max 10 points)
+    # ============================================
+    if lead.intent_level == 'hot':
+        score += 10
+    elif lead.intent_level == 'high':
+        score += 8
+    elif lead.intent_level == 'medium':
+        score += 4
+    elif lead.intent_level == 'low':
+        score += 1
+    
+    # ============================================
+    # 6. PAYMENT METHOD CLARITY (max 5 points)
+    # ============================================
+    if lead.payment_method == 'cash':
+        score += 5  # Cash = fastest, most reliable
+    elif lead.payment_method == 'both':
+        score += 4  # Open to options
+    elif lead.payment_method == 'loan':
+        score += 3  # Requires financing (more steps)
+    
+    # ============================================
+    # 7. PROPERTY REQUIREMENTS SPECIFICITY (bonus +5 max)
+    # ============================================
+    if lead.property_requirements:
+        requirements = lead.property_requirements
+        specificity_count = 0
+        
+        # Count how specific they are
+        if requirements.get('bedrooms'):
+            specificity_count += 1
+        if requirements.get('bathrooms'):
+            specificity_count += 1
+        if requirements.get('area_sqft'):
+            specificity_count += 1
+        if requirements.get('property_type'):
+            specificity_count += 1
+        if requirements.get('amenities'):
+            specificity_count += 1
+        
+        # More specific = higher intent
+        if specificity_count >= 4:
+            score += 5
+        elif specificity_count >= 2:
+            score += 3
+        elif specificity_count >= 1:
+            score += 1
+    
+    # ============================================
+    # 8. LOCATION SPECIFICITY (bonus +3 max)
+    # ============================================
+    if lead.preferred_location:
+        # Specific location = higher intent
+        location = lead.preferred_location.lower()
+        
+        # Very specific (includes area/neighborhood)
+        if any(keyword in location for keyword in ['sector', 'lane', 'street', 'avenue', 'road', "street"]):
+            score += 3
+        # City mentioned
+        elif len(location) > 10:  # Not just "Delhi" or "Mumbai"
+            score += 2
+        else:
+            score += 1
+    
+    # ============================================
+    # 9. BUYER TYPE SIGNALS (bonus +2 max)
+    # ============================================
+    buyer_signal = 0
+    
+    if lead.is_first_time_buyer is False:
+        buyer_signal += 1  # Experienced buyer = faster decision
+    
+    if lead.has_property_to_sell is False:
+        buyer_signal += 1  # No complications, ready to move
+    
+    score += buyer_signal
+    
+    # ============================================
+    # 10. QUALIFICATION STATUS MULTIPLIER
+    # ============================================
+    # Boost score based on how far through qualification they are
+    if lead.qualification_status == 'ready_for_agent':
+        score = min(score + 10, 100)  # Boost if ready for agent
+    elif lead.qualification_status == 'qualified':
+        score = min(score + 5, 100)   # Already qualified
+    elif lead.qualification_status == 'unqualified':
+        score = max(score - 20, 0)    # Penalize unqualified
+    
+    # ============================================
+    # FINAL SCORE CALCULATION
+    # ============================================
+    final_score = min(score, 100)
+    
+    return final_score
+
+
+
+
 def calculate_lead_score(lead : Lead):
     score = 0
     # Budget signals (max 30 points)

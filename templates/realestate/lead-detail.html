@@ -10,7 +10,7 @@
             <a href="{% url 'leads' lead.company.id %}" class="back-link">← Back to Leads</a>
         </div>
         <div class="header-title">
-            <h1>Edit Lead: @{{ lead.instagram_username }}</h1>
+            <h1>Lead: @{{ lead.instagram_username }}</h1>
             <span class="status-badge status-{{ lead.status }}">{{ lead.get_status_display }}</span>
         </div>
     </div>
@@ -212,6 +212,13 @@
                 <textarea id="agent_notes" name="agent_notes" class="form-textarea" placeholder="Add internal notes about this lead, follow-up actions, or important details...">{{ lead.agent_notes }}</textarea>
             </div>
 
+            <div class="form-section full-width">
+                <h3>Conversation summary (Read-only)</h3>
+                <div class="summary-box">
+                    {{ lead.ai_conversation_summary }}
+                </div>
+            </div>
+
             <!-- Conversation Summary (Read-only) -->
             {% if conversations_formatted %}
             <div class="form-section full-width">
@@ -220,6 +227,7 @@
                     {{ conversations_formatted|linebreaks }}
                 </div>
             </div>
+            <br>
             {% endif %}
 
             <!-- Form Actions -->

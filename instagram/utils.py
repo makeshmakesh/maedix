@@ -31,52 +31,106 @@ def extract_lead_data_async(lead_id, lead=None):
     conversation_text = format_conversation_messages(messages)
 
     agent = Agent(
-        name="Lead Data Extractor",
-        model="gpt-4-turbo",
-        instructions="""
-    You are an AI assistant that reads a real estate chat conversation and extracts structured lead data.
-    Output a single valid JSON object **only**, with the following fields:
+    name="Lead Data Extractor",
+    model="gpt-4-turbo",
+    instructions="""
+You are an AI assistant that reads a real estate chat conversation and extracts structured lead data.
+Output a single valid JSON object **only**, with the following fields:
 
-    - customer_name: string or null
-    - phone_number: string (digits, include country code if possible) or null
-    - email: string or null
-    - preferred_location: string or null
-    - budget_min: number or null
-    - budget_max: number or null
-    - timeline: one of ["immediate", "short", "medium", "long", "just_browsing"] or null
-    - payment_method: one of ["cash", "loan", "both", "unknown"]
-    - property_requirements: JSON object (example: {"bedrooms": 2, "bathrooms": 2, "area_sqft": 1200}) or empty object {}
-    - intent_level: one of ["low", "medium", "high", "hot"] or null
-    - qualification_status: one of ["initiated", "in_progress", "qualified", "unqualified", "no_response", "ready_for_agent"]
-    - summary: string, concise summary of user conversation
+REQUIRED FIELDS:
+- customer_name: string or null
+- phone_number: string (digits, include country code if possible) or null
+- email: string or null
+- preferred_location: string or null
+- budget_min: number or null
+- budget_max: number or null
+- timeline: one of ["immediate", "short", "medium", "long", "just_browsing"] or null
+- payment_method: one of ["cash", "loan", "both", "unknown"]
+- property_requirements: JSON object (example: {"bedrooms": 2, "bathrooms": 2, "area_sqft": 1200}) or empty object {}
+- intent_level: one of ["low", "medium", "high", "hot"] or null
+- qualification_status: one of ["initiated", "in_progress", "qualified", "unqualified", "no_response", "ready_for_agent"]
+- status: one of ["active", "qualified_hot", "qualified_warm", "qualified_cold", "unqualified", "spam", "closed_won", "closed_lost"]
+- ai_conversation_summary: string, concise summary of user conversation
 
-    Rules:
-    1. Output only JSON. Do not include any extra text or explanations outside the JSON object.
-    2. If a field value is unknown, use null (not empty string).
-    3. property_requirements must be an object even if empty.
-    4. Always include all fields.
-    5. All numbers must be valid JSON numbers (not strings).
+EXTRACTION RULES:
 
-    Example output:
+1. Output only valid JSON. No extra text outside the JSON object.
+2. If a field value is unknown, use null (not empty string).
+3. property_requirements must be an object, even if empty {}.
+4. Always include all fields.
+5. All numbers must be valid JSON numbers (not strings).
 
-    {
-        "customer_name": "John Doe",
-        "phone_number": "+911234567890",
-        "email": "johndoe@example.com",
-        "preferred_location": "Bangalore, Whitefield",
-        "budget_min": 5000000,
-        "budget_max": 8000000,
-        "timeline": "short",
-        "payment_method": "loan",
-        "property_requirements": {"bedrooms": 3, "bathrooms": 2, "area_sqft": 1500},
-        "intent_level": "high",
-        "qualification_status": "in_progress",
-        "summary": "User is looking for a 3BHK apartment in Whitefield within 5-8M INR, wants to buy in 1-3 months using a home loan."
-    }
+QUALIFICATION LOGIC (Critical):
 
-    Now analyze the following conversation and produce a JSON strictly matching the fields above.
-    """
-    )
+Set qualification_status based on conversation analysis:
+- "initiated" → Just started talking, minimal info
+- "in_progress" → Has provided some info (name, location, or timeline mentioned)
+- "qualified" → Has name/phone + at least 2 of: budget + location + property type + timeline
+- "unqualified" → Explicitly not interested, spam, or rude
+- "no_response" → They stopped responding mid-conversation
+- "ready_for_agent" → Qualified + phone number present → MARK THIS FOR HANDOFF
+
+Set status based on engagement and qualification:
+- "active" → Actively chatting, responding well
+- "qualified_hot" → Has phone + budget + location + timeline → HOT LEAD (ready for immediate agent follow-up)
+- "qualified_warm" → Has phone + 2-3 of (budget/location/timeline/property type) → Warm lead
+- "qualified_cold" → Has basic info but vague on budget/timeline → Cold lead
+- "unqualified" → Not interested or spam
+- "spam" → Irrelevant messages, multiple requests, suspicious behavior
+- "closed_won" → Lead converted/property bought (if mentioned)
+- "closed_lost" → Explicitly said not interested or stopped responding
+
+INTENT LEVEL MAPPING (based on what they say and ask):
+- "low" → Passive browsing, no urgency, vague responses
+- "medium" → Interested but still exploring, some hesitation
+- "high" → Active interest, asking specific questions, has preferences
+- "hot" → Very engaged, phone provided, clear budget/timeline, ready to move forward
+
+TIMELINE INTERPRETATION:
+- immediate → "ASAP", "this month", "URGENTLY", "right now"
+- short → "next month", "1-3 months", "soon", "Q1"
+- medium → "3-6 months", "half year", "this year"
+- long → "6+ months", "next year", "taking time"
+- just_browsing → "just looking", "exploring", "browsing", "no rush"
+
+PROPERTY REQUIREMENTS:
+Extract these if mentioned:
+- bedrooms: number
+- bathrooms: number
+- area_sqft: number
+- property_type: "apartment", "villa", "land", "builder floor", etc.
+- amenities: ["list", "of", "amenities"] if mentioned
+- furnished: "furnished", "semi-furnished", "unfurnished"
+
+EXAMPLE OUTPUT:
+
+{
+    "customer_name": "John Doe",
+    "phone_number": "+911234567890",
+    "email": "johndoe@example.com",
+    "preferred_location": "Bangalore, Whitefield",
+    "budget_min": 5000000,
+    "budget_max": 8000000,
+    "timeline": "short",
+    "payment_method": "loan",
+    "property_requirements": {"bedrooms": 3, "bathrooms": 2, "area_sqft": 1500, "property_type": "apartment"},
+    "intent_level": "high",
+    "qualification_status": "ready_for_agent",
+    "status": "qualified_hot",
+    "ai_conversation_summary": "John is looking for a 3BHK apartment in Whitefield, budget 50-80L, wants to buy in 1-3 months using home loan. Very engaged, provided phone number. Ready for agent follow-up."
+}
+
+SPECIAL CASES:
+
+1. If they provide phone + budget + location + clear timeline → ALWAYS "qualified_hot" and "ready_for_agent"
+2. If vague on all fronts but engaging → "in_progress" and "active"
+3. If they say "just browsing" → "qualified_cold" at best, never "hot"
+4. If conversation died out → "no_response" but keep "active" status if recent
+5. If they're rude or irrelevant → "unqualified" and "spam"
+
+Now analyze the following conversation and produce a JSON strictly matching the fields above.
+""",
+)
 
     # Run the async agent synchronously
     result = async_to_sync(Runner.run)(agent, input=conversation_text)

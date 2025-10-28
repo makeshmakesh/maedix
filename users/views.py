@@ -4,7 +4,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import CustomUser as User
 from django.contrib.auth import authenticate, login, logout
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import UserProfileForm
 
 class SignupView(View):
     """View for user registration."""
@@ -105,3 +106,39 @@ class LogoutView(View):
     def post(self, request):
         logout(request)  # Logs out the user
         return redirect("login")  # Redirect to login page
+    
+    
+class ProfileView(LoginRequiredMixin, View):
+    """Display and edit user profile"""
+    
+    def get(self, request):
+        form = UserProfileForm(instance=request.user)
+        context = {
+            'form': form,
+            'user': request.user,
+        }
+        return render(request, 'users/profile.html', context)
+    
+    def post(self, request):
+        form = UserProfileForm(request.POST, instance=request.user)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        else:
+            if form.errors:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        if field == '__all__':
+                            # Non-field errors
+                            messages.error(request, str(error))
+                        else:
+                            # Field-specific errors
+                            messages.error(request, f'{field.replace("_", " ").title()}: {error}')
+        
+        context = {
+            'form': form,
+            'user': request.user,
+        }
+        return render(request, 'users/profile.html', context)
