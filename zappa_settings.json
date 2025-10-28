@@ -2,6 +2,7 @@
     "dev": {
         "aws_region": "us-east-1",
         "django_settings": "maedix_core.settings",
+        "app_function": "maedix_core.wsgi.application",
         "exclude": [
             "boto3",
             "dateutil",
