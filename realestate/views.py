@@ -3,6 +3,7 @@ from django.views import View
 from django.shortcuts import render, redirect, get_object_or_404
 from users.models import CustomUser
 from .models import Membership, Company, PropertyListing, Lead, ConversationMessage, CompanyInvitation
+from core.models import Subscription
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.contrib import messages
@@ -12,7 +13,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
-
+from instagram.models import InstagramAccount
 
 
 from django.utils import timezone
@@ -209,42 +210,6 @@ def calculate_lead_score(lead: Lead) -> int:
     
     return final_score
 
-
-
-
-def calculate_lead_score(lead : Lead):
-    score = 0
-    # Budget signals (max 30 points)
-    if lead.budget_max:
-
-        if lead.listing and lead.budget_max >= lead.listing.price:
-            score += 30
-        elif lead.budget_max >= 5000000:  # High budget
-            score += 20
-    
-    # Timeline urgency (max 25 points)
-    if lead.timeline == 'immediate':
-        score += 25
-    elif lead.timeline == 'short':
-        score += 15
-    
-    # Contact info provided (max 20 points)
-    if lead.phone_number:
-        score += 15
-    if lead.email:
-        score += 5
-    
-    # Engagement quality (max 15 points)
-    if lead.total_messages >= 5:
-        score += 15
-    elif lead.total_messages >= 3:
-        score += 10
-    
-    # Requirements match (max 10 points)
-    if lead.property_requirements:
-        score += 10
-    print("Final Score:", score)
-    return min(score, 100)
 # Create your views here.
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request):
@@ -297,6 +262,10 @@ class MyInvitationsView(LoginRequiredMixin, View):
 class InvitationsView(LoginRequiredMixin, View):
     def get(self, request, company_id):
         membership = get_object_or_404(Membership, user=request.user, company_id=company_id)
+        subscription = Subscription.objects.filter(company_id=company_id).first()
+        if not subscription or not subscription.is_active() or not subscription.has_permission("multi_agent_collaboration"):
+            messages.warning(request, "Your company subscription is inactive or do not have permissions to manage invitations. Please renew or upgrade to manage invitations.")
+            return redirect('company-detail', company_id=company_id)
         if membership.role not in ['admin', 'manager']:
             messages.warning(request, "You do not have permission to view invitations for this company.")
             return redirect('company-detail', company_id=company_id)
@@ -531,6 +500,15 @@ class LeadDetailView(LoginRequiredMixin, View):
 class ListingCreateView(LoginRequiredMixin, View):
     def post(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
+        subscription = Subscription.objects.filter(company=company).first()
+        if not subscription or not subscription.is_active() or subscription.has_permission("property_listing_integration") is False:
+            messages.warning(request, "Your company subscription is inactive or do not have permissions to create property listings. Please renew or upgrade to create listings.")
+            return redirect('listings', company_id=company_id)
+        listing_count = PropertyListing.objects.filter(company=company).count()
+        feature = subscription.get_feature("property_listing_integration")
+        if feature and feature.get("limit") is not None and listing_count >= feature.get("limit"):
+            messages.warning(request, f"You have reached the listing limit of your current plan ({feature.get('limit')} listings). Please upgrade your plan to add more listings.")
+            return redirect('listings', company_id=company_id)
         
         try:
             # Extract form data - Basic Information
@@ -676,6 +654,10 @@ class ListingDeleteView(LoginRequiredMixin, View):
     def post(self, request, company_id, listing_id):
         try:
             company = get_object_or_404(Company, id=company_id)
+            membership = get_object_or_404(Membership, user=request.user, company=company)
+            if membership.role not in ['admin', 'manager']:
+                messages.error(request, "You do not have permission to delete listings for this company.")
+                return redirect('listings', company_id=company_id)
             listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
             
             listing_title = listing.title
@@ -698,22 +680,26 @@ class ListingDeleteView(LoginRequiredMixin, View):
 def get_instagram_posts(request, company_id):
     """Fetch Instagram posts for post selection"""
     company = get_object_or_404(Company, id=company_id)
-    
-    
-    # Check if Instagram is connected
-    if not hasattr(company, 'instagram_account') or not company.instagram_account.is_active:
+    instagram_account = InstagramAccount.objects.filter(company=company).first()
+    if not instagram_account:
         return JsonResponse({
             'success': False,
             'error': 'Instagram account not connected. Please connect your Instagram account first.'
         })
     
-    instagram_account = company.instagram_account
+    access_token=instagram_account.instagram_data["access_token"]
+    instagram_business_account_id = instagram_account.fb_data["instagram_business_account_id"]
+    if not access_token or not instagram_business_account_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'Instagram account not properly configured. Please reconnect your Instagram account.'
+        })
     try:
         # Fetch media from Instagram Graph API
-        media_url = f"https://graph.instagram.com/v24.0/{instagram_account.instagram_business_account_id}/media"
+        media_url = f"https://graph.instagram.com/v24.0/{instagram_business_account_id}/media"
         params = {
             'fields': 'id,media_type,media_url,thumbnail_url,timestamp,caption',
-            'access_token': instagram_account.access_token,
+            'access_token': access_token,
             'limit': 50  # Get last 50 posts
         }
         
@@ -739,3 +725,35 @@ def get_instagram_posts(request, company_id):
             'success': False,
             'error': f'Failed to fetch Instagram posts: {str(e)}'
         })
+        
+class CompanyManageView(LoginRequiredMixin, View):
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        subscription = Subscription.objects.filter(company=company).first()
+        if membership.role not in ['admin', 'manager']:
+            messages.warning(request, "You do not have permission to manage this company.")
+            return redirect('company-detail', company_id=company_id)
+        context = {
+            "company": company,
+            "membership": membership,
+            "subscription" : subscription,
+        }
+        return render(request, "realestate/manage-company.html", context)
+    
+    def post(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        if membership.role not in ['admin', 'manager']:
+            messages.warning(request, "You do not have permission to manage this company.")
+            return redirect('company-detail', company_id=company_id)
+        
+        # Update company details
+        company.name = request.POST.get('company_name', company.name)
+        company.industry = request.POST.get('industry', company.industry)
+        # Add more fields as necessary
+        
+        company.save()
+        
+        messages.success(request, f"Company '{company.name}' updated successfully!")
+        return redirect('company-manage', company_id=company_id)

@@ -4,10 +4,6 @@ from openai import OpenAI
 from realestate.models import PropertyListing
 client = OpenAI()
 from pgvector.django import CosineDistance
-
-
-
-import threading
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from agents import Agent, Runner
@@ -190,3 +186,39 @@ def find_relevant_properties(user_message, limit=10):
 
     # Return full summaries for context feeding
     return [summarize_property(l) for l in listings]
+
+
+def parse_instagram_payload(data: dict):
+    try:
+        response = {"webhook_type": "unknown"}
+        entry = data.get("entry", [])
+        if not entry:
+            return response
+        latest_entry = entry[0]
+        if not latest_entry:
+            return response
+        if "messaging" in latest_entry:
+            message_data = latest_entry["messaging"][0]
+            response["webhook_type"] = "message"
+            response["sender"] = message_data["sender"]["id"]
+            response["sender_username"] = message_data["sender"]["id"]
+            response["recipient"] = message_data["recipient"]["id"]
+            response["message"] = message_data["message"]["text"]
+            response["message_id"] = message_data["message"]["mid"]
+            return response
+        if "changes" in latest_entry:
+            comment_data = latest_entry["changes"][0]
+            response["webhook_type"] = "comment"
+            response["recipient"] = latest_entry["id"]
+            response["sender"] = comment_data["value"]["from"]["id"]
+            response["sender_username"] = comment_data["value"]["from"]["username"]
+            response["post_id"] = comment_data["value"]["media"]["id"]
+            response["parent_id"] = comment_data["value"].get("parent_id","")
+            response["comment_id"] = comment_data["value"]["id"]
+            response["post_type"] = comment_data["value"]["media"]["media_product_type"]
+            response["comment_text"] = comment_data["value"]["text"]
+            return response
+        return response
+    except Exception as error:
+        print("Error on webhook data parse", error)
+        return {"webhook_type": "unknown"}

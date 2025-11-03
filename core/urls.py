@@ -10,7 +10,12 @@ urlpatterns = [
     path("terms", views.TermsPage.as_view(), name="terms"),
     path("privacy-policy", views.PrivacyPolicyPage.as_view(), name="privacy-policy"),
     path("contact", views.ContactPage.as_view(), name="contact"),
-    path("plans/", views.PlansPage.as_view(), name="plans")
+    path("plans/", views.PlansPage.as_view(), name="plans"),
+    path("company-plans/<str:company_id>", views.PlansPageCompany.as_view(), name="company-plans"),
+    path('company/<str:company_id>/plan/<str:plan_id>/order_confirmation', views.OrderConfirmationView.as_view(), name='order_confirmation'),
+    path('payment/success/', views.PaymentSuccessView.as_view(), name='payment_success'),
+    path('payment/success/page/', views.PaymentSuccessPageView.as_view(), name='payment_success_page'),
+    path('payment/failed/', views.PaymentFailedView.as_view(), name='payment_failed'),
 ]
 
 

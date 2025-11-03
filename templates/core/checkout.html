@@ -1,0 +1,589 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Checkout - MAEDIX{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: 2rem 1rem;
+    }
+
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+    }
+
+    .checkout-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 2.5rem;
+        box-shadow: var(--shadow-glow);
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .checkout-header {
+        margin-bottom: 2.5rem;
+    }
+
+    .checkout-title {
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .checkout-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .order-summary {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+
+    .summary-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        color: var(--text-secondary);
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+
+    .summary-row.total {
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid rgba(59, 130, 246, 0.3);
+        color: var(--text-primary);
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+
+    .summary-label {
+        font-weight: 500;
+        font-size: 1rem;
+    }
+
+    .summary-value {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    .plan-badge {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .plan-features {
+        background: rgba(59, 130, 246, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .feature-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        background: var(--primary-gradient);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.8rem;
+    }
+
+    .payment-section {
+        position: sticky;
+        top: 100px;
+    }
+
+    .btn-payment {
+        width: 100%;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.4rem 2rem;
+        border-radius: 30px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-payment::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-payment:hover::before {
+        left: 100%;
+    }
+
+    .btn-payment:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0, 212, 255, 0.6);
+    }
+
+    .btn-payment:disabled {
+        background: rgba(100, 116, 139, 0.3);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-back {
+        width: 100%;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        padding: 1.1rem 2rem;
+        border-radius: 30px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 2px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-back:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: #60a5fa;
+    }
+
+    .security-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: #22c55e;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .payment-methods {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .payment-methods-title {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .payment-methods-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .payment-method-badge {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .payment-method-badge:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .loading-spinner {
+        display: none;
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .btn-payment.processing .loading-spinner {
+        display: block;
+    }
+
+    .btn-payment.processing .btn-text {
+        display: none;
+    }
+
+    .trust-badges {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.4);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .trust-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .trust-icon {
+        font-size: 1.5rem;
+    }
+
+    .trust-text {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
+    .price-highlight {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    @media (max-width: 1024px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .payment-section {
+            position: static;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .checkout-container {
+            padding: 1.5rem 0.5rem;
+        }
+
+        .checkout-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .checkout-title {
+            font-size: 1.75rem;
+        }
+
+        .order-summary {
+            padding: 1.5rem;
+        }
+
+        .payment-methods-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .trust-badges {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-grid">
+        <!-- Left Column - Order Details -->
+        <div class="checkout-card fade-in">
+            <div class="checkout-header">
+                <h1 class="checkout-title">Complete Your Purchase</h1>
+                <p class="checkout-subtitle">You're one step away from unlocking AI-powered lead automation for your real estate business</p>
+            </div>
+
+            <div class="order-summary">
+                <h2 class="summary-title">
+                    <span>📋</span>
+                    <span>Order Summary</span>
+                </h2>
+                
+                <div class="summary-row">
+                    <span class="summary-label">Selected Plan</span>
+                    <span class="plan-badge">
+                        <span>✨</span>
+                        <span>{{ plan_name }}</span>
+                    </span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="summary-label">Subscription Period</span>
+                    <span class="summary-value">{{duration}} {{plan.duration_period}}</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal</span>
+                    <span class="summary-value">{{ currency_symbol }}{{ price }}</span>
+                </div>
+
+                <div class="summary-row total">
+                    <span class="summary-label">Total Amount</span>
+                    <span class="summary-value price-highlight">{{ currency_symbol }}{{ price }}</span>
+                </div>
+            </div>
+
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <div class="trust-icon">🔒</div>
+                    <div class="trust-text">Secure<br>Payment</div>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-icon">⚡</div>
+                    <div class="trust-text">Instant<br>Activation</div>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-icon">🔄</div>
+                    <div class="trust-text">Cancel<br>Anytime</div>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-icon">💬</div>
+                    <div class="trust-text">24/7<br>Support</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Payment -->
+        <div class="payment-section">
+            <div class="checkout-card fade-in" style="animation-delay: 0.2s;">
+                <button id="rzp-button" class="btn-payment">
+                    <span class="btn-text">
+                        <span>🔒</span>
+                        <span>Proceed to Payment</span>
+                    </span>
+                    <div class="loading-spinner"></div>
+                </button>
+
+                <a href="{% url 'company-plans' company_id %}" class="btn-back">
+                    <span>←</span>
+                    <span>Back to Plans</span>
+                </a>
+
+                <div class="security-badge">
+                    <span>🔒</span>
+                    <span>Secured by Razorpay • 256-bit encryption</span>
+                </div>
+
+                <div class="payment-methods">
+                    <div class="payment-methods-title">Accepted Payment Methods</div>
+                    <div class="payment-methods-grid">
+                        <div class="payment-method-badge">💳 Credit/Debit Cards</div>
+                        <div class="payment-method-badge">🏦 UPI Payments</div>
+                        <div class="payment-method-badge">📱 Digital Wallets</div>
+                        <div class="payment-method-badge">🏪 Net Banking</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rzpButton = document.getElementById('rzp-button');
+    
+    // Smooth entrance animations
+    const cards = document.querySelectorAll('.checkout-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 + (index * 200));
+    });
+    
+    // Razorpay options
+    const options = {
+        "key": "{{ razorpay_key_id }}", 
+        "amount": "{{ amount_smallest_unit }}", // Amount in smallest currency unit (paise/cents)
+        "currency": "{{ currency }}",
+        "name": "MAEDIX",
+        "description": "{{ plan_name }}",
+        "image": "https://prepai.online/static/logo.png", // Update with your logo
+        "order_id": "{{ order_id }}",
+        "handler": function (response) {
+            // Payment successful - send to backend for verification
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "payment_success" %}';
+            
+            const inputs = {
+                'razorpay_payment_id': response.razorpay_payment_id,
+                'razorpay_order_id': response.razorpay_order_id,
+                'razorpay_signature': response.razorpay_signature,
+                'plan': '{{ plan_id }}',
+                'price': '{{ price }}',
+                'currency': '{{ currency }}',
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+                'company_id': '{{ company_id }}'
+            };
+            
+            Object.keys(inputs).forEach(key => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = inputs[key];
+                form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+        },
+        "prefill": {
+            "name": "{{ user.get_full_name|default:user.username }}",
+            "email": "{{ user.email }}",
+            "contact": "{{ user.profile.phone|default:'' }}"
+        },
+        "notes": {
+            "plan_type": "{{ plan_id }}",
+            "currency": "{{ currency }}",
+            "company_id": "{{ company_id }}"
+        },
+        "theme": {
+            "color": "#0066ff"
+        },
+        "modal": {
+            "ondismiss": function() {
+                rzpButton.classList.remove('processing');
+            }
+        }
+    };
+    
+    const rzp = new Razorpay(options);
+    
+    // Handle payment failure
+    rzp.on('payment.failed', function (response) {
+        rzpButton.classList.remove('processing');
+        
+        alert('Payment Failed: ' + response.error.description);
+        
+        // Optional: Send failure info to backend
+        fetch('{% url "payment_failed" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                error_code: response.error.code,
+                error_description: response.error.description,
+                order_id: response.error.metadata.order_id,
+                payment_id: response.error.metadata.payment_id,
+                currency: "{{ currency }}"
+            })
+        });
+    });
+    
+    // Open Razorpay checkout on button click
+    rzpButton.onclick = function(e) {
+        e.preventDefault();
+        rzpButton.classList.add('processing');
+        rzp.open();
+    };
+});
+</script>
+{% endblock %}

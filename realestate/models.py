@@ -116,12 +116,34 @@ class PropertyListing(models.Model):
             except ValueError:
                 return False
         return False
+    
+    
+    def summarize_property(self) -> str:
+        """Create a concise but complete text summary for LLM context."""
+        summary = (
+            f"🏡 {self.title}\n"
+            f"Type: {self.get_property_type_display()} | Status: {self.get_status_display()}\n"
+            f"Location: {self.location}\n"
+            f"Company: {self.company.name if self.company_id and self.company else '-'}\n"
+            f"Price: {self.price or '-'} {self.currency} ({self.get_price_type_display()})\n"
+            f"Bedrooms: {self.bedrooms or '-'} | Bathrooms: {self.bathrooms or '-'}\n"
+            f"Area: {self.area_sqft or '-'} sqft\n"
+            f"Land Area: {self.land_area or '-'} {self.get_land_unit_display() if self.land_unit else '-'}\n"
+            f"Amenities: {self.amenities or '-'}\n"
+            f"Description: {(self.description[:400] + '...') if self.description and len(self.description) > 400 else (self.description or '-')}\n"
+            f"Additional Info: {self.ai_context_notes or '-'}\n"
+            f"Created: {self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else '-'} | "
+            f"Updated: {self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else '-'}"
+        )
+        return summary
+
 
 
 # Create your models here.
 class Company(models.Model):
     name = models.CharField(max_length=255)
     industry = models.CharField(max_length=100, blank=True)
+    detail = models.JSONField(default=dict, blank=True)
     created_by = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.SET_NULL,  # keeps company even if user is deleted

@@ -270,7 +270,7 @@
         </div>
         {% else %}
         <div class="plan-cta">
-            <a href="{% url 'dashboard' %}" class="btn {{ plan.button_class }}">Select plan</a> 
+            <a href="{% url 'order_confirmation' company.id plan.id %}" class="btn {{ plan.button_class }}">Choose Plan</a> 
         </div>
         {% endif %}
     </div>

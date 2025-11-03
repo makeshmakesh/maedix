@@ -1,11 +1,8 @@
 # pylint:disable=all
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
-from django.conf import settings
-from django.urls import reverse
 from datetime import datetime, timedelta
 from .models import InstagramAccount
 from realestate.models import (
@@ -28,118 +25,18 @@ import os
 logger = logging.getLogger(__name__)
 from realestate.models import Company, Lead
 from django.utils import timezone
-from typing import List, Optional
-from asgiref.sync import sync_to_async
-from asgiref.sync import async_to_sync
+from asgiref.sync import sync_to_async, async_to_sync
+
 from agents import Agent, Runner
 import threading
-from .utils import extract_lead_data_async
-
-
-class MyCustomSession:
-    """Custom session backed by the ConversationMessage model."""
-
-    def __init__(self, conversation_id: str, lead):
-        self.conversation_id = conversation_id
-        self.lead = lead
-
-    async def get_items(self, limit: Optional[int] = None) -> List[dict]:
-        """Retrieve messages for this conversation."""
-        queryset = ConversationMessage.objects.filter(
-            conversation_id=self.conversation_id
-        ).order_by("timestamp")
-        if limit:
-            queryset = queryset[:limit]
-        messages = await sync_to_async(list)(queryset)
-        res = []
-        for m in messages:
-            if m.message_text:
-                res.append({"role": m.sender_type, "content": m.message_text})
-        return res
-
-    async def add_items(self, items: List[dict]) -> None:
-        """Store new messages."""
-        objs = []
-        for item in items:
-            if not item.get("message_text", ""):
-                continue
-            objs.append(
-                ConversationMessage(
-                    lead=self.lead,
-                    conversation_id=self.conversation_id,
-                    sender_type=item.get("sender_type", "assistant"),
-                    message_text=item.get("message_text", ""),
-                    message_type=item.get("message_type", "follow_up"),
-                    extracted_data=item.get("extracted_data", {}),
-                    confidence_score=item.get("confidence_score"),
-                    is_from_instagram=item.get("is_from_instagram", False),
-                    instagram_message_id=item.get("instagram_message_id", None),
-                )
-            )
-        await sync_to_async(ConversationMessage.objects.bulk_create)(objs)
-
-    async def pop_item(self) -> Optional[dict]:
-        """Remove and return the latest message."""
-        latest = await sync_to_async(
-            lambda: ConversationMessage.objects.filter(
-                conversation_id=self.conversation_id
-            )
-            .order_by("-timestamp")
-            .first()
-        )()
-        if not latest:
-            return None
-        data = {
-            "sender_type": latest.sender_type,
-            "message_text": latest.message_text,
-            "timestamp": latest.timestamp.isoformat(),
-            "message_type": latest.message_type,
-        }
-        await sync_to_async(latest.delete)()
-        return data
-
-    async def clear_session(self) -> None:
-        """Delete all messages for this conversation."""
-        await sync_to_async(
-            lambda: ConversationMessage.objects.filter(
-                conversation_id=self.conversation_id
-            ).delete()
-        )()
-
-
-def parse_instagram_payload(data: dict):
-    try:
-        response = {"webhook_type": "unknown"}
-        entry = data.get("entry", [])
-        if not entry:
-            return response
-        latest_entry = entry[0]
-        if not latest_entry:
-            return response
-        if "messaging" in latest_entry:
-            message_data = latest_entry["messaging"][0]
-            response["webhook_type"] = "message"
-            response["sender"] = message_data["sender"]["id"]
-            response["recipient"] = message_data["recipient"]["id"]
-            response["message"] = message_data["message"]["text"]
-            response["message_id"] = message_data["message"]["mid"]
-            return response
-        if "changes" in latest_entry:
-            comment_data = latest_entry["changes"][0]
-            response["webhook_type"] = "comment"
-            response["sender"] = comment_data["value"]["from"]["id"]
-            response["sender_username"] = comment_data["value"]["from"]["username"]
-            response["post_id"] = comment_data["value"]["media"]["id"]
-            response["post_type"] = comment_data["value"]["media"]["media_product_type"]
-            response["comment_text"] = comment_data["value"]["text"]
-            return response
-        return response
-    except Exception as error:
-        print("Error on webhook data parse", error)
-        return {"webhook_type": "unknown"}
-
-
-from .utils import find_relevant_properties
+from .utils import (
+    extract_lead_data_async,
+    parse_instagram_payload,
+    find_relevant_properties,
+)
+from core.models import Subscription, EventRegister
+from .session import MyCustomSession
+from .agent_instructions import AGENT_1, AGENT_2
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -174,120 +71,15 @@ class InstagramWebHookView(View):
         messages = await session.get_items()
         print("History going to LLM:", messages)
         agent = Agent(
-    name="Instagram Real Estate Assistant",
-    model="gpt-4-turbo",
-    instructions=f"""
-You are a friendly, helpful real estate assistant for {self.company.name}, 
-chatting with potential buyers on Instagram DMs.
-
-YOUR PERSONALITY:
-- Warm, conversational, and genuine — like a real team member, not a bot
-- Keep responses short and natural (2-3 sentences max per message)
-- Mirror the user's energy and tone
-- Use their name when they share it
-- Be helpful and proactive, not pushy
-
-YOUR GOAL:
-Have a natural conversation while collecting these key details naturally:
-- Name
-- Phone number (priority — ask once early , if not shared, ask again in different way later in conversation, but don't miss it)
-- Budget range
-- Preferred location/neighborhood
-- Property type and requirements (bedrooms, sqft, amenities)
-- Timeline (when they want to buy)
-- Payment method (cash/loan/both)
-- First-time buyer status
-- Whether they own/need to sell another property
-- Email (optional, for follow-up)
-
-CONVERSATION FLOW (ONE QUESTION AT A TIME):
-
-**Message 1-2: Greeting**
-- Welcome them warmly
-- Example: "Hey! Thanks for reaching out! 👋 what is your name?"
-
-**Message 3: Phone Number (ASK ONCE)**
-- After they told name, naturally ask for phone
-- Example: "Love it! To make sure we can follow up with you quickly, could I grab your phone number?"
-- If they ignore this and answer your next question instead, ask again un different way.
-- Move forward with conversation naturally
-
-**Message 4+: Understand Their Needs**
-Ask one question at a time based on what's missing:
-
-Location:
-- "What area are you interested in? chennai, banglore, delhi, noida, or a specific neighborhood?"
-- "Which neighborhoods sound good to you?"
-
-Property Type:
-- "What type are you looking for — apartment, villa, or land?"
-- "How many bedrooms do you need?"
-
-Budget:
-- "What's your budget range?"
-- "Great! And what's the upper limit you're comfortable with?"
-
-Timeline:
-- "When are you looking to buy — soon or taking your time?"
-- "Are you thinking this month, next quarter, or further out?"
-
-Payment Method:
-- "Will you be paying with cash or planning to home loan?"
-- "Are you open to both options?"
-
-Buyer Status:
-- "Is this your first property purchase?"
-- "Do you currently own a property?"
-
-**Message 5+: Suggest & Engage**
-- Once you understand their basics, suggest relevant properties
-- Explain WHY each fits their needs
-- Keep them engaged with property details
-- Reference what they told you ("You mentioned budget of X and like Y area...")
-
-HANDLING COMMON SCENARIOS:
-
-"Just browsing":
-→ "No worries! Happy to show you what's available. What kind of property interests you?"
-
-"Not sure about budget":
-→ "That's totally fine! Just roughly — are you thinking under 50L, 50-100L, or above?"
-
-"Looking for something nice":
-→ "Perfect! To narrow it down — what would your ideal budget be?"
-
-"Can they negotiate?":
-→ "Great question! Let me check what options we have in your budget. First, what's your range?"
-
-Don't know location:
-→ "Which part of the city are you thinking? Or what matters most — proximity to work, schools, etc.?"
-
-TONE & STYLE:
-- Use casual language ("Love it!", "Perfect!", "Great question!")
-- Use emojis occasionally but not excessively
-- Reference their answers ("You mentioned...")
-- Compliment their choices ("Smart thinking!")
-- Be genuine, not scripted
-- Keep it conversational — this is a chat, not a form
-
-IMPORTANT RULES:
-- NEVER ask 2 questions in one message
-- ALWAYS wait for their response before asking next question
-- Ask phone number ONCE early — if ignored, try again in different way.
-- Don't repeat questions they've already answered
-- If they're vague, ask ONE clarifying question, not multiple
-- Keep messages 2-3 sentences max
-- Share your personality — be warm and helpful
-- Listen and respond to what they say, not just follow a script
-
-Property listings context:
-{context_text}
-
-Remember: This is a real conversation with a real person. They might take tangents, ask random questions, or ignore something you ask. That's okay! Go with the flow, answer their questions, and naturally work toward understanding their needs. The goal is to build trust and help them find the right property.
-""",
-)
+            name="Instagram Real Estate Assistant",
+            model="gpt-4-turbo",
+            instructions=AGENT_1.format(
+                company_name=self.company.name, context_text=context_text
+            ),
+        )
         result = await Runner.run(agent, input=user_message, session=session)
         return result.final_output
+        #return "Reply from llm"
 
     def get_reply_from_llm(self, conversation_id, user_message):
         return async_to_sync(self.get_reply_from_llm_async)(
@@ -327,19 +119,46 @@ Remember: This is a real conversation with a real person. They might take tangen
             return {}
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
         self.company = company_instagram_account.company
-        lead, created = Lead.objects.update_or_create(
+
+        lead, created = Lead.objects.get_or_create(
             instagram_conversation_id=conversation_id,
             defaults={
                 "company": company_instagram_account.company,
                 "source_type": "instagram_dm",
-                "instagram_username": str(data["sender"]),  # or resolved username
+                "instagram_username": str(data["sender"]),
                 "qualification_status": "initiated",
                 "status": "active",
                 "last_customer_message": str(data["message"]),
                 "last_interaction_at": timezone.now(),
-            },
+            }
         )
+
+        # Update only if lead already existed
+        if not created:
+            lead.last_customer_message = str(data["message"])
+            lead.last_interaction_at = timezone.now()
+            # Don't update source_type - keep original
+            lead.save(update_fields=['last_customer_message', 'last_interaction_at', 'status'])
+
+        subscription = Subscription.objects.filter(company=self.company).first()
+        if created:
+            # Increment leads_used count
+            subscription.leads_used += 1
+            subscription.save()
+            print("New lead created from Instagram DM:", lead.id)
         self.lead = lead
+        if (
+            not subscription
+            or not subscription.is_active()
+            or subscription.has_permission("instagram_dm") is False
+        ):
+            print("Inactive or invalid subscription for company", self.company.id)
+            return {}
+
+        # Prevent automatic reply a new lead when quota is 0
+        if subscription.leads_used >= subscription.lead_quota:
+            print(f"Lead quota exhausted for company {self.company.id}")
+            return {}
 
         # Initialize the custom session
         session = MyCustomSession(conversation_id, self.lead)
@@ -385,13 +204,206 @@ Remember: This is a real conversation with a real person. They might take tangen
             ]
         )
 
+    async def get_reply_from_llm_async_for_cmments(
+        self, user_message, property_context
+    ):
+        """Uses OpenAI Agent to get a contextual LLM reply."""
+        print("Generating comment reply for message:", user_message, property_context)
+        agent = Agent(
+            name="Instagram Real Estate Assistant",
+            model="gpt-4-turbo",
+            instructions=AGENT_2.format(property_context=property_context),
+        )
+        result = await Runner.run(agent, input=user_message)
+        return result.final_output
+        # return """{
+        #     "comment_reply" : "Please check message",
+        #     "first_dm" : "Thanks for message us", 
+        #     "context_for_dm_handler" : "user commented"}"""
+
+    def reply_to_instagram_comment(self, comment_id, message, access_token):
+        """Reply to an Instagram comment using the Graph API."""
+        url = f"https://graph.instagram.com/v24.0/{comment_id}/replies"
+
+        headers = {"Content-Type": "application/json"}
+
+        payload = {"message": message, "access_token": access_token}
+
+        try:
+            response = requests.post(url, headers=headers, json=payload)
+            response_data = response.json()
+
+            if response.status_code == 200:
+                print(f"Successfully replied to comment {comment_id}")
+                return response_data
+            else:
+                print(f"Failed to reply to comment: {response_data}")
+                return None
+
+        except Exception as e:
+            print(f"Error replying to comment: {str(e)}")
+            return None
+
+    def send_dm_to_commenter(
+        self, comment_id, message, ig_business_account_id, access_token
+    ):
+        """
+        Send a DM to the person who commented.
+        Uses comment_id to identify the recipient.
+        """
+        url = f"https://graph.instagram.com/v24.0/{ig_business_account_id}/messages"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}",
+        }
+
+        payload = {
+            "recipient": {"comment_id": comment_id},
+            "message": {"text": message},
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=payload)
+            response_data = response.json()
+
+            if response.status_code == 200:
+                print(f"✅ Successfully sent DM via comment {comment_id}")
+                return response_data
+            else:
+                print(f"❌ Failed to send DM: {response_data}")
+                return None
+
+        except Exception as e:
+            print(f"❌ Error sending DM: {str(e)}")
+            return None
+
+    def handle_comments(self, data: dict):
+        print("Comment data", data)
+        post_id = data.get("post_id", "")
+        comment_id = data["comment_id"]
+        parent_id = data.get("parent_id", "")
+        if parent_id:
+            return {}
+        if not comment_id:
+            return {}
+        event = EventRegister.objects.filter(event_id=comment_id).first()
+        if event:
+            print("Comment event already processed", comment_id)
+            return {}
+        EventRegister.objects.create(
+            event_id=comment_id, event_type="instagram_comment", payload=data
+        )
+        if not post_id:
+            return {}
+        try:
+            company_instagram_account = InstagramAccount.objects.get(
+                fb_data__instagram_business_account_id=data["recipient"]
+            )
+        except InstagramAccount.DoesNotExist:
+            return {}
+        self.company = company_instagram_account.company
+
+        conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
+        self.company = company_instagram_account.company
+        existing_lead = Lead.objects.filter(
+            instagram_conversation_id=conversation_id
+        ).first()
+        new_lead = None
+        if not existing_lead:
+            new_lead = Lead.objects.create(
+                instagram_conversation_id=conversation_id,
+                company=self.company,
+                source_type="instagram_comment",
+                instagram_username=str(data["sender_username"]),
+                qualification_status="initiated",
+                status="active",
+                last_customer_message=str(data["comment_text"]),
+                last_interaction_at=timezone.now(),
+            )
+        subscription = Subscription.objects.filter(company=self.company).first()
+        if new_lead:
+            # Increment leads_used count
+            subscription.leads_used += 1
+            subscription.save()
+            print("New lead created from Instagram comment:", new_lead.id)
+
+        if (
+            not subscription
+            or not subscription.is_active()
+            or subscription.has_permission("instagram_comment_auto_response") is False
+        ):
+            print("Inactive or invalid subscription for company", self.company.id)
+            return {}
+        lead = existing_lead or new_lead
+        company_listing_of_post_id = None
+        property_context = ""
+        try:
+            company_listing_of_post_id = PropertyListing.objects.get(
+                instagram_post_id=post_id
+            )
+            property_context = company_listing_of_post_id.summarize_property()
+        except PropertyListing.DoesNotExist:
+            property_context = ""
+        response = async_to_sync(self.get_reply_from_llm_async_for_cmments)(
+            data["comment_text"], property_context
+        )
+        print("LLM comment reply response", response)
+        try:
+            response = json.loads(response)
+        except json.JSONDecodeError:
+            print("❌ Failed to parse LLM comment reply response as JSON:", response)
+            return {}
+        comment_reply = response.get("comment_reply", "Please check your DM")
+        comment_reply_response = self.reply_to_instagram_comment(
+            comment_id=data["comment_id"],
+            message=comment_reply,
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+        print("Comment reply response", comment_reply_response)
+        dm_message : str = response.get(
+                "first_dm",
+                "Hi, Thanks for commenting on our post. How can we assit you further on your property searchinh journey?",
+            )
+        send_dm_response = self.send_dm_to_commenter(
+            comment_id=comment_id,
+            message=dm_message,
+            ig_business_account_id=company_instagram_account.fb_data[
+                "instagram_business_account_id"
+            ],
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+        if new_lead:
+            ConversationMessage.objects.create(
+                lead=lead,
+                conversation_id=conversation_id,
+                sender_type="assistant",
+                message_text="Context for chat : "
+                + str(
+                    response.get(
+                        "context_for_dm_handler",
+                        "This conversation is initiated via Instagram comment",
+                    )
+                ),
+                message_type="initial_inquiry"
+            )
+            ConversationMessage.objects.create(
+                lead=lead,
+                conversation_id=conversation_id,
+                sender_type="assistant",
+                message_text=dm_message,
+                message_type="initial_inquiry"
+            )
+        print("First dm response", send_dm_response)
+        return {}
+
     def post(self, request):
         print("Webhook data", request.body)
         data = parse_instagram_payload(json.loads(request.body))
         if data["webhook_type"] == "message":
             response = self.handle_message(data=data)
-        # if data["webhook_type"] == "comment":
-        #     response = self.handle_comments(data=data)
+        if data["webhook_type"] == "comment":
+            response = self.handle_comments(data=data)
         return JsonResponse({"status": "received"})
 
 
@@ -794,35 +806,6 @@ class InstagramDisconnectView(LoginRequiredMixin, View):
         return JsonResponse(
             {"success": False, "error": "Method not allowed"}, status=405
         )
-
-        """def handle_comment_without_listing(self, data: dict):
-        print("Handling a comment ,which does not have a listing with maedix")
-        return {}
-
-    def reply_to_comment(self, ig_comment_id, message, access_token):
-        url = f"https://graph.facebook.com/v24.0/{ig_comment_id}/replies"
-        headers = {"Content-Type": "application/json"}
-        payload = {"message": message, "access_token": access_token}
-
-        response = requests.post(url, json=payload, headers=headers)
-        return response.json()
-
-    def handle_comments(self, data: dict):
-        print("Comment data", data)
-        post_id = data.get("post_id", "")
-        if not post_id:
-            return {}
-        company_listing_of_post_id = None
-        try:
-            company_listing_of_post_id = PropertyListing.objects.get(
-                instagram_post_id=post_id
-            )
-        except PropertyListing.DoesNotExist:
-            return self.handle_comment_without_listing(data=data)
-        print("User commented on listing", company_listing_of_post_id.title)
-        return self.reply_to_comment()
-        """
-
 
 class FBDisconnectView(LoginRequiredMixin, View):
     login_url = "/login/"

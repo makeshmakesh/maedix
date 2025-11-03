@@ -565,11 +565,11 @@
                 </a>
                 <a href="{% url 'listings' company.id %}" class="quick-action-btn">
                     <span>📊</span>
-                    <span>View Listings</span>
+                    <span>Manage Listings</span>
                 </a>
                 <a href="{% url 'leads' company.id %}" class="quick-action-btn">
                     <span>👥</span>
-                    <span>View Leads</span>
+                    <span>Manage Leads</span>
                 </a>
             </div>
         </div>
@@ -591,7 +591,18 @@
                     </span>
                 </a>
 
-                <!-- Edit Company -->
+                <!-- Company Detiails -->
+                <a href="{% url 'company-manage' company.id %}" class="nav-card">
+                    <div class="nav-icon">🏢</div>
+                    <h3 class="nav-title">Manage Company</h3>
+                    <p class="nav-description">
+                        Company details and subscriptions.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>Manage Company</span>
+                        <span>→</span>
+                    </span>
+                </a>
 
                 <!-- Connect Instagram -->
                 <a href="{% url 'instagram_connect' company.id %}" class="nav-card">
