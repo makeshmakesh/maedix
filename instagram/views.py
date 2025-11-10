@@ -632,6 +632,7 @@ def instagram_save_token(request):
         }
         instagram_account, created = InstagramAccount.objects.update_or_create(
             company=company,
+            instagram_business_account_id=fb_data.get("instagram_business_account_id", ""),
             defaults={"fb_data": fb_data},
         )
         return JsonResponse({"status": "ok"})
