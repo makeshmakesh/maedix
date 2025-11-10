@@ -7,3 +7,5 @@ requests
 openai-agents
 pgvector
 razorpay
+django-storages
+boto3
