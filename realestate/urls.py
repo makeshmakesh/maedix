@@ -61,6 +61,7 @@ urlpatterns = [
     ),
     path("company-manage/<int:company_id>/", views.CompanyManageView.as_view(), name="company-manage"),
     path('api/instagram/posts/<int:company_id>/', views.get_instagram_posts, name='get_instagram_posts'),
+    path('create-company/', views.create_company, name='create-company'),
         
 ]
 

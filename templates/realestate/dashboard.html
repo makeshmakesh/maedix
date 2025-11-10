@@ -350,7 +350,13 @@
                 <span>📩</span>
                 <span>My Invitations</span>
             </a>
+                        <a href="{% url 'create-company' %}" class="btn-create-company">
+                <span>➕</span>
+                <span>Create Company</span>
+            </a>
+            
         </div>
+        
 
         <!-- Companies Grid -->
         {% if memberships %}
@@ -364,7 +370,7 @@
                     <h3 class="company-name">{{ membership.company.name }}</h3>
                     <span class="company-role">{{ membership.role|default:"Member" }}</span>
                     <p class="company-description">
-                        {{ company.description|default:"AI-powered lead automation for real estate" }}
+                        {{ company.description|default:"" }}
                     </p>
                     <div class="company-stats">
                         {% comment %} <div class="stat-item">
@@ -392,7 +398,7 @@
             <p class="empty-state-text">
                 Get started by creating your first company. Set up AI automation to capture and qualify leads from Instagram, WhatsApp, and your website.
             </p>
-            <a href="#" class="btn-create-company">
+            <a href="{% url 'create-company' %}" class="btn-create-company">
                 <span>➕</span>
                 <span>Create Your First Company</span>
             </a>

@@ -1,0 +1,469 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Create Company - MAEDIX{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-company-container {
+        max-width: 700px;
+        margin: 4rem auto;
+        padding: 2rem 1rem;
+    }
+
+    .company-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        border: 1px solid var(--border-color);
+        padding: 3rem;
+        box-shadow: var(--shadow-glow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .company-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: var(--primary-gradient);
+    }
+
+    .company-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+        animation: rotateGlow 15s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes rotateGlow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .form-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .form-title {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    .form-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .form-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .required-star {
+        color: #ef4444;
+        font-size: 1.2rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border-radius: 16px;
+        border: 2px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.6);
+        color: var(--text-primary);
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: rgba(15, 23, 42, 0.8);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .form-input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-input:disabled {
+        background: rgba(15, 23, 42, 0.3);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .form-help {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .help-icon {
+        width: 18px;
+        height: 18px;
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        color: #3b82f6;
+        font-weight: 700;
+    }
+
+    .info-box {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .info-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .info-text {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 1.25rem;
+        border-radius: 16px;
+        border: none;
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 1.15rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-submit:hover::before {
+        left: 100%;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0, 212, 255, 0.6);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-submit:active {
+        transform: translateY(-1px);
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .feature-item:hover {
+        background: rgba(59, 130, 246, 0.1);
+        transform: translateX(5px);
+    }
+
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-gradient);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .feature-text {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+        .create-company-container {
+            margin: 2rem auto;
+            padding: 1rem 0.5rem;
+        }
+
+        .company-card {
+            padding: 2rem 1.5rem;
+            border-radius: 24px;
+        }
+
+        .form-title {
+            font-size: 2rem;
+        }
+
+        .form-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 2rem;
+        }
+
+        .form-input {
+            padding: 0.875rem 1.25rem;
+            font-size: 1rem;
+        }
+
+        .btn-submit {
+            padding: 1rem;
+            font-size: 1.05rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-company-container">
+    <div class="company-card fade-in">
+        <div class="form-header">
+            <div class="form-icon">🏢</div>
+            <h1 class="form-title">Create Your Company</h1>
+            <p class="form-subtitle">Set up your company profile to start managing real estate leads with AI automation</p>
+        </div>
+
+        <div class="form-content">
+            <div class="info-box">
+                <span class="info-icon">💡</span>
+                <div class="info-text">
+                    <strong>Getting Started:</strong> Your company profile will be used to manage your Instagram integration, property listings, and AI-powered lead conversations.
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'create-company' %}" id="createCompanyForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span>Company Name</span>
+                        <span class="required-star">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        name="name" 
+                        class="form-input" 
+                        placeholder="e.g., Prime Real Estate Solutions"
+                        required
+                        maxlength="255"
+                        autofocus
+                    >
+                    <div class="form-help">
+                        <span class="help-icon">i</span>
+                        <span>This will be displayed to your customers in automated messages</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span>Industry</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        name="industry" 
+                        class="form-input" 
+                        value="Real Estate"
+                        readonly
+                        disabled
+                    >
+                    <input type="hidden" name="industry" value="Real Estate">
+                    <div class="form-help">
+                        <span class="help-icon">i</span>
+                        <span>Currently optimized for Real Estate businesses</span>
+                    </div>
+                </div>
+
+                <div class="feature-list">
+                    <h3 style="color: var(--text-primary); font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem;">What you'll get:</h3>
+                    
+                    <div class="feature-item">
+                        <span class="feature-icon">📸</span>
+                        <span class="feature-text">Instagram DM automation for lead capture</span>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <span class="feature-icon">🤖</span>
+                        <span class="feature-text">AI-powered conversation management</span>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <span class="feature-icon">🏠</span>
+                        <span class="feature-text">Property listing management</span>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <span class="feature-text">Lead tracking and analytics</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <span>✨</span>
+                    <span>Create Company</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createCompanyForm');
+        const submitBtn = form.querySelector('.btn-submit');
+        
+        // Smooth entrance animation
+        const card = document.querySelector('.company-card');
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
+        
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const companyName = form.querySelector('input[name="name"]');
+            
+            if (!companyName.value.trim()) {
+                e.preventDefault();
+                
+                // Show error
+                companyName.style.borderColor = '#ef4444';
+                companyName.focus();
+                
+                // Add shake animation
+                companyName.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    companyName.style.animation = '';
+                }, 500);
+                
+                return false;
+            }
+            
+            // Disable submit button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>⏳</span><span>Creating...</span>';
+        });
+        
+        // Reset border color on input
+        form.querySelector('input[name="name"]').addEventListener('input', function() {
+            this.style.borderColor = '';
+        });
+    });
+    
+    // Add shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

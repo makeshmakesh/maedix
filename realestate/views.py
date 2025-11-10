@@ -757,3 +757,28 @@ class CompanyManageView(LoginRequiredMixin, View):
         
         messages.success(request, f"Company '{company.name}' updated successfully!")
         return redirect('company-manage', company_id=company_id)
+    
+
+# views.py
+@login_required
+def create_company(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        industry = request.POST.get('industry', 'Real Estate')
+        
+        company = Company.objects.create(
+            name=name,
+            industry=industry,
+            created_by=request.user
+        )
+        membership = Membership.objects.create(
+            user=request.user,
+            company=company,
+            role="admin"
+            
+        )
+        
+        messages.success(request, f'Company "{company.name}" created successfully!')
+        return redirect('dashboard')
+    
+    return render(request, 'realestate/create-company.html')
