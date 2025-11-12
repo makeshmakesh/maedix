@@ -34,20 +34,19 @@ PLANS = [
         "duration_period": "month",
         "currency_symbol": "₹",
         "currency": "INR",
-        "leads_count": 10,
-        "leads_count_display": "10",
+        "leads_count": 0,
+        "leads_count_display": "0",
         "featured": False,
         "button_class": "btn-outline-primary",
         "features_allowed": [
             {"name": "instagram_dm"},
-            {"name": "property_listing_integration", "limit": 10},
+            {"name": "property_listing_integration"},
         ],
         "features": [
-            "Automated DM replies",
-            "Lead capture & CRM sync",
-            "AI pre-qualification chat flow",
-            "Basic property listing integration(Limited to 10 listings)",
-            "Performance dashboard",
+            "Automated static DM responses",
+            "Automated static comment replies with first DM follow-up",
+            "Automatic lead capture from all incoming DMs",
+            "Unlimited property listings",
         ],
     },
     {
@@ -67,13 +66,12 @@ PLANS = [
         "features_allowed": [
             {"name": "instagram_dm"},
             {"name": "property_listing_integration"},
+            {"name": "instagram_dm_ai_reply"}
         ],
         "features": [
-            "Automated DM replies",
-            "Lead capture & CRM sync",
-            "AI pre-qualification chat flow",
-            "Unlimited property listing integration",
-            "Email support",
+            "All features from Lite",
+            "AI-powered automated DM replies",
+            "AI prequalification for up to 50 leads per month",
         ],
     },
     {
@@ -95,12 +93,15 @@ PLANS = [
             {"name": "instagram_comment_auto_response"},
             {"name": "multi_agent_collaboration"},
             {"name": "property_listing_integration"},
+            {"name": "instagram_dm_ai_reply"},
+            {"name": "instagram_comment_ai_response"},
         ],
         "features": [
-            "Everything in Starter",
-            "Comment auto-response",
-            "Multi-agent collaboration",
-            "Priority email & chat support",
+            "All features from Starter",
+            "AI prequalification for up to 200 leads per month",
+            "AI-powered comment auto-responses",
+            "Multi-agent collaboration tools",
+            "Priority email and chat support",
         ],
     },
     {
@@ -123,16 +124,20 @@ PLANS = [
             {"name": "multi_agent_collaboration"},
             {"name": "human_takeover_support"},
             {"name": "property_listing_integration"},
+            {"name": "instagram_dm_ai_reply"},
+            {"name": "instagram_comment_ai_response"},
         ],
         "features": [
-            "Everything in Growth",
-            "Dedicated account manager",
-            "Custom AI flow design",
-            "Human takeover support in our platform(hybrid automation)",
+            "All features from Growth",
+            "AI prequalification for up to 500 leads per month",
+            "Dedicated account manager for personalized support",
+            "Hybrid automation with human takeover assistance",
+            "Advanced analytics for leads and property listings",
             "Priority phone support",
         ],
     },
 ]
+
 
 
 def get_plan(plan_id):

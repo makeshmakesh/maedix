@@ -452,18 +452,11 @@
 
                 <div class="usage-bar">
                     <div class="usage-label">
-                        <span>Leads Used</span>
+                        <span>AI Leads Used</span>
                         <span><strong>{{ subscription.leads_used }}</strong> / {{ subscription.lead_quota }}</span>
                     </div>
                     <div class="progress">
                         <div class="progress-bar" style="width: {% widthratio subscription.leads_used subscription.lead_quota 100 %}%;"></div>
-                    </div>
-                </div>
-
-                <div class="usage-bar">
-                    <div class="usage-label">
-                        <span>Messages Sent</span>
-                        <span><strong>{{ subscription.messages_used|default:0 }}</strong></span>
                     </div>
                 </div>
 

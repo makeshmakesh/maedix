@@ -119,7 +119,14 @@ class InstagramWebHookView(View):
             return {}
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
         self.company = company_instagram_account.company
-
+        subscription = Subscription.objects.filter(company=self.company).first()
+        if (
+            not subscription
+            or not subscription.is_active()
+            or subscription.has_permission("instagram_dm") is False
+        ):
+            print("No active subscription to handle DM")
+            return {}
         lead, created = Lead.objects.get_or_create(
             instagram_conversation_id=conversation_id,
             defaults={
@@ -140,19 +147,28 @@ class InstagramWebHookView(View):
             # Don't update source_type - keep original
             lead.save(update_fields=['last_customer_message', 'last_interaction_at', 'status'])
 
-        subscription = Subscription.objects.filter(company=self.company).first()
+        
         if created:
             # Increment leads_used count
             subscription.leads_used += 1
             subscription.save()
             print("New lead created from Instagram DM:", lead.id)
         self.lead = lead
+        if self.lead.human_agent_assigned:
+            print("Human agent assigned so ignoring ai reply")
+            return {}
         if (
             not subscription
             or not subscription.is_active()
-            or subscription.has_permission("instagram_dm") is False
+            or subscription.has_permission("instagram_dm_ai_reply") is False
         ):
-            print("Inactive or invalid subscription for company", self.company.id)
+            response_to_user = self.reply_to_message(
+            recipient_ig_id=data["sender"],
+            company_business_ig_id=data["recipient"],
+            message=self.company.detail.get("static_dm_reply", "Thanks for reaching out to us, we will contact you shortly."),
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+            print("Inactive or invalid subscription for company to generate ai reply", self.company.id)
             return {}
 
         # Prevent automatic reply a new lead when quota is 0
@@ -310,6 +326,14 @@ class InstagramWebHookView(View):
             instagram_conversation_id=conversation_id
         ).first()
         new_lead = None
+        subscription = Subscription.objects.filter(company=self.company).first()
+        if (
+            not subscription
+            or not subscription.is_active()
+            or subscription.has_permission("instagram_comment_auto_response") is False
+        ):
+            print("Comment auto response feature not enabled")
+            return {}
         if not existing_lead:
             new_lead = Lead.objects.create(
                 instagram_conversation_id=conversation_id,
@@ -321,7 +345,7 @@ class InstagramWebHookView(View):
                 last_customer_message=str(data["comment_text"]),
                 last_interaction_at=timezone.now(),
             )
-        subscription = Subscription.objects.filter(company=self.company).first()
+        
         if new_lead:
             # Increment leads_used count
             subscription.leads_used += 1
@@ -331,9 +355,22 @@ class InstagramWebHookView(View):
         if (
             not subscription
             or not subscription.is_active()
-            or subscription.has_permission("instagram_comment_auto_response") is False
+            or subscription.has_permission("instagram_comment_ai_response") is False
         ):
             print("Inactive or invalid subscription for company", self.company.id)
+            comment_reply_response = self.reply_to_instagram_comment(
+            comment_id=data["comment_id"],
+            message=self.company.detail.get("static_comment_reply", "Please check your DM"),
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+            send_dm_response = self.send_dm_to_commenter(
+            comment_id=comment_id,
+            message=self.company.detail.get("static_comment_reply_follow_up_dm", "Hi, Thanks for commenting on our post. How can we assit you further on your property searchinh journey?"),
+            ig_business_account_id=company_instagram_account.fb_data[
+                "instagram_business_account_id"
+            ],
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
             return {}
         lead = existing_lead or new_lead
         company_listing_of_post_id = None
@@ -592,17 +629,41 @@ class FBOAuthRedirectView(LoginRequiredMixin, View):
 VERIFY_TOKEN = "Speed#123"
 
 
+def get_long_lived_toke(short_token):
+    url = f"https://graph.facebook.com/v24.0/oauth/access_token"
+    configs = Configuration.objects.filter(
+            key__in=["fb_app_id", "fb_app_secret"]
+        )
+    config_data = {conf.key: conf.value for conf in configs}
+    params = {
+        "grant_type": "fb_exchange_token",
+        "client_id": config_data['fb_app_id'],
+        "client_secret": config_data['fb_app_secret'],
+        "fb_exchange_token": short_token,
+    }
+
+    response = requests.get(url, params=params)
+
+    if response.ok:
+        data = response.json()
+        print("Long-lived token:", data.get("access_token"))
+        print("Expires in (seconds):", data.get("expires_in"))
+        return data
+    else:
+        print("Error:", response.status_code, response.text)
+        return {}
+        
 @csrf_exempt
 def instagram_save_token(request):
     try:
         payload = json.loads(request.body.decode())
-        long_lived_token = payload.get("long_lived_token")
+        short_token = payload.get("access_token")
         token_expires_at = datetime.now() + timedelta(seconds=5184000)
         company_id = payload.get("company_id")
         url = "https://graph.facebook.com/v24.0/me/accounts"
         params = {
             "fields": "id,name,access_token,instagram_business_account",
-            "access_token": long_lived_token,
+            "access_token": short_token,
         }
 
         response = requests.get(url, params=params)
@@ -625,14 +686,14 @@ def instagram_save_token(request):
         fb_data = {
             "instagram_business_account_id": instagram_business_account_id,
             "username": user_info.get("username", ""),
-            "access_token": long_lived_token,
+            "access_token": response_data[0].get("access_token",""),
             "token_expires_at": str(token_expires_at),
             "is_active": True,
             "page_data": response_data[0],
         }
         instagram_account, created = InstagramAccount.objects.update_or_create(
             company=company,
-            instagram_business_account_id=fb_data.get("instagram_business_account_id", ""),
+            instagram_business_account_id=str(fb_data.get("instagram_business_account_id", "")),
             defaults={"fb_data": fb_data},
         )
         return JsonResponse({"status": "ok"})
