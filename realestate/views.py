@@ -751,6 +751,9 @@ class CompanyManageView(LoginRequiredMixin, View):
         # Update company details
         company.name = request.POST.get('company_name', company.name)
         company.industry = request.POST.get('industry', company.industry)
+        company.detail["static_dm_reply"] = request.POST.get('static_dm_reply', company.detail.get("static_dm_reply", ""))
+        company.detail["static_comment_reply"] = request.POST.get('static_comment_reply', company.detail.get("static_comment_reply", ""))
+        company.detail["static_comment_followup_dm_reply"] = request.POST.get('static_comment_followup_dm_reply', company.detail.get("static_comment_followup_dm_reply", "round_robin"))
         # Add more fields as necessary
         
         company.save()

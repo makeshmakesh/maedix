@@ -131,8 +131,6 @@ PLANS = [
             "All features from Growth",
             "AI prequalification for up to 500 leads per month",
             "Dedicated account manager for personalized support",
-            "Hybrid automation with human takeover assistance",
-            "Advanced analytics for leads and property listings",
             "Priority phone support",
         ],
     },

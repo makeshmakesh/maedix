@@ -86,6 +86,7 @@
 
     .form-control:focus {
         outline: none;
+        color: var(--text-primary);
         border-color: #3b82f6;
         background: rgba(15, 23, 42, 0.7);
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
@@ -93,6 +94,11 @@
 
     .form-control::placeholder {
         color: var(--text-muted);
+    }
+    .form-control:disabled {
+        background: rgba(15, 23, 42, 0.2);
+        color: var(--text-muted);
+        cursor: not-allowed;
     }
 
     .info-grid {
@@ -355,9 +361,46 @@
                     type="text" 
                     class="form-control" 
                     id="industry" 
-                    name="industry" 
+                    name="industry"
                     value="{{ company.industry }}"
                     placeholder="e.g., Real Estate, Technology, Healthcare"
+                    disabled
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="static_dm_reply">Static DM Reply Text</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="static_dm_reply" 
+                    name="static_dm_reply"
+                    value="{{ company.detail.static_dm_reply }}"
+                    placeholder="e.g., Thanks for reaching out! How can we assist you?"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="static_comment_reply">Static Comment Reply Text</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="static_comment_reply" 
+                    name="static_comment_reply"
+                    value="{{ company.detail.static_comment_reply }}"
+                    placeholder="e.g., Thanks for your comment! Please check your DM."
+                >
+            </div>
+
+                                    <div class="form-group">
+                <label class="form-label" for="static_comment_followup_dm_reply">Static Comment Follow up DM Text</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="static_comment_followup_dm_reply" 
+                    name="static_comment_followup_dm_reply"
+                    value="{{ company.detail.static_comment_followup_dm_reply }}"
+                    placeholder="e.g., Thanks for engaging with our post! How can we help you further?"
                 >
             </div>
 

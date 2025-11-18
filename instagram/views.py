@@ -365,7 +365,7 @@ class InstagramWebHookView(View):
         )
             send_dm_response = self.send_dm_to_commenter(
             comment_id=comment_id,
-            message=self.company.detail.get("static_comment_reply_follow_up_dm", "Hi, Thanks for commenting on our post. How can we assit you further on your property searchinh journey?"),
+            message=self.company.detail.get("static_comment_followup_dm_reply", "Hi, Thanks for commenting on our post. How can we assit you further on your property searchinh journey?"),
             ig_business_account_id=company_instagram_account.fb_data[
                 "instagram_business_account_id"
             ],
