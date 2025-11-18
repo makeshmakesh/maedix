@@ -532,6 +532,22 @@
             </div>
 
             <!-- Action Button -->
+                        {% if fb_connected %}
+                <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectFB()">
+                    <span>🔌</span>
+                    <span>Disconnect FB</span>
+                </button>
+                    {% if instagram_account and not instagram_account.webhook_subscribed %}
+    {% endif %}
+            {% else %}
+                <form method="post" action="{% url 'fb_oauth' company.id %}" id="connectForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-instagram btn-connect" id="connectBtn">
+                        <span>📱</span>
+                        <span>Step 1: Connect with FB</span>
+                    </button>
+                </form>
+            {% endif %}
             {% if instagram_connected %}
                 <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectInstagram()">
                     <span>🔌</span>
@@ -548,27 +564,12 @@
                     {% csrf_token %}
                     <button type="submit" class="btn-instagram btn-connect" id="connectBtn">
                         <span>📱</span>
-                        <span>Connect with Instagram</span>
+                        <span>Step 2: Connect with Instagram</span>
                     </button>
                 </form>
             {% endif %}
 
-            {% if fb_connected %}
-                <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectFB()">
-                    <span>🔌</span>
-                    <span>Disconnect FB</span>
-                </button>
-                    {% if instagram_account and not instagram_account.webhook_subscribed %}
-    {% endif %}
-            {% else %}
-                <form method="post" action="{% url 'fb_oauth' company.id %}" id="connectForm">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-instagram btn-connect" id="connectBtn">
-                        <span>📱</span>
-                        <span>Connect with FB</span>
-                    </button>
-                </form>
-            {% endif %}
+
         </div>
     </div>
 </div>

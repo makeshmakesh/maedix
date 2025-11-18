@@ -149,7 +149,7 @@
         try {
             // Parse the fragment after '#'
             const params = new URLSearchParams(window.location.hash.substring(1));
-
+            
             const data = {
                 access_token: params.get('access_token'),
                 long_lived_token: params.get('long_lived_token'),

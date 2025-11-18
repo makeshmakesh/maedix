@@ -31,7 +31,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://af59c7e6e068.ngrok-free.app",
+    "https://8700cf1f8079.ngrok-free.app",
     "https://maedix.com"
 ]
 # Application definition
