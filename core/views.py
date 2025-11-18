@@ -40,6 +40,7 @@ PLANS = [
         "button_class": "btn-outline-primary",
         "features_allowed": [
             {"name": "instagram_dm"},
+            {"name": "instagram_comment_auto_response"},
             {"name": "property_listing_integration"},
         ],
         "features": [
@@ -65,6 +66,7 @@ PLANS = [
         "button_class": "btn-outline-primary",
         "features_allowed": [
             {"name": "instagram_dm"},
+            {"name": "instagram_comment_auto_response"},
             {"name": "property_listing_integration"},
             {"name": "instagram_dm_ai_reply"}
         ],
