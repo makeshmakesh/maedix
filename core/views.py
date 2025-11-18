@@ -310,8 +310,12 @@ class PaymentSuccessView(LoginRequiredMixin, View):
             sign_string = f"{razorpay_order_id}|{razorpay_payment_id}"
 
             # Generate expected signature
+            configs = Configuration.objects.filter(
+                key__in=["razorpay_api_secret"]
+            )
+            config_data = {conf.key: conf.value for conf in configs}
             expected_signature = hmac.new(
-                os.getenv("RAZORPAYAPI_SECRET").encode(),
+                config_data["razorpay_api_secret"].encode(),
                 sign_string.encode(),
                 hashlib.sha256,
             ).hexdigest()
