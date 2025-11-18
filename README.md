@@ -14,3 +14,11 @@ Mastercard	    5421 1393 0609 0628
                 5105 1051 0510 5100	
 Visa	        4012 8888 8888 1881
                 5104 0600 0000 0008	
+
+
+
+
+Restart after change in ec2
+
+sudo systemctl restart nginx
+sudo systemctl restart gunicorn

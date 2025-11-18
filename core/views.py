@@ -18,7 +18,7 @@ from .models import Transaction, Subscription
 from django.utils import timezone
 from realestate.models import Company, Membership
 from dateutil.relativedelta import relativedelta
-
+from .models import Configuration
 logger = logging.getLogger(__name__)
 # Create your views here.
 
@@ -419,6 +419,10 @@ class OrderConfirmationView(LoginRequiredMixin, View):
     login_url = "/login/"
 
     def get(self, request, company_id, plan_id):
+        configs = Configuration.objects.filter(
+            key__in=["razorpay_api_key", "razorpay_api_secret"]
+        )
+        config_data = {conf.key: conf.value for conf in configs}
         company = get_object_or_404(Company, id=company_id)
         membership = get_object_or_404(Membership, user=request.user, company=company)
         if membership is None or membership.role not in ["admin", "owner"]:
@@ -427,7 +431,7 @@ class OrderConfirmationView(LoginRequiredMixin, View):
             )
             return redirect("company-manage", company_id=company_id)
         razorpay_client = razorpay.Client(
-            auth=(os.getenv("RAZORPAY_API_KEY"), os.getenv("RAZORPAYAPI_SECRET"))
+            auth=(config_data["razorpay_api_key"], config_data["razorpay_api_secret"])
         )
         plan = get_plan(plan_id)
         if not plan:
@@ -470,7 +474,7 @@ class OrderConfirmationView(LoginRequiredMixin, View):
                 "currency_symbol": currency_symbol,
                 "amount_smallest_unit": amount_smallest_unit,
                 "order_id": razorpay_order["id"],
-                "razorpay_key_id": os.getenv("RAZORPAY_API_KEY"),
+                "razorpay_key_id": config_data["razorpay_api_key"],
                 "company_id": str(company_id),
             }
             return render(request, "core/checkout.html", context)
