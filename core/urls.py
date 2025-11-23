@@ -16,6 +16,7 @@ urlpatterns = [
     path('payment/success/', views.PaymentSuccessView.as_view(), name='payment_success'),
     path('payment/success/page/', views.PaymentSuccessPageView.as_view(), name='payment_success_page'),
     path('payment/failed/', views.PaymentFailedView.as_view(), name='payment_failed'),
+    path('onboard-guide/', views.OnboardGuidePage.as_view(), name='onboard-guide'),
 ]
 
 

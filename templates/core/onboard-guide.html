@@ -1,0 +1,817 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Getting Started with MAEDIX - Setup Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --accent-blue: #2563eb;
+        --accent-blue-light: #3b82f6;
+        --accent-green: #22c55e;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --bg-card: rgba(15, 23, 42, 0.6);
+        --border-color: rgba(148, 163, 184, 0.1);
+    }
+
+    /* Header Section */
+    .guide-header {
+        text-align: center;
+        padding: 4rem 0 3rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .guide-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 50px;
+        color: var(--accent-green);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+    }
+
+    .guide-title {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .guide-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .guide-time {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+        padding: 0.8rem 1.5rem;
+        background: rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        border-radius: 8px;
+        color: var(--accent-blue-light);
+        font-weight: 500;
+    }
+
+    /* Steps Container */
+    .steps-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 0;
+    }
+
+    /* Step Card */
+    .step-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .step-card:hover {
+        border-color: rgba(37, 99, 235, 0.3);
+        transform: translateX(5px);
+    }
+
+    .step-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .step-number {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-light) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .step-title {
+        flex: 1;
+    }
+
+    .step-title h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+
+    .step-title p {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .step-content {
+        padding-left: 4rem;
+    }
+
+    .step-content p {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+
+    /* Prerequisites Box */
+    .prerequisites-box {
+        background: rgba(251, 191, 36, 0.05);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-left: 3px solid #fbbf24;
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+    }
+
+    .prerequisites-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 600;
+        color: #fbbf24;
+        margin-bottom: 0.8rem;
+        font-size: 0.95rem;
+    }
+
+    .prerequisites-list {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .prerequisites-list li {
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+    }
+
+    /* Action Steps */
+    .action-steps {
+        display: grid;
+        gap: 0.8rem;
+        margin: 1.5rem 0;
+    }
+
+    .action-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(37, 99, 235, 0.05);
+        border-radius: 8px;
+        border-left: 3px solid var(--accent-blue);
+    }
+
+    .action-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: var(--accent-blue);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.85rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .action-text {
+        flex: 1;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .action-text strong {
+        color: var(--text-primary);
+    }
+
+    /* Info Box */
+    .info-box {
+        background: rgba(59, 130, 246, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+    }
+
+    .info-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 600;
+        color: var(--accent-blue-light);
+        margin-bottom: 0.8rem;
+        font-size: 0.95rem;
+    }
+
+    .info-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Success Box */
+    .success-box {
+        background: rgba(34, 197, 94, 0.05);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin: 1.5rem 0;
+    }
+
+    .success-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 600;
+        color: var(--accent-green);
+        margin-bottom: 0.8rem;
+        font-size: 0.95rem;
+    }
+
+    .success-text {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Field Examples */
+    .field-example {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .field-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-blue-light);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .field-content {
+        color: var(--text-secondary);
+        font-style: italic;
+        line-height: 1.6;
+    }
+
+    /* Help Section */
+    .help-section {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(37, 99, 235, 0.05) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 3rem;
+        text-align: center;
+        margin-top: 3rem;
+    }
+
+    .help-section h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .help-section p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-light) 100%);
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-secondary {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: transparent;
+        color: var(--text-primary);
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        font-size: 1rem;
+        margin-left: 1rem;
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--accent-blue-light);
+        background: rgba(37, 99, 235, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .guide-header {
+            padding: 3rem 0 2rem;
+        }
+
+        .step-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .step-header {
+            gap: 1rem;
+        }
+
+        .step-content {
+            padding-left: 0;
+            margin-top: 1rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+
+        .help-section {
+            padding: 2rem 1.5rem;
+        }
+
+        .btn-secondary {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="guide-header">
+    <div class="container">
+        <div class="guide-badge">Setup Guide</div>
+        <h1 class="guide-title">Getting Started with MAEDIX</h1>
+        <p class="guide-subtitle">
+            Follow these steps to connect your Instagram account and start automating your lead capture. Complete setup takes about 10 minutes.
+        </p>
+        <div class="guide-time">
+            <span>⏱️</span>
+            <span>Estimated time: 10 minutes</span>
+        </div>
+    </div>
+</section>
+
+<!-- Steps -->
+<section class="steps-container">
+    <div class="container">
+        
+        <!-- Step 1 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">
+                    <h2>Create Your Account</h2>
+                    <p>Sign up or log in to access your MAEDIX dashboard</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <p>
+                    Start by creating your MAEDIX account. If you already have an account, simply log in to continue.
+                </p>
+                <div class="action-steps">
+                    <div class="action-item">
+                        <div class="action-number">1</div>
+                        <div class="action-text">
+                            Go to the <strong>Sign Up</strong> page or click <strong>Login</strong> if you already have an account
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">2</div>
+                        <div class="action-text">
+                            Enter your email address and create a secure password
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">3</div>
+                        <div class="action-text">
+                            Verify your email address through the confirmation link sent to your inbox
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">
+                    <h2>Create Your Company Profile</h2>
+                    <p>Set up your real estate company in the dashboard</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <p>
+                    Once logged in, you'll need to create a company profile. This represents your real estate business or agency within MAEDIX.
+                </p>
+                <div class="action-steps">
+                    <div class="action-item">
+                        <div class="action-number">1</div>
+                        <div class="action-text">
+                            From your dashboard, click <strong>"Create New Company"</strong> or <strong>"Add Company"</strong>
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">2</div>
+                        <div class="action-text">
+                            Enter your company name, contact information, and basic details
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">3</div>
+                        <div class="action-text">
+                            Click <strong>"Save"</strong> to create your company profile
+                        </div>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <div class="info-title">
+                        <span>💡</span>
+                        <span>Tip</span>
+                    </div>
+                    <p class="info-text">
+                        You can manage multiple companies under one MAEDIX account if you operate multiple agencies or branches.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">
+                    <h2>Connect Your Instagram Account</h2>
+                    <p>Link your Instagram Business or Creator account to MAEDIX</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <p>
+                    Before connecting Instagram, you need to ensure your account meets the requirements.
+                </p>
+                
+                <div class="prerequisites-box">
+                    <div class="prerequisites-title">
+                        <span>⚠️</span>
+                        <span>Prerequisites - Important</span>
+                    </div>
+                    <ul class="prerequisites-list">
+                        <li><strong>Instagram Professional Account:</strong> You must have an Instagram Business or Creator account (not a personal account)</li>
+                        <li><strong>Facebook Page:</strong> Your Instagram account must be connected to a Facebook Page</li>
+                        <li><strong>Facebook Page Admin:</strong> You need admin access to the Facebook Page</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-title">
+                        <span>ℹ️</span>
+                        <span>Don't Have a Professional Account?</span>
+                    </div>
+                    <p class="info-text">
+                        You can convert your personal Instagram account to a Business or Creator account for free. Go to Instagram Settings → Account → Switch to Professional Account.
+                    </p>
+                </div>
+
+                <p style="margin-top: 1.5rem;">
+                    Once your prerequisites are met, follow these steps:
+                </p>
+
+                <div class="action-steps">
+                    <div class="action-item">
+                        <div class="action-number">1</div>
+                        <div class="action-text">
+                            Go to your company profile and click <strong>"Connect Instagram"</strong>
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">2</div>
+                        <div class="action-text">
+                            Click <strong>"Connect Facebook"</strong> first - you'll be redirected to Facebook login
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">3</div>
+                        <div class="action-text">
+                            <strong>Select your Facebook Page</strong> from the list (this must be the page connected to your Instagram account)
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">4</div>
+                        <div class="action-text">
+                            Grant the necessary permissions when prompted (read messages, manage comments, etc.)
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">5</div>
+                        <div class="action-text">
+                            After Facebook connection is complete, click <strong>"Connect Instagram"</strong>
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">6</div>
+                        <div class="action-text">
+                            Enter your Instagram credentials and authorize MAEDIX to access your account
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <div class="success-title">
+                        <span>✓</span>
+                        <span>Success</span>
+                    </div>
+                    <p class="success-text">
+                        Once connected, MAEDIX will begin monitoring your Instagram DMs and comments immediately.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">
+                    <h2>Configure Default Responses</h2>
+                    <p>Set up your automated reply messages</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <p>
+                    Before you subscribe to AI-powered plans, you need to set up default response messages. These will be used for basic automation.
+                </p>
+                <div class="action-steps">
+                    <div class="action-item">
+                        <div class="action-number">1</div>
+                        <div class="action-text">
+                            Navigate to <strong>"View Company"</strong> or your company settings page
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">2</div>
+                        <div class="action-text">
+                            Find the <strong>"Default Messages"</strong> section
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">3</div>
+                        <div class="action-text">
+                            Fill in the following required fields:
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-example">
+                    <div class="field-label">Default Reply Text (DMs)</div>
+                    <div class="field-content">
+                        "Thank you for your interest! We've received your message and one of our agents will respond shortly. In the meantime, you can browse our available properties at [your website]."
+                    </div>
+                </div>
+
+                <div class="field-example">
+                    <div class="field-label">Comment Reply</div>
+                    <div class="field-content">
+                        "Thanks for asking! We'll send you details via DM. Please check your messages."
+                    </div>
+                </div>
+
+                <div class="field-example">
+                    <div class="field-label">First Follow-up Message</div>
+                    <div class="field-content">
+                        "Hi! Following up on your inquiry about our property. Are you available for a quick chat to discuss your requirements? What's your preferred budget range?"
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-title">
+                        <span>💡</span>
+                        <span>Why These Messages?</span>
+                    </div>
+                    <p class="info-text">
+                        Default messages ensure you never miss responding to an inquiry, even without an active AI subscription. Once you subscribe to an AI plan, intelligent responses will replace these default messages.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">
+                    <h2>Add Your Property Listings</h2>
+                    <p>Create listings that AI will reference in responses</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <p>
+                    Add your active property listings to MAEDIX. These serve as the knowledge base for AI-powered responses.
+                </p>
+                <div class="action-steps">
+                    <div class="action-item">
+                        <div class="action-number">1</div>
+                        <div class="action-text">
+                            Go to the <strong>"Listings"</strong> tab in your company dashboard
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">2</div>
+                        <div class="action-text">
+                            Click <strong>"Create New Listing"</strong> or <strong>"Add Listing"</strong>
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">3</div>
+                        <div class="action-text">
+                            Fill in property details: address, price, bedrooms, bathrooms, square footage, amenities, description
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">4</div>
+                        <div class="action-text">
+                            Upload property photos (optional but recommended)
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">5</div>
+                        <div class="action-text">
+                            If you have an <strong>Instagram post</strong> about this property, you can <strong>link the Instagram post</strong> to the listing
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">6</div>
+                        <div class="action-text">
+                            Click <strong>"Save Listing"</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-title">
+                        <span>💡</span>
+                        <span>Connecting Instagram Posts</span>
+                    </div>
+                    <p class="info-text">
+                        When you link an Instagram post to a listing, MAEDIX can automatically respond to comments on that specific post with accurate property information. This creates a seamless experience for potential buyers.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">6</div>
+                <div class="step-title">
+                    <h2>Choose Your Subscription Plan</h2>
+                    <p>Select the plan that fits your business needs</p>
+                </div>
+            </div>
+            <div class="step-content">
+                <p>
+                    Finally, subscribe to a plan to unlock AI-powered responses and lead pre-qualification.
+                </p>
+                <div class="action-steps">
+                    <div class="action-item">
+                        <div class="action-number">1</div>
+                        <div class="action-text">
+                            Go to <strong>"View Company"</strong> section in your dashboard
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">2</div>
+                        <div class="action-text">
+                            Find the <strong>"Subscription Plans"</strong> or <strong>"Upgrade"</strong> section
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">3</div>
+                        <div class="action-text">
+                            Review available plans and select the one that suits your lead volume and team size
+                        </div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number">4</div>
+                        <div class="action-text">
+                            Complete the payment process to activate your subscription
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <div class="success-title">
+                        <span>✓</span>
+                        <span>You're All Set!</span>
+                    </div>
+                    <p class="success-text">
+                        With an active subscription, MAEDIX will now respond to Instagram inquiries with intelligent, contextual messages, pre-qualify leads, and automatically route hot prospects to your agents.
+                    </p>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-title">
+                        <span>ℹ️</span>
+                        <span>Free Trial Available</span>
+                    </div>
+                    <p class="info-text">
+                        Most plans come with a 14-day free trial. Test the AI responses and lead qualification before committing to a paid plan.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Help Section -->
+<section class="help-section">
+    <div class="container">
+        <h3>Need Help Getting Started?</h3>
+        <p>
+            Our support team is here to help you with setup and answer any questions you have about MAEDIX.
+        </p>
+        <a href="{% url 'login' %}" class="btn-primary">Go to Dashboard</a>
+        <a href="{% url 'contact' %}" class="btn-secondary">Contact Support</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Add scroll progress indicator
+    window.addEventListener('scroll', function() {
+        const steps = document.querySelectorAll('.step-card');
+        const scrollPosition = window.scrollY + window.innerHeight / 2;
+
+        steps.forEach((step, index) => {
+            const stepTop = step.offsetTop;
+            const stepBottom = stepTop + step.offsetHeight;
+
+            if (scrollPosition >= stepTop && scrollPosition <= stepBottom) {
+                step.style.borderColor = 'rgba(37, 99, 235, 0.5)';
+            } else if (scrollPosition > stepBottom) {
+                step.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+            } else {
+                step.style.borderColor = 'var(--border-color)';
+            }
+        });
+    });
+</script>
+{% endblock %}

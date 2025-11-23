@@ -154,6 +154,12 @@ class HomePage(View):
     def get(self, request):
 
         return render(request, "core/landing-page.html")
+class OnboardGuidePage(View):
+    """Renders the landing page."""
+
+    def get(self, request):
+
+        return render(request, "core/onboard-guide.html")
 
 
 class TermsPage(View):

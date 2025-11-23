@@ -1,381 +1,445 @@
 {% extends 'core/base.html' %}
 
-{% block title %}MAEDIX - Instagram Lead Automation for Real Estate{% endblock %}
+{% block title %}MAEDIX - Instagram Lead Response Automation for Real Estate{% endblock %}
 
 {% block extra_css %}
 <style>
+    :root {
+        --accent-blue: #2563eb;
+        --accent-blue-light: #3b82f6;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --bg-card: rgba(15, 23, 42, 0.6);
+        --border-color: rgba(148, 163, 184, 0.1);
+    }
+
     /* Hero Section */
     .hero-section {
-        min-height: 90vh;
+        min-height: 85vh;
         display: flex;
         align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 4rem 0;
-        position: relative;
+        padding: 4rem 0 2rem;
     }
 
-    .hero-compass {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        animation: pulse 3s ease-in-out infinite;
+    .hero-content {
+        max-width: 900px;
     }
 
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.05); opacity: 0.8; }
+    .hero-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        border-radius: 50px;
+        color: var(--accent-blue-light);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
     }
 
     .hero-title {
-        font-size: clamp(2.5rem, 7vw, 5rem);
-        font-weight: 900;
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 800;
         margin-bottom: 1.5rem;
-        background: linear-gradient(135deg, #fff 0%, #00d4ff 50%, #0066ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-primary);
         line-height: 1.2;
         letter-spacing: -0.02em;
     }
 
-    .hero-tagline {
-        font-size: clamp(1.3rem, 3vw, 2rem);
-        color: var(--text-primary);
-        margin-bottom: 1rem;
-        font-weight: 600;
-        line-height: 1.4;
-    }
-
-    .hero-subtext {
-        font-size: clamp(1rem, 2vw, 1.3rem);
+    .hero-subtitle {
+        font-size: clamp(1.1rem, 2.5vw, 1.4rem);
         color: var(--text-secondary);
-        max-width: 800px;
-        margin: 0 auto 3rem;
-        line-height: 1.8;
+        line-height: 1.7;
+        margin-bottom: 2.5rem;
     }
 
-    .hero-cta {
+    .hero-stats {
         display: flex;
-        gap: 1.5rem;
-        justify-content: center;
+        gap: 3rem;
+        margin-top: 3rem;
         flex-wrap: wrap;
+    }
+
+    .hero-stat {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent-blue-light);
+        line-height: 1;
+    }
+
+    .hero-stat-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-top: 0.3rem;
     }
 
     /* Section Styles */
     .section {
-        padding: 6rem 0;
-        position: relative;
+        padding: 5rem 0;
+    }
+
+    .section-header {
+        max-width: 800px;
+        margin-bottom: 4rem;
+    }
+
+    .section-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-blue-light);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
     }
 
     .section-title {
-        font-size: clamp(2rem, 5vw, 3.5rem);
-        font-weight: 800;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(135deg, #fff 0%, #00d4ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
         line-height: 1.3;
     }
 
-    .section-subtitle {
-        font-size: clamp(1.1rem, 2vw, 1.5rem);
-        color: var(--text-secondary);
-        margin-bottom: 4rem;
-        line-height: 1.8;
-        max-width: 900px;
-    }
-
-    /* Problem Section */
-    .problem-section {
-        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
-        border-radius: 24px;
-        padding: 4rem 3rem;
-        margin-bottom: 4rem;
-        border: 1px solid var(--border-color);
-    }
-
-    .problem-icon {
-        font-size: 3rem;
-        margin-bottom: 1.5rem;
-    }
-
-    /* Solution Section */
-    .solution-section {
-        text-align: center;
-        margin-bottom: 4rem;
-    }
-
-    .solution-box {
-        background: var(--bg-card);
-        backdrop-filter: blur(15px);
-        border-radius: 24px;
-        padding: 3rem;
-        border: 1px solid var(--border-color);
-        margin-top: 3rem;
-        transition: all 0.3s ease;
-    }
-
-    .solution-box:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.3);
-    }
-
-    /* How It Works */
-    .workflow-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-        margin-top: 3rem;
-    }
-
-    .workflow-step {
-        background: var(--bg-card);
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        padding: 2.5rem;
-        border: 1px solid var(--border-color);
-        text-align: center;
-        position: relative;
-        transition: all 0.3s ease;
-    }
-
-    .workflow-step:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.2);
-    }
-
-    .step-number {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
-        border-radius: 50%;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 1rem;
-    }
-
-    .step-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .step-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.8rem;
-    }
-
-    .step-description {
+    .section-description {
+        font-size: 1.1rem;
         color: var(--text-secondary);
         line-height: 1.7;
-        font-size: 0.95rem;
     }
 
-    /* Features Grid */
-    .features-grid {
+    /* Pain Points Section */
+    .pain-points-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 2rem;
-        margin-top: 3rem;
     }
 
-    .feature-card {
+    .pain-card {
         background: var(--bg-card);
         backdrop-filter: blur(15px);
-        border-radius: 20px;
-        padding: 2rem;
         border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
         transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
     }
 
-    .feature-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(--primary-gradient);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
+    .pain-card:hover {
+        border-color: rgba(239, 68, 68, 0.3);
+        transform: translateY(-3px);
     }
 
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.3);
-    }
-
-    .feature-card:hover::before {
-        transform: scaleX(1);
-    }
-
-    .feature-icon {
-        font-size: 2.2rem;
+    .pain-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
         margin-bottom: 1rem;
-        display: block;
     }
 
-    .feature-title {
+    .pain-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .pain-title {
         font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.8rem;
-    }
-
-    .feature-description {
-        color: var(--text-secondary);
-        line-height: 1.6;
-        font-size: 0.95rem;
-    }
-
-    /* Benefits Grid */
-    .benefits-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
-        margin-top: 3rem;
-    }
-
-    .benefit-item {
-        display: flex;
-        gap: 1.5rem;
-        padding: 1.5rem;
-        background: rgba(59, 130, 246, 0.05);
-        border-radius: 12px;
-        border-left: 3px solid #3b82f6;
-    }
-
-    .benefit-icon {
-        font-size: 2rem;
-        flex-shrink: 0;
-    }
-
-    .benefit-text {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .benefit-title {
-        font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-primary);
     }
 
-    .benefit-desc {
+    .pain-description {
         color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .pain-impact {
         font-size: 0.9rem;
-        line-height: 1.5;
+        color: #ef4444;
+        font-weight: 500;
     }
 
-    /* Stats Section */
-    .stats-grid {
+    /* Solution Section */
+    .solution-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 2rem;
-        margin: 4rem 0;
     }
 
-    .stat-item {
-        text-align: center;
-        padding: 2rem;
+    .solution-card {
         background: var(--bg-card);
         backdrop-filter: blur(15px);
-        border-radius: 20px;
         border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2.5rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2rem;
+        align-items: start;
+        transition: all 0.3s ease;
     }
 
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 900;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        line-height: 1;
-        margin-bottom: 0.5rem;
+    .solution-card:hover {
+        border-color: rgba(37, 99, 235, 0.3);
+        transform: translateX(5px);
     }
 
-    .stat-label {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
-
-    /* Use Case Section */
-    .use-case-box {
-        background: var(--bg-card);
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        padding: 3rem;
-        border: 1px solid var(--border-color);
-        margin-top: 2rem;
-    }
-
-    .use-case-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 1.5rem;
+    .solution-number {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-light) 100%);
+        border-radius: 12px;
         display: flex;
         align-items: center;
-        gap: 0.8rem;
-    }
-
-    .use-case-point {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 1.2rem;
-        padding: 1rem;
-        background: rgba(59, 130, 246, 0.05);
-        border-radius: 8px;
-    }
-
-    .use-case-check {
-        color: #22c55e;
+        justify-content: center;
+        font-size: 1.5rem;
         font-weight: 700;
-        font-size: 1.2rem;
+        color: white;
         flex-shrink: 0;
     }
 
-    .use-case-text {
+    .solution-content h3 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.8rem;
+    }
+
+    .solution-content p {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+
+    .solution-result {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 6px;
+        color: #22c55e;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Process Section */
+    .process-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        position: relative;
+    }
+
+    .process-step {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        position: relative;
+    }
+
+    .process-step-number {
+        position: absolute;
+        top: -12px;
+        left: 1.5rem;
+        width: 28px;
+        height: 28px;
+        background: var(--accent-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .process-step h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .process-step p {
+        font-size: 0.95rem;
         color: var(--text-secondary);
         line-height: 1.6;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .feature-item {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.8rem;
+    }
+
+    .feature-item h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.6rem;
+    }
+
+    .feature-item p {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* Case Study */
+    .case-study {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 3rem;
+    }
+
+    .timeline {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .timeline-item {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 2rem;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.4);
+        border-radius: 8px;
+        border-left: 3px solid var(--accent-blue);
+    }
+
+    .timeline-time {
+        font-weight: 600;
+        color: var(--accent-blue-light);
+        font-size: 0.95rem;
+    }
+
+    .timeline-content {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .timeline-highlight {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 4rem 3rem;
+        text-align: center;
+    }
+
+    .cta-title {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .cta-description {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-light) 100%);
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-secondary {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: transparent;
+        color: var(--text-primary);
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        font-size: 1rem;
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--accent-blue-light);
+        background: rgba(37, 99, 235, 0.1);
     }
 
     /* Responsive */
     @media (max-width: 768px) {
         .hero-section {
-            min-height: 80vh;
+            min-height: auto;
             padding: 3rem 0;
         }
 
         .section {
-            padding: 4rem 0;
+            padding: 3rem 0;
         }
 
-        .problem-section,
-        .solution-box,
-        .use-case-box {
-            padding: 2.5rem 1.5rem;
-        }
-
-        .features-grid,
-        .workflow-grid,
-        .benefits-grid {
+        .pain-points-grid,
+        .feature-grid,
+        .process-grid {
             grid-template-columns: 1fr;
         }
 
-        .stat-number {
-            font-size: 2rem;
+        .solution-card {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .timeline-item {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .case-study {
+            padding: 2rem 1.5rem;
+        }
+
+        .hero-stats {
+            gap: 2rem;
         }
     }
 </style>
@@ -383,247 +447,285 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section fade-in">
+<section class="hero-section">
     <div class="container">
-        <div class="hero-compass">📱</div>
-        <h1 class="hero-title">MAEDIX</h1>
-        <p class="hero-tagline">Instagram Lead Automation for Real Estate</p>
-        <p class="hero-subtext">
-            Never miss a property inquiry again. Respond to Instagram DMs and comments instantly.<br>
-            Capture leads automatically, pre-qualify them using your listings, and route hot prospects to your agents — all without lifting a finger.
-        </p>
+        <div class="hero-content">
+            <div class="hero-badge">Instagram Lead Automation</div>
+            <h1 class="hero-title">Stop Losing Instagram Leads to Slow Response Times</h1>
+            <p class="hero-subtitle">
+                MAEDIX automatically responds to Instagram property inquiries within seconds, pre-qualifies buyers, and routes hot leads to your agents—turning Instagram comments and DMs into qualified appointments.
+            </p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{% url 'login' %}" class="btn-primary">Get started</a>
+                <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-number">&lt;30s</div>
+                    <div class="hero-stat-label">Average Response Time</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-number">24/7</div>
+                    <div class="hero-stat-label">Lead Capture</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-number">3x</div>
+                    <div class="hero-stat-label">Higher Conversion Rate</div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- Problem Section -->
-<section class="section">
+<!-- Pain Points Section -->
+<section class="section" style="background: rgba(15, 23, 42, 0.3);">
     <div class="container">
-        <div class="problem-section">
-            <div class="problem-icon">⏰</div>
-            <h2 class="section-title">The Problem</h2>
-            <p class="section-subtitle">
-                A potential buyer comments on your property post asking "Is this still available?" — but your team doesn't see it until hours later. By then, they've already reached out to another agent.
+        <div class="section-header">
+            <div class="section-label">The Problem</div>
+            <h2 class="section-title">Every Hour You Wait, You Lose Potential Buyers</h2>
+            <p class="section-description">
+                Instagram is where buyers discover properties. But if you're not responding immediately, they've already moved on to the next agent.
             </p>
-            <p class="section-subtitle" style="margin-bottom: 0;">
-                In real estate, every second counts. Instagram inquiries need immediate responses. You need to qualify buyers, understand their needs, and route them to the right agent — faster than your competition.
-            </p>
+        </div>
+
+        <div class="pain-points-grid">
+            <div class="pain-card">
+                <div class="pain-header">
+                    <div class="pain-icon">⏰</div>
+                    <h3 class="pain-title">Response Time Kills Deals</h3>
+                </div>
+                <p class="pain-description">
+                    A buyer comments "Is this still available?" at 8 PM. Your team sees it the next morning at 9 AM. By then, they've contacted 3 other agents and scheduled viewings.
+                </p>
+                <div class="pain-impact">⚠ You lose 67% of leads after first hour without response</div>
+            </div>
+
+            <div class="pain-card">
+                <div class="pain-header">
+                    <div class="pain-icon">💬</div>
+                    <h3 class="pain-title">Manual Follow-ups Are Impossible</h3>
+                </div>
+                <p class="pain-description">
+                    You're getting 50+ Instagram inquiries per week. Tracking who asked what, qualifying each buyer, and following up manually is overwhelming and leads fall through the cracks.
+                </p>
+                <div class="pain-impact">⚠ Average agent misses 40% of Instagram inquiries</div>
+            </div>
+
+            <div class="pain-card">
+                <div class="pain-header">
+                    <div class="pain-icon">🔍</div>
+                    <h3 class="pain-title">No Lead Qualification System</h3>
+                </div>
+                <p class="pain-description">
+                    You spend hours responding to everyone, including tire-kickers, without knowing their budget, timeline, or if they're even serious buyers. Your time is wasted on unqualified leads.
+                </p>
+                <div class="pain-impact">⚠ 60% of Instagram inquiries are unqualified</div>
+            </div>
         </div>
     </div>
 </section>
 
 <!-- Solution Section -->
-<section class="section" style="padding-top: 0;">
+<section class="section" id="solution">
     <div class="container">
-        <div class="solution-section">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-            <h2 class="section-title">Instant Instagram Lead Capture</h2>
-            <div class="solution-box">
-                <p style="font-size: 1.2rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem;">
-                    MAEDIX monitors your Instagram DMs and comments 24/7. When someone asks about a property, we respond instantly with relevant information from your listings.
-                </p>
-                <p style="font-size: 1.2rem; color: var(--text-primary); font-weight: 600; margin-bottom: 0;">
-                    Our AI pre-qualifies the lead by asking about their budget, preferred location, and timeline — then automatically creates a lead in your system and notifies your agents.
-                </p>
+        <div class="section-header">
+            <div class="section-label">The Solution</div>
+            <h2 class="section-title">How MAEDIX Solves These Problems</h2>
+            <p class="section-description">
+                Automated Instagram lead capture that works while you sleep. Every inquiry gets an instant, intelligent response.
+            </p>
+        </div>
+
+        <div class="solution-grid">
+            <div class="solution-card">
+                <div class="solution-number">1</div>
+                <div class="solution-content">
+                    <h3>Instant Response to Every Instagram Inquiry</h3>
+                    <p>
+                        MAEDIX monitors your Instagram DMs and comments 24/7. When someone asks "Is this available?" or "What's the price?", our AI responds within seconds with relevant property details from your listings.
+                    </p>
+                    <div class="solution-result">✓ 100% of inquiries answered in under 30 seconds</div>
+                </div>
+            </div>
+
+            <div class="solution-card">
+                <div class="solution-number">2</div>
+                <div class="solution-content">
+                    <h3>Automatic Buyer Pre-Qualification</h3>
+                    <p>
+                        After initial response, MAEDIX asks qualifying questions: budget range, preferred location, purchase timeline, and financing status. The AI conversationally extracts this information and scores each lead.
+                    </p>
+                    <div class="solution-result">✓ 85% qualification rate on interested buyers</div>
+                </div>
+            </div>
+
+            <div class="solution-card">
+                <div class="solution-number">3</div>
+                <div class="solution-content">
+                    <h3>Hot Leads Routed to Your Sales Team</h3>
+                    <p>
+                        Qualified leads are automatically created in your dashboard with all buyer details. High-priority leads trigger instant notifications to your agents, so they can call while the buyer is still engaged.
+                    </p>
+                    <div class="solution-result">✓ Agents contact hot leads within 10 minutes</div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- How It Works -->
-<section class="section" id="features">
+<!-- How It Works Section -->
+<section class="section" id="how-it-works" style="background: rgba(15, 23, 42, 0.3);">
     <div class="container">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
-            <h2 class="section-title">How It Works</h2>
-            <p class="section-subtitle">Three simple steps to automate your Instagram lead capture</p>
+        <div class="section-header">
+            <div class="section-label">How It Works</div>
+            <h2 class="section-title">Simple Setup, Powerful Results</h2>
         </div>
-        
-        <div class="workflow-grid">
-            <div class="workflow-step">
-                <div class="step-number">1</div>
-                <div class="step-icon">💬</div>
-                <h3 class="step-title">Capture Every Inquiry</h3>
-                <p class="step-description">MAEDIX monitors your Instagram DMs and comments. Every "Is this available?" or property question is instantly detected.</p>
+
+        <div class="process-grid">
+            <div class="process-step">
+                <div class="process-step-number">1</div>
+                <h3>Connect Instagram</h3>
+                <p>Link your Instagram Business account in under 2 minutes. MAEDIX begins monitoring your DMs and comments immediately.</p>
             </div>
 
-            <div class="workflow-step">
-                <div class="step-number">2</div>
-                <div class="step-icon">🤖</div>
-                <h3 class="step-title">AI Pre-Qualification</h3>
-                <p class="step-description">Our AI responds with property details from your listings and asks qualifying questions about budget, location, and timeline.</p>
+            <div class="process-step">
+                <div class="process-step-number">2</div>
+                <h3>Add Property Listings</h3>
+                <p>Upload your active listings with details, photos, and pricing. This becomes the knowledge base for AI responses.</p>
             </div>
 
-            <div class="workflow-step">
-                <div class="step-number">3</div>
-                <div class="step-icon">✅</div>
-                <h3 class="step-title">Lead Assigned to Agents</h3>
-                <p class="step-description">A lead is created in your system with all qualification data. Hot prospects are automatically routed to your sales team.</p>
+            <div class="process-step">
+                <div class="process-step-number">3</div>
+                <h3>Configure Lead Rules</h3>
+                <p>Set qualification criteria and assign agents. Define what makes a lead "hot" and how it should be routed.</p>
+            </div>
+
+            <div class="process-step">
+                <div class="process-step-number">4</div>
+                <h3>AI Takes Over</h3>
+                <p>MAEDIX automatically responds, qualifies, and creates leads. You focus on closing deals, not chasing comments.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Key Features -->
-<section class="section" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%); padding: 6rem 0;">
-    <div class="container">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
-            <h2 class="section-title">Powerful Features</h2>
-        </div>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <span class="feature-icon">📸</span>
-                <h3 class="feature-title">Instagram Integration</h3>
-                <p class="feature-description">Connect your Instagram Business account and automate responses to DMs and comments instantly.</p>
-            </div>
-
-            <div class="feature-card">
-                <span class="feature-icon">🏠</span>
-                <h3 class="feature-title">Property Listings</h3>
-                <p class="feature-description">Create listings in MAEDIX that serve as context for AI responses. Keep all property details in one place.</p>
-            </div>
-
-            <div class="feature-card">
-                <span class="feature-icon">🧠</span>
-                <h3 class="feature-title">Intelligent Qualification</h3>
-                <p class="feature-description">AI asks the right questions based on your listings. Collects budget, location preferences, and purchase timeline automatically.</p>
-            </div>
-
-            <div class="feature-card">
-                <span class="feature-icon">📊</span>
-                <h3 class="feature-title">Lead Dashboard</h3>
-                <p class="feature-description">View all captured leads with qualification scores. See which properties generate the most interest.</p>
-            </div>
-
-            <div class="feature-card">
-                <span class="feature-icon">👥</span>
-                <h3 class="feature-title">Agent Assignment</h3>
-                <p class="feature-description">Route hot leads to your agents automatically. Assign roles and permissions for your team.</p>
-            </div>
-
-            <div class="feature-card">
-                <span class="feature-icon">🔄</span>
-                <h3 class="feature-title">Follow-up Automation</h3>
-                <p class="feature-description">AI sends contextual follow-ups with property updates that match the buyer's interests.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Benefits Section -->
+<!-- Real World Example -->
 <section class="section">
     <div class="container">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">💡</div>
-            <h2 class="section-title">Why Real Estate Agents Choose MAEDIX</h2>
+        <div class="section-header">
+            <div class="section-label">Case Study</div>
+            <h2 class="section-title">See MAEDIX in Action</h2>
+            <p class="section-description">
+                Here's exactly how a typical Instagram inquiry becomes a qualified appointment.
+            </p>
         </div>
-        
-        <div class="benefits-grid">
-            <div class="benefit-item">
-                <div class="benefit-icon">⚡</div>
-                <div class="benefit-text">
-                    <div class="benefit-title">Instant Response</div>
-                    <p class="benefit-desc">Never let a lead wait. MAEDIX responds to inquiries in seconds, not hours.</p>
-                </div>
-            </div>
 
-            <div class="benefit-item">
-                <div class="benefit-icon">🎯</div>
-                <div class="benefit-text">
-                    <div class="benefit-title">Smart Qualification</div>
-                    <p class="benefit-desc">Pre-qualify buyers automatically. Focus your time on hot prospects, not tire-kickers.</p>
+        <div class="case-study">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-time">Tuesday, 9:00 PM</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">Buyer comments on luxury condo post:</span> "Is this still available? What's included in HOA?"
+                    </div>
                 </div>
-            </div>
 
-            <div class="benefit-item">
-                <div class="benefit-icon">📈</div>
-                <div class="benefit-text">
-                    <div class="benefit-title">More Conversions</div>
-                    <p class="benefit-desc">Quick responses = higher conversion rates. Speed is your competitive advantage.</p>
+                <div class="timeline-item">
+                    <div class="timeline-time">9:00 PM (15 seconds later)</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">MAEDIX responds automatically:</span> "Yes, this 2BR/2BA luxury condo is available. HOA includes pool, gym, 24/7 security, water/trash. Listed at $485,000. What's your budget range for this area?"
+                    </div>
                 </div>
-            </div>
 
-            <div class="benefit-item">
-                <div class="benefit-icon">⏱️</div>
-                <div class="benefit-text">
-                    <div class="benefit-title">Save Time</div>
-                    <p class="benefit-desc">Stop manually responding to hundreds of Instagram inquiries. Let MAEDIX handle the work.</p>
+                <div class="timeline-item">
+                    <div class="timeline-time">9:03 PM</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">Buyer responds:</span> "Looking for $450K-$520K. Need to move in 2-3 months."
+                    </div>
                 </div>
-            </div>
 
-            <div class="benefit-item">
-                <div class="benefit-icon">📱</div>
-                <div class="benefit-text">
-                    <div class="benefit-title">Stay on Instagram</div>
-                    <p class="benefit-desc">Buyers see responses on Instagram instantly. No need to direct them elsewhere.</p>
+                <div class="timeline-item">
+                    <div class="timeline-time">9:03 PM (Instant)</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">MAEDIX asks follow-up:</span> "Perfect, this fits your budget. Are you pre-approved for financing? I can have one of our agents schedule a viewing."
+                    </div>
                 </div>
-            </div>
 
-            <div class="benefit-item">
-                <div class="benefit-icon">💼</div>
-                <div class="benefit-text">
-                    <div class="benefit-title">Team Collaboration</div>
-                    <p class="benefit-desc">Assign leads to agents, track performance, and manage your entire pipeline from one dashboard.</p>
+                <div class="timeline-item">
+                    <div class="timeline-time">9:05 PM</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">Buyer confirms:</span> "Yes, pre-approved. Would love to see it this weekend."
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-time">9:06 PM</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">Lead created in MAEDIX:</span>
+                        <ul style="margin: 0.5rem 0 0 1.2rem; padding: 0;">
+                            <li>Budget: $450K-$520K</li>
+                            <li>Timeline: 2-3 months</li>
+                            <li>Status: Pre-approved</li>
+                            <li>Interest: High (engaged conversation)</li>
+                            <li>Agent notification sent to Sarah (top performer)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-time">9:12 PM</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight">Agent Sarah calls buyer:</span> Viewing scheduled for Saturday 11 AM. Deal progresses to showing.
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-time">Result</div>
+                    <div class="timeline-content">
+                        <span class="timeline-highlight" style="color: #22c55e;">Qualified lead captured in 12 minutes.</span> Without MAEDIX, this inquiry would have been seen next business day—12 hours later. Buyer would have contacted 5+ other agents by then.
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Real World Use Case -->
-<section class="section">
+<!-- Features Section -->
+<section class="section" style="background: rgba(15, 23, 42, 0.3);">
     <div class="container">
-        <div style="text-align: center; margin-bottom: 1rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🎬</div>
-            <h2 class="section-title">Real World Example</h2>
+        <div class="section-header">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Everything You Need to Convert Instagram Traffic</h2>
         </div>
-        
-        <div class="use-case-box">
-            <div class="use-case-title">
-                📍 How This Plays Out
-            </div>
-            
-            <div class="use-case-point">
-                <div class="use-case-check">1</div>
-                <div class="use-case-text">
-                    <strong>Tuesday 9 PM:</strong> A buyer comments on your luxury condo listing: "Is this available? What's the price?"
-                </div>
+
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>Instagram Business Integration</h3>
+                <p>Connect your account once. MAEDIX handles all DMs and comments automatically. Works with Instagram Business and Creator accounts.</p>
             </div>
 
-            <div class="use-case-point">
-                <div class="use-case-check">2</div>
-                <div class="use-case-text">
-                    <strong>9:02 PM (Instantly):</strong> MAEDIX responds with property details, photos, and asks: "What's your budget? When are you looking to move?"
-                </div>
+            <div class="feature-item">
+                <h3>Property Listings Database</h3>
+                <p>Manage all your listings in one place. AI pulls accurate details for every inquiry—price, specs, photos, neighborhood info.</p>
             </div>
 
-            <div class="use-case-point">
-                <div class="use-case-check">3</div>
-                <div class="use-case-text">
-                    <strong>9:05 PM:</strong> The buyer responds. MAEDIX captures their budget ($500K-$700K), timeline (3 months), and preferred location.
-                </div>
+            <div class="feature-item">
+                <h3>Smart Lead Qualification</h3>
+                <p>AI asks the right questions to extract budget, location preference, timeline, and financing status. Qualification score assigned to every lead.</p>
             </div>
 
-            <div class="use-case-point">
-                <div class="use-case-check">4</div>
-                <div class="use-case-text">
-                    <strong>9:06 PM:</strong> A lead is created in MAEDIX with a qualification score. Your top agent gets a notification with all the buyer's information.
-                </div>
+            <div class="feature-item">
+                <h3>Lead Dashboard & CRM</h3>
+                <p>View all captured leads, sort by qualification score, track conversation history, and monitor which properties generate most interest.</p>
             </div>
 
-            <div class="use-case-point">
-                <div class="use-case-check">5</div>
-                <div class="use-case-text">
-                    <strong>9:10 PM:</strong> Your agent calls the buyer while they're still engaged. The listing is scheduled. Deal moves forward.
-                </div>
+            <div class="feature-item">
+                <h3>Team Management</h3>
+                <p>Add agents to your account. Assign leads automatically based on availability, territory, or performance. Track individual metrics.</p>
             </div>
 
-            <div class="use-case-point">
-                <div class="use-case-check">✓</div>
-                <div class="use-case-text">
-                    <strong>Result:</strong> You captured a qualified lead in 10 minutes instead of next business day. You beat your competition by hours.
-                </div>
+            <div class="feature-item">
+                <h3>Instant Agent Notifications</h3>
+                <p>Hot leads trigger immediate SMS and email alerts to assigned agents. Includes full buyer context and conversation history.</p>
             </div>
         </div>
     </div>
@@ -632,15 +734,9 @@
 <!-- CTA Section -->
 <section class="section">
     <div class="container">
-        <div style="text-align: center; background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%); border-radius: 24px; padding: 4rem 3rem; border: 1px solid var(--border-color);">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
-            <h2 class="section-title">Ready to Capture Every Lead?</h2>
-            <p class="section-subtitle" style="margin-bottom: 2rem;">
-                Stop losing buyers to slow responses. Start automating your Instagram lead capture today.
-            </p>
-            <div class="hero-cta">
-                <a href="{% url 'login' %}" class="btn btn-primary">Get Started</a>
-            </div>
+        <div class="cta-section">
+            <h2 class="cta-title">Start Capturing Instagram Leads Today</h2>
+            <a href="{% url 'login' %}" class="btn-primary">Get Started</a>
         </div>
     </div>
 </section>

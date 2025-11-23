@@ -119,6 +119,9 @@ class InstagramWebHookView(View):
             return {}
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
         self.company = company_instagram_account.company
+        if not self.company.detail.get('enable_dm_response', True):
+            print("DM response feature not enabled for company", self.company.id)
+            return {}
         subscription = Subscription.objects.filter(company=self.company).first()
         if (
             not subscription
@@ -162,12 +165,25 @@ class InstagramWebHookView(View):
             or not subscription.is_active()
             or subscription.has_permission("instagram_dm_ai_reply") is False
         ):
-            response_to_user = self.reply_to_message(
-            recipient_ig_id=data["sender"],
-            company_business_ig_id=data["recipient"],
-            message=self.company.detail.get("static_dm_reply", "Thanks for reaching out to us, we will contact you shortly."),
-            access_token=company_instagram_account.instagram_data["access_token"],
-        )
+            # Check if we've already sent the static first DM
+            if not self.lead.tags or self.lead.tags.get("static_first_dm") != "done":
+                response_to_user = self.reply_to_message(
+                    recipient_ig_id=data["sender"],
+                    company_business_ig_id=data["recipient"],
+                    message=self.company.detail.get("static_dm_reply", "Thanks for reaching out to us, we will contact you shortly."),
+                    access_token=company_instagram_account.instagram_data["access_token"],
+                )
+                
+                # Mark that static DM has been sent
+                if self.lead.tags is None:
+                    self.lead.tags = {}
+                self.lead.tags["static_first_dm"] = "done"
+                self.lead.save(update_fields=['tags'])
+                
+                print("Static DM reply sent to user for company", self.company.id)
+            else:
+                print("Static DM already sent to this lead, skipping", self.lead.id)
+            
             print("Inactive or invalid subscription for company to generate ai reply", self.company.id)
             return {}
 
@@ -319,6 +335,9 @@ class InstagramWebHookView(View):
         except InstagramAccount.DoesNotExist:
             return {}
         self.company = company_instagram_account.company
+        if not self.company.detail.get('enable_comment_reply', True): 
+            print("Comment auto response feature not enabled for company", self.company.id)
+            return {}
 
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
         self.company = company_instagram_account.company

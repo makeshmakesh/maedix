@@ -753,8 +753,9 @@ class CompanyManageView(LoginRequiredMixin, View):
         company.industry = request.POST.get('industry', company.industry)
         company.detail["static_dm_reply"] = request.POST.get('static_dm_reply', company.detail.get("static_dm_reply", ""))
         company.detail["static_comment_reply"] = request.POST.get('static_comment_reply', company.detail.get("static_comment_reply", ""))
-        company.detail["static_comment_followup_dm_reply"] = request.POST.get('static_comment_followup_dm_reply', company.detail.get("static_comment_followup_dm_reply", "round_robin"))
-        # Add more fields as necessary
+        company.detail["static_comment_followup_dm_reply"] = request.POST.get('static_comment_followup_dm_reply', company.detail.get("static_comment_followup_dm_reply", ""))
+        company.detail["enable_dm_response"] = 'enable_dm_response' in request.POST
+        company.detail["enable_comment_reply"] = 'enable_comment_reply' in request.POST
         
         company.save()
         
@@ -772,7 +773,14 @@ def create_company(request):
         company = Company.objects.create(
             name=name,
             industry=industry,
-            created_by=request.user
+            created_by=request.user,
+            detail={
+                "enable_dm_response": True,
+                "enable_comment_reply": True,
+                "static_dm_reply": "Thank you for reaching out! We'll get back to you shortly.",
+                "static_comment_reply": "Thanks for your comment! We'll DM you shortly.",
+                "static_comment_followup_dm_reply": "Thanks for engaging with our post! How can we assist you further?"
+            }
         )
         membership = Membership.objects.create(
             user=request.user,

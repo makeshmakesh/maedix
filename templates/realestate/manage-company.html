@@ -95,6 +95,7 @@
     .form-control::placeholder {
         color: var(--text-muted);
     }
+    
     .form-control:disabled {
         background: rgba(15, 23, 42, 0.2);
         color: var(--text-muted);
@@ -303,6 +304,80 @@
         opacity: 0.3;
     }
 
+    /* Custom Checkbox Styles */
+    .checkbox-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        cursor: pointer;
+        position: relative;
+        padding: 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .checkbox-container:hover {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .checkbox-container input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkbox-checkmark {
+        position: relative;
+        height: 24px;
+        width: 24px;
+        background-color: rgba(15, 23, 42, 0.5);
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .checkbox-container:hover .checkbox-checkmark {
+        border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .checkbox-container input:checked ~ .checkbox-checkmark {
+        background: var(--primary-gradient);
+        border-color: #3b82f6;
+    }
+
+    .checkbox-checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 7px;
+        top: 3px;
+        width: 6px;
+        height: 11px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .checkbox-container input:checked ~ .checkbox-checkmark:after {
+        display: block;
+    }
+
+    .checkbox-label {
+        flex: 1;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .checkbox-label strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
     @media (max-width: 768px) {
         .page-title {
             font-size: 2rem;
@@ -325,13 +400,15 @@
 
 {% block content %}
 <div class="container">
-            <div class="header-content">
-            <a href="{% url 'company-detail' company.id %}" class="back-link">← Back to {{ company.name }}</a>
-        </div>
+    <div class="header-content">
+        <a href="{% url 'company-detail' company.id %}" class="back-link">← Back to {{ company.name }}</a>
+    </div>
+    
     <div class="page-header">
         <h1 class="page-title">Manage Company</h1>
         <p class="page-subtitle">Update your company information and monitor subscription details</p>
     </div>
+    
     <!-- Company Details Section -->
     <div class="section-card fade-in">
         <h2 class="section-title">
@@ -392,7 +469,7 @@
                 >
             </div>
 
-                                    <div class="form-group">
+            <div class="form-group">
                 <label class="form-label" for="static_comment_followup_dm_reply">Static Comment Follow up DM Text</label>
                 <input 
                     type="text" 
@@ -402,6 +479,50 @@
                     value="{{ company.detail.static_comment_followup_dm_reply }}"
                     placeholder="e.g., Thanks for engaging with our post! How can we help you further?"
                 >
+            </div>
+
+            <!-- Automation Settings -->
+            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.05); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                <h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 1.3rem;">⚙️</span>
+                    Automation Settings
+                </h3>
+                
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-container">
+                        <input 
+                            type="checkbox" 
+                            name="enable_dm_response" 
+                            id="enable_dm_response"
+                            {% if company.detail.enable_dm_response %}checked{% endif %}
+                        >
+                        <span class="checkbox-checkmark"></span>
+                        <span class="checkbox-label">
+                            <strong>Enable DM Response (AI/Static)</strong>
+                            <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                Automatically respond to Instagram direct messages with AI-powered or static replies
+                            </span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="checkbox-container">
+                        <input 
+                            type="checkbox" 
+                            name="enable_comment_reply" 
+                            id="enable_comment_reply"
+                            {% if company.detail.enable_comment_reply %}checked{% endif %}
+                        >
+                        <span class="checkbox-checkmark"></span>
+                        <span class="checkbox-label">
+                            <strong>Enable Comment Reply + First Followup Message (AI/Static)</strong>
+                            <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                Automatically reply to Instagram comments and send a follow-up DM to engage leads
+                            </span>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <div class="info-grid">
@@ -475,16 +596,6 @@
                     <div class="info-label">Next Renewal</div>
                     <div class="info-value">{{ subscription.renewal_date|date:"M d, Y" }}</div>
                 </div>
-                {% comment %} <div class="info-item">
-                    <div class="info-label">Auto-Renew</div>
-                    <div class="info-value">
-                        {% if subscription.is_auto_renew %}
-                            ✅ Enabled
-                        {% else %}
-                            ❌ Disabled
-                        {% endif %}
-                    </div>
-                </div> {% endcomment %}
             </div>
 
             <!-- Usage Statistics -->
