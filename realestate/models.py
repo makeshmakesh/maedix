@@ -294,6 +294,7 @@ class Lead(models.Model):
 
     agent_notes = TextField(blank=True)
     tags = JSONField(default=list)
+    metadata = JSONField(default=dict)
 
     # Timestamps
     created_at = DateTimeField(auto_now_add=True)

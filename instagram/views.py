@@ -166,7 +166,7 @@ class InstagramWebHookView(View):
             or subscription.has_permission("instagram_dm_ai_reply") is False
         ):
             # Check if we've already sent the static first DM
-            if not self.lead.tags or self.lead.tags.get("static_first_dm") != "done":
+            if not self.lead.metadata or self.lead.metadata.get("static_first_dm") != "done":
                 response_to_user = self.reply_to_message(
                     recipient_ig_id=data["sender"],
                     company_business_ig_id=data["recipient"],
@@ -175,10 +175,10 @@ class InstagramWebHookView(View):
                 )
                 
                 # Mark that static DM has been sent
-                if self.lead.tags is None:
-                    self.lead.tags = {}
-                self.lead.tags["static_first_dm"] = "done"
-                self.lead.save(update_fields=['tags'])
+                if self.lead.metadata is None:
+                    self.lead.metadata = {}
+                self.lead.metadata["static_first_dm"] = "done"
+                self.lead.save(update_fields=['metadata'])
                 
                 print("Static DM reply sent to user for company", self.company.id)
             else:
