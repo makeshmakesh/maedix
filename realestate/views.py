@@ -992,18 +992,13 @@ class PublicLeadShareView(View):
         
         # Record the view
         lead_share.record_view()
-        print("11111111111", lead_share)
         
         # Get leads for this listing
         lead_listings = LeadListing.objects.filter(
             listing=lead_share.listing
         ).select_related('lead')
         
-        print("22222222222222", lead_listings)
-        
         leads = [ll.lead for ll in lead_listings]
-        
-        print("3333333333", leads)
         
         context = {
             'share': lead_share,
