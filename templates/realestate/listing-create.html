@@ -862,61 +862,66 @@
         }
     }
 
-    function renderPosts(posts) {
-        const postsHtml = posts.map(post => {
-            const imageUrl = post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url;
-            const caption = post.caption ? post.caption.substring(0, 50) + (post.caption.length > 50 ? '...' : '') : 'No caption';
-            const date = new Date(post.timestamp).toLocaleDateString();
-            const isSelected = selectedPost && selectedPost.id === post.id;
+    // Add this at the top with other variables
+let postsData = {};
 
-            return `
-                <div class="post-card ${isSelected ? 'selected' : ''}" data-post-id="${post.id}" data-post-data='${JSON.stringify(post)}'>
-                    <img src="${imageUrl}" alt="Instagram post" class="post-image">
-                    <div class="post-info">
-                        <p class="post-caption">${caption}</p>
-                        <p class="post-date">${date}</p>
-                    </div>
+function renderPosts(posts) {
+    const currentPostId = document.getElementById('instagram_post_id').value;
+    
+    // Store posts data in JavaScript object instead of HTML attribute
+    postsData = {};
+    posts.forEach(post => {
+        postsData[post.id] = post;
+    });
+
+    const postsHtml = posts.map(post => {
+        const imageUrl = post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url;
+        const caption = post.caption ? post.caption.substring(0, 50) + (post.caption.length > 50 ? '...' : '') : 'No caption';
+        const date = new Date(post.timestamp).toLocaleDateString();
+        const isSelected = selectedPost && selectedPost.id === post.id || post.id === currentPostId;
+
+        return `
+            <div class="post-card ${isSelected ? 'selected' : ''}" data-post-id="${post.id}">
+                <img src="${imageUrl}" alt="Instagram post" class="post-image">
+                <div class="post-info">
+                    <p class="post-caption">${caption}</p>
+                    <p class="post-date">${date}</p>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
+    }).join('');
 
-        modalBody.innerHTML = `<div class="posts-grid">${postsHtml}</div>`;
+    modalBody.innerHTML = `<div class="posts-grid">${postsHtml}</div>`;
 
-        // Add click handlers
-        document.querySelectorAll('.post-card').forEach(card => {
-            card.addEventListener('click', function() {
-                selectPost(this);
-            });
+    document.querySelectorAll('.post-card').forEach(card => {
+        card.addEventListener('click', function() {
+            selectPost(this);
         });
-    }
+    });
+}
 
-    function selectPost(cardElement) {
-        // Remove previous selection
-        document.querySelectorAll('.post-card').forEach(c => c.classList.remove('selected'));
-        
-        // Mark as selected
-        cardElement.classList.add('selected');
-        
-        // Get post data
-        const postData = JSON.parse(cardElement.dataset.postData);
-        selectedPost = postData;
-        
-        // Update input field
-        document.getElementById('instagram_post_id').value = postData.id;
-        
-        // Show preview
-        const preview = document.getElementById('selectedPostPreview');
-        const imageUrl = postData.media_type === 'VIDEO' ? postData.thumbnail_url : postData.media_url;
-        const caption = postData.caption ? postData.caption.substring(0, 100) : 'No caption';
-        
-        document.getElementById('previewImage').src = imageUrl;
-        document.getElementById('previewCaption').textContent = caption;
-        preview.classList.add('show');
-        
-        // Close modal after a short delay
-        setTimeout(() => {
-            modal.classList.remove('active');
-        }, 500);
-    }
+function selectPost(cardElement) {
+    document.querySelectorAll('.post-card').forEach(c => c.classList.remove('selected'));
+    cardElement.classList.add('selected');
+    
+    // Get post data from JavaScript object instead of HTML attribute
+    const postId = cardElement.dataset.postId;
+    const postData = postsData[postId];
+    selectedPost = postData;
+    
+    document.getElementById('instagram_post_id').value = postData.id;
+    
+    const preview = document.getElementById('selectedPostPreview');
+    const imageUrl = postData.media_type === 'VIDEO' ? postData.thumbnail_url : postData.media_url;
+    const caption = postData.caption ? postData.caption.substring(0, 100) : 'No caption';
+    
+    document.getElementById('previewImage').src = imageUrl;
+    document.getElementById('previewCaption').textContent = caption;
+    preview.classList.add('show');
+    
+    setTimeout(() => {
+        modal.classList.remove('active');
+    }, 500);
+}
 </script>
 {% endblock %}
