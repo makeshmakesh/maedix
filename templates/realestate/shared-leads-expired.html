@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Unavailable | MAEDIX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #030712;
+            --bg-card: rgba(15, 23, 42, 0.8);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(59, 130, 246, 0.2);
+            --accent-red: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .error-container {
+            text-align: center;
+            max-width: 450px;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .error-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+        
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .error-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .error-reason {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+        
+        .footer-branding {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .footer-branding a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+        
+        .footer-branding a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🔗</div>
+        <h1 class="error-title">Link Unavailable</h1>
+        
+        <div class="error-card">
+            <div class="error-reason">
+                {% if reason == 'expired' %}
+                    <span>⏰</span>
+                    <span>This link has expired</span>
+                {% elif reason == 'revoked' %}
+                    <span>🚫</span>
+                    <span>This link has been revoked</span>
+                {% else %}
+                    <span>❌</span>
+                    <span>This link is no longer valid</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <p class="error-message">
+            {% if reason == 'expired' %}
+                Share links expire after 30 days for security. Please contact the agent for a new link.
+            {% elif reason == 'revoked' %}
+                The agent has revoked access to this shared report. Please contact them for more information.
+            {% else %}
+                This link is no longer accessible. Please contact the agent for assistance.
+            {% endif %}
+        </p>
+        
+        <p class="footer-branding">
+            Powered by <a href="https://maedix.com" target="_blank">MAEDIX</a>
+        </p>
+    </div>
+</body>
+</html>

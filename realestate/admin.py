@@ -1,7 +1,15 @@
 #pylint:disable=all
 from django.contrib import admin
 
-from .models import Company, Membership, PropertyListing, Lead, ConversationMessage, CompanyInvitation
+from .models import Company, Membership, PropertyListing, Lead, ConversationMessage, CompanyInvitation, LeadListing, LeadShare
+
+
+@admin.register(LeadShare)
+class LeadShareAdmin(admin.ModelAdmin):
+    pass
+@admin.register(LeadListing)
+class LeadListingAdmin(admin.ModelAdmin):
+    pass
 
 @admin.register(CompanyInvitation)
 class CompanyInvitationAdmin(admin.ModelAdmin):

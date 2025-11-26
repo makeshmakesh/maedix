@@ -1,8 +1,9 @@
 # pylint:disable=all
 from django.views import View
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST, require_GET
 from users.models import CustomUser
-from .models import Membership, Company, PropertyListing, Lead, ConversationMessage, CompanyInvitation
+from .models import Membership, Company, PropertyListing, Lead, ConversationMessage, CompanyInvitation,LeadListing, LeadShare
 from core.models import Subscription
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -18,7 +19,6 @@ from instagram.models import InstagramAccount
 
 from django.utils import timezone
 from datetime import timedelta
-from .models import Lead
 
 
 def calculate_lead_score(lead: Lead) -> int:
@@ -446,12 +446,14 @@ class LeadDetailView(LoginRequiredMixin, View):
         conversations = ConversationMessage.objects.filter(lead=lead).order_by('timestamp')
         conversations_formatted = self.format_conversation_messages(conversations)
         available_agents = Membership.objects.filter(company=company)
+        lead_listings = LeadListing.objects.filter(lead=lead).select_related('listing')
         context = {
             "company": company,
             "lead": lead,
             "score" :score,
             "conversations_formatted": conversations_formatted,
             "available_agents": available_agents,
+            "lead_listings": lead_listings,
         }
 
         return render(request, "realestate/lead-detail.html", context)
@@ -586,9 +588,15 @@ class ListingEditView(LoginRequiredMixin, View):
     def get(self, request, company_id, listing_id):
         company = get_object_or_404(Company, id=company_id)
         listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+        lead_listings = LeadListing.objects.filter(listing=listing).select_related('lead')
+        
+        associated_lead_ids = lead_listings.values_list('lead_id', flat=True)
+        available_leads = Lead.objects.filter(company=company).exclude(id__in=associated_lead_ids)
         context = {
             'company': company,
             'listing': listing,
+            "lead_listings" :lead_listings,
+            "available_leads": available_leads,
         }
         return render(request, "realestate/listing-edit.html", context)
     
@@ -659,6 +667,7 @@ class ListingDeleteView(LoginRequiredMixin, View):
                 messages.error(request, "You do not have permission to delete listings for this company.")
                 return redirect('listings', company_id=company_id)
             listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+            
             
             listing_title = listing.title
             listing.delete()
@@ -793,3 +802,215 @@ def create_company(request):
         return redirect('dashboard')
     
     return render(request, 'realestate/create-company.html')
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@require_POST
+def add_lead_to_listing(request, company_id, listing_id):
+    try:
+        lead_id = request.POST.get('lead_id')
+        if not lead_id:
+            return JsonResponse({'success': False, 'error': 'Lead ID required'})
+        
+        company = get_object_or_404(Company, id=company_id)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+        lead = get_object_or_404(Lead, id=lead_id, company=company)
+        
+        lead_listing, created = LeadListing.objects.get_or_create(
+            lead=lead,
+            listing=listing,
+            defaults={'notes': 'Manually linked from listing page'}
+        )
+        
+        if created:
+            return JsonResponse({
+                'success': True,
+                'message': f'Lead @{lead.instagram_username} linked to listing',
+                'lead': {
+                    'id': lead.id,
+                    'instagram_username': lead.instagram_username,
+                    'customer_name': lead.customer_name or '',
+                    'status': lead.status,
+                    'status_display': lead.get_status_display(),
+                    'intent_level': lead.intent_level,
+                    'intent_display': lead.get_intent_level_display(),
+                    'budget_max': str(lead.budget_max) if lead.budget_max else '',
+                    'created_at': lead.created_at.strftime('%b %d, %Y'),
+                },
+                'lead_listing_id': lead_listing.id,
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Lead already linked'})
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def remove_lead_from_listing(request, company_id, listing_id):
+    try:
+        lead_id = request.POST.get('lead_id')
+        if not lead_id:
+            return JsonResponse({'success': False, 'error': 'Lead ID required'})
+        
+        company = get_object_or_404(Company, id=company_id)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+        
+        deleted, _ = LeadListing.objects.filter(
+            listing=listing,
+            lead_id=lead_id
+        ).delete()
+        
+        if deleted:
+            return JsonResponse({'success': True, 'message': 'Lead unlinked from listing'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Association not found'})
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+    
+    
+
+
+@login_required
+@require_POST
+def create_lead_share(request, company_id, listing_id):
+    """Create a new share link for a listing."""
+    try:
+        company = get_object_or_404(Company, id=company_id)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+        
+        owner_name = request.POST.get('owner_name', '').strip()
+        if not owner_name:
+            return JsonResponse({'success': False, 'error': 'Owner name is required'})
+        
+        show_contact_info = request.POST.get('show_contact_info') == 'true'
+        
+        lead_share = LeadShare.objects.create(
+            company=company,
+            listing=listing,
+            created_by=request.user,
+            owner_name=owner_name,
+            show_contact_info=show_contact_info,
+        )
+        
+        share_url = request.build_absolute_uri(f'/realestate/shared/{lead_share.token}/')
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Share link created successfully',
+            'share': {
+                'id': lead_share.id,
+                'token': lead_share.token,
+                'url': share_url,
+                'owner_name': lead_share.owner_name,
+                'show_contact_info': lead_share.show_contact_info,
+                'expires_at': lead_share.expires_at.strftime('%b %d, %Y'),
+                'created_at': lead_share.created_at.strftime('%b %d, %Y'),
+                'view_count': lead_share.view_count,
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_GET
+def list_lead_shares(request, company_id, listing_id):
+    """List all shares for a listing."""
+    try:
+        company = get_object_or_404(Company, id=company_id)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+        
+        shares = LeadShare.objects.filter(listing=listing, is_active=True)
+        
+        shares_data = []
+        for share in shares:
+            share_url = request.build_absolute_uri(f'/realestate/shared/{share.token}/')
+            shares_data.append({
+                'id': share.id,
+                'token': share.token,
+                'url': share_url,
+                'owner_name': share.owner_name,
+                'show_contact_info': share.show_contact_info,
+                'expires_at': share.expires_at.strftime('%b %d, %Y'),
+                'created_at': share.created_at.strftime('%b %d, %Y'),
+                'view_count': share.view_count,
+                'is_expired': share.is_expired,
+                'last_viewed_at': share.last_viewed_at.strftime('%b %d, %Y %H:%M') if share.last_viewed_at else None,
+            })
+        
+        return JsonResponse({'success': True, 'shares': shares_data})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def revoke_lead_share(request, company_id, share_id):
+    """Revoke/deactivate a share link."""
+    try:
+        company = get_object_or_404(Company, id=company_id)
+        lead_share = get_object_or_404(LeadShare, id=share_id, company=company)
+        
+        lead_share.is_active = False
+        lead_share.save(update_fields=['is_active'])
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Share link revoked successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+class PublicLeadShareView(View):
+    """Public view for property owners to see leads (no login required)."""
+    
+    def get(self, request, token):
+        lead_share = get_object_or_404(LeadShare, token=token)
+        
+        # Check if valid
+        if not lead_share.is_active:
+            return render(request, 'realestate/shared-leads-expired.html', {
+                'reason': 'revoked'
+            })
+        
+        if lead_share.is_expired:
+            return render(request, 'realestate/shared-leads-expired.html', {
+                'reason': 'expired'
+            })
+        
+        # Record the view
+        lead_share.record_view()
+        print("11111111111", lead_share)
+        
+        # Get leads for this listing
+        lead_listings = LeadListing.objects.filter(
+            listing=lead_share.listing
+        ).select_related('lead')
+        
+        print("22222222222222", lead_listings)
+        
+        leads = [ll.lead for ll in lead_listings]
+        
+        print("3333333333", leads)
+        
+        context = {
+            'share': lead_share,
+            'company': lead_share.company,
+            'listing': lead_share.listing,
+            'leads': leads,
+            'show_contact_info': lead_share.show_contact_info,
+        }
+        
+        return render(request, 'realestate/shared-leads-public.html', context)

@@ -11,6 +11,7 @@ from realestate.models import (
     ConversationMessage,
     PropertyListing,
     Membership,
+    LeadListing
 )
 from core.models import Configuration
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -401,6 +402,16 @@ class InstagramWebHookView(View):
             property_context = company_listing_of_post_id.summarize_property()
         except PropertyListing.DoesNotExist:
             property_context = ""
+            
+        if company_listing_of_post_id and lead:
+            LeadListing.objects.get_or_create(
+                lead=lead,
+                listing=company_listing_of_post_id,
+                defaults={
+                    "notes": f"From IG comment: {data.get('comment_text', '')[:200]}"
+                }
+            )   
+        
         response = async_to_sync(self.get_reply_from_llm_async_for_cmments)(
             data["comment_text"], property_context
         )

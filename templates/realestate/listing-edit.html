@@ -441,6 +441,620 @@
         color: var(--text-muted);
     }
 
+    .leads-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.lead-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.lead-card:hover {
+    border-color: rgba(0, 212, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    text-decoration: none;
+}
+
+.lead-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lead-username {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.lead-intent {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.lead-intent.intent-low {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+}
+
+.lead-intent.intent-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.lead-intent.intent-high {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.lead-intent.intent-hot {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.lead-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.lead-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.lead-notes {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.status-qualified_hot {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.status-qualified_warm {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.status-qualified_cold {
+    background: rgba(100, 116, 139, 0.2);
+    color: #cbd5e1;
+}
+.add-lead-control {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.add-lead-control .form-select {
+    flex: 1;
+}
+
+.btn-add-lead {
+    padding: 0.875rem 1.5rem;
+    border-radius: 12px;
+    background: var(--secondary-gradient);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+}
+
+.btn-add-lead:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+}
+
+.btn-add-lead:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.no-leads-hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.leads-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.lead-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.lead-card:hover {
+    border-color: rgba(0, 212, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+.lead-card-link {
+    text-decoration: none;
+    display: block;
+}
+
+.lead-card-link:hover {
+    text-decoration: none;
+}
+
+.btn-remove-lead {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+}
+
+.lead-card:hover .btn-remove-lead {
+    opacity: 1;
+}
+
+.btn-remove-lead:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.1);
+}
+
+.lead-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lead-username {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.lead-intent {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.lead-intent.intent-low {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+}
+
+.lead-intent.intent-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.lead-intent.intent-high {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.lead-intent.intent-hot {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.lead-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.lead-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-active { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.status-qualified_hot { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.status-qualified_warm { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.status-qualified_cold { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; }
+
+.empty-leads-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+}
+
+.empty-leads-state .hint {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+
+
+.btn-create-share {
+    padding: 0.875rem 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    margin-bottom: 1.5rem;
+}
+
+.btn-create-share:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+}
+
+.shares-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.loading-shares {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 1rem;
+}
+
+.no-shares-message {
+    color: var(--text-muted);
+    padding: 1rem;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 12px;
+}
+
+.share-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.share-card:hover {
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.share-card.expired {
+    opacity: 0.6;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.share-info {
+    flex: 1;
+}
+
+.share-owner-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.share-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.share-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.share-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.share-badge.contact-visible {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.share-badge.contact-hidden {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+}
+
+.share-badge.expired-badge {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.share-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-copy-share, .btn-revoke-share {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-copy-share {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.btn-copy-share:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.btn-revoke-share {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-revoke-share:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Modal Styles */
+.modal-small {
+    max-width: 500px;
+}
+
+.share-expiry-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 1rem 0;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-cancel-modal {
+    flex: 1;
+    padding: 0.875rem;
+    border-radius: 10px;
+    background: rgba(100, 116, 139, 0.1);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel-modal:hover {
+    background: rgba(100, 116, 139, 0.2);
+}
+
+.btn-generate-link {
+    flex: 1;
+    padding: 0.875rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-generate-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.btn-generate-link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Success State */
+#share-success-container {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.share-success-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+#share-success-container h4 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.share-success-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.share-link-box {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.share-link-box .form-input {
+    flex: 1;
+    font-size: 0.85rem;
+}
+
+.btn-copy-link {
+    padding: 0.875rem 1.25rem;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-copy-link:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.btn-done {
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    background: var(--secondary-gradient);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-done:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .share-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .share-actions {
+        width: 100%;
+    }
+    
+    .share-actions button {
+        flex: 1;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .share-link-box {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .add-lead-control {
+        flex-direction: column;
+    }
+    
+    .btn-add-lead {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-remove-lead {
+        opacity: 1;
+    }
+}
+
     @media (max-width: 768px) {
         .edit-listing-container {
             padding: 2rem 0;
@@ -650,6 +1264,149 @@
                     </div>
                 </div>
 
+
+<!-- Associated Leads Section -->
+<div class="form-section">
+    <h3 class="section-title">Interested Leads (<span id="leads-count">{{ lead_listings|length }}</span>)</h3>
+    
+    <!-- Add Lead Control -->
+    <div class="add-lead-control">
+        <select id="lead-select" class="form-select">
+            <option value="">-- Select a lead to link --</option>
+            {% for lead in available_leads %}
+            <option value="{{ lead.id }}" data-username="{{ lead.instagram_username }}">
+                @{{ lead.instagram_username }}{% if lead.customer_name %} ({{ lead.customer_name }}){% endif %} - {{ lead.get_status_display }}
+            </option>
+            {% endfor %}
+        </select>
+        <button type="button" id="add-lead-btn" class="btn-add-lead" disabled>
+            <span>➕</span> Link Lead
+        </button>
+    </div>
+    
+    {% if not available_leads %}
+    <p class="no-leads-hint">All leads are already linked to this property, or no leads exist for this company.</p>
+    {% endif %}
+
+    <!-- Leads Grid -->
+    <div class="leads-grid" id="leads-grid">
+        {% for ll in lead_listings %}
+        <div class="lead-card" data-lead-id="{{ ll.lead.id }}">
+            <button type="button" class="btn-remove-lead" data-lead-id="{{ ll.lead.id }}" title="Unlink lead">×</button>
+            <a href="{% url 'lead-detail' company.id ll.lead.id %}" class="lead-card-link">
+                <div class="lead-header">
+                    <span class="lead-username">@{{ ll.lead.instagram_username }}</span>
+                    <span class="lead-intent intent-{{ ll.lead.intent_level }}">{{ ll.lead.get_intent_level_display }}</span>
+                </div>
+                <div class="lead-details">
+                    {% if ll.lead.customer_name %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">👤</span>
+                        <span>{{ ll.lead.customer_name }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">📊</span>
+                        <span class="status-badge status-{{ ll.lead.status }}">{{ ll.lead.get_status_display }}</span>
+                    </div>
+                    {% if ll.lead.budget_max %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">💰</span>
+                        <span>Budget: up to {{ ll.lead.budget_max }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">📅</span>
+                        <span>{{ ll.lead.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="empty-leads-state" id="empty-leads-state">
+            <p>📭 No leads linked to this property yet.</p>
+            <p class="hint">Select a lead from the dropdown above to link them.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+
+
+<div class="form-section">
+    <h3 class="section-title">📤 Share Leads with Property Owner</h3>
+    
+    <button type="button" id="create-share-btn" class="btn-create-share">
+        <span>🔗</span> Create Share Link
+    </button>
+    
+    <div class="shares-list" id="shares-list">
+        <div class="loading-shares">Loading existing shares...</div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+    <div class="modal-content modal-small">
+        <div class="modal-header">
+            <h3 class="modal-title" id="shareModalTitle">Share Leads with Owner</h3>
+            <button type="button" class="btn-close-modal" id="closeShareModalBtn">×</button>
+        </div>
+        <div class="modal-body" id="shareModalBody">
+            <!-- Create Form (initial state) -->
+            <div id="share-form-container">
+                <div class="form-group">
+                    <label class="form-label">Owner Name <span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="share-owner-name" 
+                        class="form-input" 
+                        placeholder="e.g., Ramesh Kumar"
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox">
+                        <input type="checkbox" id="share-show-contact">
+                        Include contact info (phone & email)
+                    </label>
+                    <p class="form-help">If unchecked, owner will only see lead names and interest details</p>
+                </div>
+                
+                <div class="share-expiry-note">
+                    <span>📅</span> Link will expire in 30 days
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel-modal" id="cancelShareBtn">Cancel</button>
+                    <button type="button" class="btn-generate-link" id="generateShareBtn">
+                        <span>🔗</span> Generate Link
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Success State (after generation) -->
+            <div id="share-success-container" style="display: none;">
+                <div class="share-success-icon">✅</div>
+                <h4>Share Link Created!</h4>
+                <p class="share-success-subtitle">Copy the link below and send it to the owner</p>
+                
+                <div class="share-link-box">
+                    <input type="text" id="share-link-input" class="form-input" readonly>
+                    <button type="button" id="copy-share-link-btn" class="btn-copy-link">
+                        📋 Copy
+                    </button>
+                </div>
+                
+                <button type="button" class="btn-done" id="shareDoneBtn">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
                 <!-- Property Details (Residential/Commercial) -->
                 <div class="form-section" id="building-details-section">
                     <h3 class="section-title">Property Details</h3>
@@ -790,6 +1547,7 @@
 {% block extra_js %}
 <script>
     const companyId = {{ company.id }};
+    const listingId = {{ listing.id }};
     let selectedPost = null;
 
     // Price type help text
@@ -906,7 +1664,6 @@
 
         modalBody.innerHTML = `<div class="posts-grid">${postsHtml}</div>`;
 
-        // Add click handlers
         document.querySelectorAll('.post-card').forEach(card => {
             card.addEventListener('click', function() {
                 selectPost(this);
@@ -915,20 +1672,14 @@
     }
 
     function selectPost(cardElement) {
-        // Remove previous selection
         document.querySelectorAll('.post-card').forEach(c => c.classList.remove('selected'));
-        
-        // Mark as selected
         cardElement.classList.add('selected');
         
-        // Get post data
         const postData = JSON.parse(cardElement.dataset.postData);
         selectedPost = postData;
         
-        // Update input field
         document.getElementById('instagram_post_id').value = postData.id;
         
-        // Show preview
         const preview = document.getElementById('selectedPostPreview');
         const imageUrl = postData.media_type === 'VIDEO' ? postData.thumbnail_url : postData.media_url;
         const caption = postData.caption ? postData.caption.substring(0, 100) : 'No caption';
@@ -937,10 +1688,419 @@
         document.getElementById('previewCaption').textContent = caption;
         preview.classList.add('show');
         
-        // Close modal after a short delay
         setTimeout(() => {
             modal.classList.remove('active');
         }, 500);
     }
+
+    // ========== Lead Linking Functionality ==========
+    const leadSelect = document.getElementById('lead-select');
+    const addLeadBtn = document.getElementById('add-lead-btn');
+    const leadsGrid = document.getElementById('leads-grid');
+    const leadsCount = document.getElementById('leads-count');
+
+    // Enable/disable add button based on selection
+    if (leadSelect) {
+        leadSelect.addEventListener('change', function() {
+            console.log('Lead selected:', this.value);
+            addLeadBtn.disabled = !this.value;
+        });
+    }
+
+    // Add lead to listing
+    if (addLeadBtn) {
+        addLeadBtn.addEventListener('click', async function() {
+            const leadId = leadSelect.value;
+            if (!leadId) return;
+            
+            addLeadBtn.disabled = true;
+            addLeadBtn.innerHTML = '<span>⏳</span> Linking...';
+            
+            try {
+const response = await fetch("{% url 'add_lead_to_listing' company.id listing.id %}", {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}',
+    },
+    body: `lead_id=${leadId}`
+});
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const emptyState = document.getElementById('empty-leads-state');
+                    if (emptyState) emptyState.remove();
+                    
+                    const lead = data.lead;
+                    const newCard = createLeadCard(lead);
+                    leadsGrid.insertAdjacentHTML('beforeend', newCard);
+                    
+                    const newCardEl = leadsGrid.lastElementChild;
+                    const removeBtn = newCardEl.querySelector('.btn-remove-lead');
+                    if (removeBtn) attachRemoveHandler(removeBtn);
+                    
+                    leadSelect.querySelector(`option[value="${leadId}"]`).remove();
+                    leadSelect.value = '';
+                    
+                    leadsCount.textContent = parseInt(leadsCount.textContent) + 1;
+                    
+                    showToast('Lead linked successfully!', 'success');
+                } else {
+                    showToast(data.error || 'Failed to link lead', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            } finally {
+                addLeadBtn.disabled = !leadSelect.value;
+                addLeadBtn.innerHTML = '<span>➕</span> Link Lead';
+            }
+        });
+    }
+
+    // Remove lead from listing
+    function attachRemoveHandler(btn) {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (!confirm('Unlink this lead from the property?')) return;
+            
+            const leadId = this.dataset.leadId;
+            const card = this.closest('.lead-card');
+            
+            try {
+const response = await fetch("{% url 'remove_lead_from_listing' company.id listing.id %}", {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}',
+    },
+    body: `lead_id=${leadId}`
+});
+                const data = await response.json();
+                
+                if (data.success) {
+                    const username = card.querySelector('.lead-username').textContent;
+                    
+                    card.style.transition = 'all 0.2s ease';
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        card.remove();
+                        
+                        const newCount = parseInt(leadsCount.textContent) - 1;
+                        leadsCount.textContent = newCount;
+                        
+                        if (newCount === 0) {
+                            leadsGrid.innerHTML = `
+                                <div class="empty-leads-state" id="empty-leads-state">
+                                    <p>📭 No leads linked to this property yet.</p>
+                                    <p class="hint">Select a lead from the dropdown above to link them.</p>
+                                </div>
+                            `;
+                        }
+                        
+                        const option = document.createElement('option');
+                        option.value = leadId;
+                        option.textContent = username;
+                        leadSelect.appendChild(option);
+                    }, 200);
+                    
+                    showToast('Lead unlinked successfully!', 'success');
+                } else {
+                    showToast(data.error || 'Failed to unlink lead', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            }
+        });
+    }
+
+    // Attach handlers to existing remove buttons
+    document.querySelectorAll('.btn-remove-lead').forEach(attachRemoveHandler);
+
+    // Helper to create lead card HTML
+    function createLeadCard(lead) {
+        return `
+            <div class="lead-card" data-lead-id="${lead.id}">
+                <button type="button" class="btn-remove-lead" data-lead-id="${lead.id}" title="Unlink lead">×</button>
+                <a href="/realestate/${companyId}/leads/${lead.id}/" class="lead-card-link">
+                    <div class="lead-header">
+                        <span class="lead-username">@${lead.instagram_username}</span>
+                        <span class="lead-intent intent-${lead.intent_level}">${lead.intent_display}</span>
+                    </div>
+                    <div class="lead-details">
+                        ${lead.customer_name ? `
+                        <div class="lead-detail-row">
+                            <span class="detail-label">👤</span>
+                            <span>${lead.customer_name}</span>
+                        </div>
+                        ` : ''}
+                        <div class="lead-detail-row">
+                            <span class="detail-label">📊</span>
+                            <span class="status-badge status-${lead.status}">${lead.status_display}</span>
+                        </div>
+                        ${lead.budget_max ? `
+                        <div class="lead-detail-row">
+                            <span class="detail-label">💰</span>
+                            <span>Budget: up to ${lead.budget_max}</span>
+                        </div>
+                        ` : ''}
+                        <div class="lead-detail-row">
+                            <span class="detail-label">📅</span>
+                            <span>${lead.created_at}</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        `;
+    }
+
+    // Simple toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            background: ${type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+
+
+
+    const shareModal = document.getElementById('shareModal');
+const createShareBtn = document.getElementById('create-share-btn');
+const closeShareModalBtn = document.getElementById('closeShareModalBtn');
+const cancelShareBtn = document.getElementById('cancelShareBtn');
+const generateShareBtn = document.getElementById('generateShareBtn');
+const shareDoneBtn = document.getElementById('shareDoneBtn');
+const copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+const sharesList = document.getElementById('shares-list');
+
+// Form elements
+const shareOwnerNameInput = document.getElementById('share-owner-name');
+const shareShowContactCheckbox = document.getElementById('share-show-contact');
+const shareFormContainer = document.getElementById('share-form-container');
+const shareSuccessContainer = document.getElementById('share-success-container');
+const shareLinkInput = document.getElementById('share-link-input');
+
+// Load existing shares on page load
+document.addEventListener('DOMContentLoaded', loadExistingShares);
+
+async function loadExistingShares() {
+    try {
+        const response = await fetch("{% url 'list_lead_shares' company.id listing.id %}");
+        const data = await response.json();
+        
+        if (data.success) {
+            renderSharesList(data.shares);
+        } else {
+            sharesList.innerHTML = `<div class="no-shares-message">Failed to load shares</div>`;
+        }
+    } catch (error) {
+        console.error('Error loading shares:', error);
+        sharesList.innerHTML = `<div class="no-shares-message">Failed to load shares</div>`;
+    }
+}
+
+function renderSharesList(shares) {
+    if (shares.length === 0) {
+        sharesList.innerHTML = `
+            <div class="no-shares-message">
+                <p>📭 No share links created yet</p>
+                <p style="font-size: 0.85rem; margin-top: 0.5rem;">Create a share link to let property owners view interested leads</p>
+            </div>
+        `;
+        return;
+    }
+    
+    sharesList.innerHTML = shares.map(share => `
+        <div class="share-card ${share.is_expired ? 'expired' : ''}" data-share-id="${share.id}">
+            <div class="share-info">
+                <div class="share-owner-name">👤 ${share.owner_name}</div>
+                <div class="share-meta">
+                    <span>📅 Expires: ${share.expires_at}</span>
+                    <span>👁️ ${share.view_count} view${share.view_count !== 1 ? 's' : ''}</span>
+                    <span class="share-badge ${share.show_contact_info ? 'contact-visible' : 'contact-hidden'}">
+                        ${share.show_contact_info ? '🔓 Contact visible' : '🔒 Contact hidden'}
+                    </span>
+                    ${share.is_expired ? '<span class="share-badge expired-badge">Expired</span>' : ''}
+                </div>
+            </div>
+            <div class="share-actions">
+                ${!share.is_expired ? `
+                    <button type="button" class="btn-copy-share" onclick="copyShareLink('${share.url}')">
+                        📋 Copy Link
+                    </button>
+                ` : ''}
+                <button type="button" class="btn-revoke-share" onclick="revokeShare(${share.id})">
+                    🗑️ Revoke
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Open modal
+createShareBtn.addEventListener('click', function() {
+    resetShareModal();
+    shareModal.classList.add('active');
+});
+
+// Close modal
+function closeShareModal() {
+    shareModal.classList.remove('active');
+    resetShareModal();
+}
+
+closeShareModalBtn.addEventListener('click', closeShareModal);
+cancelShareBtn.addEventListener('click', closeShareModal);
+shareDoneBtn.addEventListener('click', closeShareModal);
+
+shareModal.addEventListener('click', function(e) {
+    if (e.target === shareModal) {
+        closeShareModal();
+    }
+});
+
+// Reset modal to initial state
+function resetShareModal() {
+    shareOwnerNameInput.value = '';
+    shareShowContactCheckbox.checked = false;
+    shareFormContainer.style.display = 'block';
+    shareSuccessContainer.style.display = 'none';
+    generateShareBtn.disabled = false;
+    generateShareBtn.innerHTML = '<span>🔗</span> Generate Link';
+}
+
+// Generate share link
+generateShareBtn.addEventListener('click', async function() {
+    const ownerName = shareOwnerNameInput.value.trim();
+    
+    if (!ownerName) {
+        showToast('Please enter owner name', 'error');
+        shareOwnerNameInput.focus();
+        return;
+    }
+    
+    generateShareBtn.disabled = true;
+    generateShareBtn.innerHTML = '<span>⏳</span> Generating...';
+    
+    try {
+        const response = await fetch("{% url 'create_lead_share' company.id listing.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: `owner_name=${encodeURIComponent(ownerName)}&show_contact_info=${shareShowContactCheckbox.checked}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show success state
+            shareLinkInput.value = data.share.url;
+            shareFormContainer.style.display = 'none';
+            shareSuccessContainer.style.display = 'block';
+            
+            // Reload shares list
+            loadExistingShares();
+            
+            showToast('Share link created!', 'success');
+        } else {
+            showToast(data.error || 'Failed to create share link', 'error');
+            generateShareBtn.disabled = false;
+            generateShareBtn.innerHTML = '<span>🔗</span> Generate Link';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred', 'error');
+        generateShareBtn.disabled = false;
+        generateShareBtn.innerHTML = '<span>🔗</span> Generate Link';
+    }
+});
+
+// Copy share link (in modal)
+copyShareLinkBtn.addEventListener('click', function() {
+    copyToClipboard(shareLinkInput.value);
+});
+
+// Copy share link (from list)
+function copyShareLink(url) {
+    copyToClipboard(url);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Link copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Link copied to clipboard!', 'success');
+    });
+}
+
+// Revoke share
+async function revokeShare(shareId) {
+    if (!confirm('Are you sure you want to revoke this share link? The owner will no longer be able to access it.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`{% url 'revoke_lead_share' company.id 0 %}`.replace('/0/', `/${shareId}/`), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Remove card with animation
+            const card = document.querySelector(`.share-card[data-share-id="${shareId}"]`);
+            if (card) {
+                card.style.transition = 'all 0.2s ease';
+                card.style.transform = 'scale(0.95)';
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    loadExistingShares();
+                }, 200);
+            }
+            showToast('Share link revoked', 'success');
+        } else {
+            showToast(data.error || 'Failed to revoke share', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred', 'error');
+    }
+}
 </script>
 {% endblock %}

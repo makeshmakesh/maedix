@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ listing.title }} - Leads | {{ company.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #030712;
+            color: #f1f5f9;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 2rem 0 3rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            margin-bottom: 2rem;
+        }
+        
+        .company-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header-subtitle {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .property-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .property-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .property-location {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+        }
+        
+        .property-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .property-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+        }
+        
+        .property-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #22c55e;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .leads-section { margin-bottom: 2rem; }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .leads-count {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .leads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+        }
+        
+        .lead-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .lead-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            transform: translateY(-3px);
+        }
+        
+        .lead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .lead-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .lead-instagram {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        
+        .intent-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .intent-low { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+        .intent-medium { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .intent-high { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .intent-hot { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        
+        .lead-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        
+        .lead-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        
+        .lead-contact {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+            color: #3b82f6;
+            margin-bottom: 0.4rem;
+        }
+        
+        .contact-row a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        .contact-row a:hover { text-decoration: underline; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .empty-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .empty-subtitle { color: #64748b; }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            margin-top: 2rem;
+        }
+        
+        .footer-info { color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .footer-branding { color: #94a3b8; font-size: 0.8rem; }
+        .footer-branding a { color: #3b82f6; text-decoration: none; }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .property-card { padding: 1.5rem; }
+            .property-title { font-size: 1.4rem; }
+            .property-details { flex-direction: column; gap: 0.75rem; }
+            .leads-grid { grid-template-columns: 1fr; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="company-name">{{ company.name }}</h1>
+            <p class="header-subtitle">Property Lead Report</p>
+        </header>
+        
+        <div class="property-card">
+            <h2 class="property-title">{{ listing.title }}</h2>
+            <div class="property-location">
+                <span>{{ listing.location }}</span>
+            </div>
+            
+            <div class="property-details">
+                <div class="property-detail">
+                    <span>{{ listing.get_property_type_display }}</span>
+                </div>
+                
+                {% if listing.bedrooms %}
+                <div class="property-detail">
+                    <span>{{ listing.bedrooms }} Bedrooms</span>
+                </div>
+                {% endif %}
+                
+                {% if listing.bathrooms %}
+                <div class="property-detail">
+                    <span>{{ listing.bathrooms }} Bathrooms</span>
+                </div>
+                {% endif %}
+                
+                {% if listing.area_sqft %}
+                <div class="property-detail">
+                    <span>{{ listing.area_sqft }} sqft</span>
+                </div>
+                {% endif %}
+                
+                {% if listing.land_area and listing.land_unit %}
+                <div class="property-detail">
+                    <span>{{ listing.land_area }} {{ listing.get_land_unit_display }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if listing.price %}
+            <div class="property-price">
+                {% if listing.currency == 'INR' %}Rs.{% elif listing.currency == 'USD' %}${% elif listing.currency == 'EUR' %}E{% endif %}{{ listing.price|floatformat:0 }}
+                {% if listing.price_type == 'per_unit' %} / {{ listing.get_land_unit_display|default:"unit" }}{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="leads-section">
+            <div class="section-header">
+                <h3 class="section-title">Interested Leads</h3>
+                <span class="leads-count">{{ leads|length }} Leads</span>
+            </div>
+            
+            {% if leads %}
+            <div class="leads-grid">
+                {% for lead in leads %}
+                <div class="lead-card">
+                    <div class="lead-header">
+                        <div>
+                            <div class="lead-name">
+                                {% if show_contact_info %}
+                                    {{ lead.customer_name|default:lead.instagram_username }}
+                                {% else %}
+                                    {% if lead.customer_name %}
+                                        {{ lead.customer_name|slice:":1" }}***
+                                    {% else %}
+                                        {{ lead.instagram_username }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="lead-instagram">@{{ lead.instagram_username }}</div>
+                        </div>
+                        <span class="intent-badge intent-{{ lead.intent_level }}">
+                            {{ lead.get_intent_level_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="lead-details">
+                        {% if lead.budget_min or lead.budget_max %}
+                        <div class="lead-detail-row">
+                            <span>Budget: 
+                                {% if lead.budget_min and lead.budget_max %}
+                                    Rs.{{ lead.budget_min|floatformat:0 }} - Rs.{{ lead.budget_max|floatformat:0 }}
+                                {% elif lead.budget_max %}
+                                    Up to Rs.{{ lead.budget_max|floatformat:0 }}
+                                {% elif lead.budget_min %}
+                                    From Rs.{{ lead.budget_min|floatformat:0 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if lead.timeline %}
+                        <div class="lead-detail-row">
+                            <span>Timeline: {{ lead.get_timeline_display }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="lead-detail-row">
+                            <span>Status: {{ lead.get_status_display }}</span>
+                        </div>
+                        
+                        {% if lead.preferred_location %}
+                        <div class="lead-detail-row">
+                            <span>Location: {{ lead.preferred_location }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if lead.payment_method and lead.payment_method != 'unknown' %}
+                        <div class="lead-detail-row">
+                            <span>Payment: {{ lead.get_payment_method_display }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if show_contact_info %}
+                    <div class="lead-contact">
+                        {% if lead.phone_number %}
+                        <div class="contact-row">
+                            <span>Phone:</span>
+                            <a href="tel:{{ lead.phone_number }}">{{ lead.phone_number }}</a>
+                        </div>
+                        {% endif %}
+                        {% if lead.email %}
+                        <div class="contact-row">
+                            <span>Email:</span>
+                            <a href="mailto:{{ lead.email }}">{{ lead.email }}</a>
+                        </div>
+                        {% endif %}
+                        {% if not lead.phone_number and not lead.email %}
+                        <div class="contact-row" style="color: #64748b;">
+                            <span>Contact info not available</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">No leads</div>
+                <h4 class="empty-title">No leads yet</h4>
+                <p class="empty-subtitle">Interested leads will appear here once they inquire</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <footer class="footer">
+            <p class="footer-info">
+                Shared by {{ share.created_by.first_name|default:share.created_by.email }} - 
+                Expires {{ share.expires_at|date:"M d, Y" }}
+            </p>
+            <p class="footer-branding">
+                Powered by <a href="https://maedix.com" target="_blank">MAEDIX</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -16,7 +16,8 @@ from django.db.models import (
 from pgvector.django import VectorField
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-
+import secrets
+from datetime import timedelta
 
 class PropertyListing(models.Model):
     PROPERTY_TYPES = [
@@ -498,3 +499,123 @@ class CompanyInvitation(models.Model):
         
         self.status = 'rejected'
         self.save()
+        
+        
+
+
+
+class LeadListing(models.Model):
+    """Associates leads with property listings they're interested in."""
+
+    lead = models.ForeignKey(
+        Lead,
+        on_delete=models.CASCADE,
+        related_name="lead_listings"
+    )
+    listing = models.ForeignKey(
+        PropertyListing,
+        on_delete=models.CASCADE,
+        related_name="lead_listings"
+    )
+    
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("lead", "listing")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.lead.instagram_username} → {self.listing.title}"
+    
+    
+    
+
+
+
+
+def generate_share_token():
+    return secrets.token_urlsafe(24)
+
+
+def default_expiry():
+    return timezone.now() + timedelta(days=30)
+
+
+class LeadShare(models.Model):
+    """Shareable link for property owners to view leads."""
+    
+    token = models.CharField(
+        max_length=64,
+        unique=True,
+        default=generate_share_token,
+        editable=False
+    )
+    company = models.ForeignKey(
+        'Company',
+        on_delete=models.CASCADE,
+        related_name='lead_shares'
+    )
+    listing = models.ForeignKey(
+        'PropertyListing',
+        on_delete=models.CASCADE,
+        related_name='lead_shares'
+    )
+    created_by = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='lead_shares_created'
+    )
+    
+    # Owner info
+    owner_name = models.CharField(max_length=255)
+    
+    # Privacy settings
+    show_contact_info = models.BooleanField(
+        default=False,
+        help_text="If True, owner can see lead phone/email"
+    )
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    expires_at = models.DateTimeField(default=default_expiry)
+    
+    # Tracking
+    view_count = models.IntegerField(default=0)
+    last_viewed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Lead Share"
+        verbose_name_plural = "Lead Shares"
+
+    def __str__(self):
+        return f"Share for {self.listing.title} → {self.owner_name}"
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_valid(self):
+        return self.is_active and not self.is_expired
+
+    def record_view(self):
+        """Call this when owner views the shared page."""
+        self.view_count += 1
+        self.last_viewed_at = timezone.now()
+        self.save(update_fields=['view_count', 'last_viewed_at'])
+
+    def get_leads(self):
+        """Get all leads associated with this listing."""
+        from core.models import LeadListing
+        lead_listings = LeadListing.objects.filter(
+            listing=self.listing
+        ).select_related('lead')
+        return [ll.lead for ll in lead_listings]
