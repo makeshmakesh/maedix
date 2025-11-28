@@ -539,6 +539,11 @@ class ListingCreateView(LoginRequiredMixin, View):
             instagram_post_id = request.POST.get('instagram_post_id', '')
             ai_context_notes = request.POST.get('ai_context_notes', '')
             
+            #instagram reply data
+            instagram_comment_reply = request.POST.get('instagram_comment_reply', '')
+            instagram_comment_dm_reply = request.POST.get('instagram_comment_dm_reply', '')
+            instagram_comment_dm_reply_trigger_keyword = request.POST.get('instagram_comment_dm_reply_trigger_keyword', '')
+            
             # Validate required fields
             if not all([title, property_type, status, location]):
                 messages.error(request, "Please fill in all required fields.")
@@ -568,6 +573,11 @@ class ListingCreateView(LoginRequiredMixin, View):
                 # Additional Information
                 instagram_post_id=instagram_post_id if instagram_post_id else None,
                 ai_context_notes=ai_context_notes,
+                metadata={
+                    "instagram_comment_reply": instagram_comment_reply,
+                    "instagram_comment_dm_reply": instagram_comment_dm_reply,
+                    "instagram_comment_dm_reply_trigger_keyword": instagram_comment_dm_reply_trigger_keyword,
+                }
             )
             
             messages.success(request, f"Property listing '{title}' created successfully!")
@@ -643,6 +653,11 @@ class ListingEditView(LoginRequiredMixin, View):
             listing.instagram_post_id = instagram_post_id if instagram_post_id else None
             
             listing.ai_context_notes = request.POST.get('ai_context_notes', '')
+            if listing.metadata is None:
+                listing.metadata = {}
+            listing.metadata["instagram_comment_reply"] = request.POST.get('instagram_comment_reply', '')
+            listing.metadata["instagram_comment_dm_reply"] = request.POST.get('instagram_comment_dm_reply', '')
+            listing.metadata["instagram_comment_dm_reply_trigger_keyword"] = request.POST.get('instagram_comment_dm_reply_trigger_keyword', '')
             
             # Validate required fields
             if not all([listing.title, listing.property_type, listing.status, listing.location]):
@@ -765,6 +780,7 @@ class CompanyManageView(LoginRequiredMixin, View):
         company.detail["static_comment_followup_dm_reply"] = request.POST.get('static_comment_followup_dm_reply', company.detail.get("static_comment_followup_dm_reply", ""))
         company.detail["enable_dm_response"] = 'enable_dm_response' in request.POST
         company.detail["enable_comment_reply"] = 'enable_comment_reply' in request.POST
+        company.detail["enable_comment_reply_only_on_linked_instagram_post_on_property_listing"] = 'enable_comment_reply_only_on_linked_instagram_post_on_property_listing' in request.POST
         
         company.save()
         
@@ -788,7 +804,8 @@ def create_company(request):
                 "enable_comment_reply": True,
                 "static_dm_reply": "Thank you for reaching out! We'll get back to you shortly.",
                 "static_comment_reply": "Thanks for your comment! We'll DM you shortly.",
-                "static_comment_followup_dm_reply": "Thanks for engaging with our post! How can we assist you further?"
+                "static_comment_followup_dm_reply": "Thanks for engaging with our post! How can we assist you further?",
+                "enable_comment_reply_only_on_linked_instagram_post_on_property_listing" : True,
             }
         )
         membership = Membership.objects.create(

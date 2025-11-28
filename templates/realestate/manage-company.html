@@ -523,7 +523,27 @@
                         </span>
                     </label>
                 </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                    <label class="checkbox-container">
+                        <input 
+                            type="checkbox" 
+                            name="enable_comment_reply_only_on_linked_instagram_post_on_property_listing" 
+                            id="enable_comment_reply_only_on_linked_instagram_post_on_property_listing"
+                            {% if company.detail.enable_comment_reply_only_on_linked_instagram_post_on_property_listing %}checked{% endif %}
+                        >
+                        <span class="checkbox-checkmark"></span>
+                        <span class="checkbox-label">
+                            <strong>Reply to Comments on Connected Posts Only</strong>
+                            <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                Reply only to comments on Instagram posts that are directly linked to your property listings.
+                            </span>
+                        </span>
+                    </label>
+                </div>
             </div>
+            </div>
+
+
 
             <div class="info-grid">
                 <div class="info-item">

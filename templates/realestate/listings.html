@@ -515,20 +515,6 @@
                     <div class="stat-label">Available</div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon purple">📱</div>
-                <div class="stat-content">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Instagram Connected</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon warning">⚡</div>
-                <div class="stat-content">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Active Auto-Replies</div>
-                </div>
-            </div>
         </div>
         {% endif %}
 
@@ -643,7 +629,7 @@
                     <div class="listing-actions">
                         <a href="{% url 'edit_listing' company.id listing.id %}" class="btn-action btn-edit">
                             <span>✏️</span>
-                            <span>Edit</span>
+                            <span>View & Edit</span>
                         </a>
                         <button type="button" class="btn-action btn-delete" 
                                 data-delete-url="{% url 'delete_listing' company.id listing.id %}" 

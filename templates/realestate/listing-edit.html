@@ -1455,6 +1455,47 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+    <label class="form-label">
+        Trigger Comment Reply / DM by Keyword <span class="optional">(Leave blank to trigger on any comment)</span>
+    </label>
+    <textarea 
+        name="instagram_comment_dm_reply_trigger_keyword" 
+        class="form-textarea" 
+        placeholder="e.g., Interested, More info, Contact me"
+        rows="4"
+    >{{ listing.metadata.instagram_comment_dm_reply_trigger_keyword }}</textarea>
+    <p class="form-help">Enter keywords separated by commas. Replies or DMs will trigger when a comment contains any of these keywords.</p>
+</div>
+
+<div class="form-group">
+    <label class="form-label">
+        Comment Reply Message <span class="optional">(Optional)</span>
+    </label>
+    <textarea 
+        name="instagram_comment_reply" 
+        class="form-textarea" 
+        placeholder="Message to reply publicly when someone comments on the linked Instagram post..."
+        rows="4"
+    >{{ listing.metadata.instagram_comment_reply }}</textarea>
+    <p class="form-help">This message will be sent as a public reply to comments on linked Instagram posts. Keep it concise and engaging.</p>
+</div>
+
+<div class="form-group">
+    <label class="form-label">
+        Follow-up DM Message <span class="optional">(Optional)</span>
+    </label>
+    <textarea 
+        name="instagram_comment_dm_reply" 
+        class="form-textarea" 
+        placeholder="Message to DM the user after they comment on the linked Instagram post..."
+        rows="4"
+    >{{ listing.metadata.instagram_comment_dm_reply }}</textarea>
+    <p class="form-help">This message will be sent privately via DM to users who comment on the linked Instagram post. Use it to provide more details or a personal follow-up.</p>
+</div>
+
+                
+
                 <!-- Action Buttons -->
                 <a href="{% url 'listings' company.id %}" class="btn-cancel">
                     <span>✕</span>

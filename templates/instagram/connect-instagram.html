@@ -457,8 +457,9 @@
                 <div class="connected-account">
                     <div class="account-avatar">📷</div>
                     <div class="account-info">
-                        <div class="account-name">{{ instagram_account.name }}</div>
-                        <div class="account-username">@{{ instagram_account.username }}</div>
+                        <div class="account-name">{{ instagram_data.name }}</div>
+                        <div class="account-username">@{{ instagram_data.username }}</div>
+                        <div class="account-username">Valid upto: {{ instagram_data.token_expires_at }}</div>
                     </div>
                 </div>
                 <div class="subscription-status {% if webhook_subscribed %}active{% else %}inactive{% endif %}">

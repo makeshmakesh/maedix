@@ -316,6 +316,7 @@ class InstagramWebHookView(View):
         post_id = data.get("post_id", "")
         comment_id = data["comment_id"]
         parent_id = data.get("parent_id", "")
+        comment_text : str = data.get("comment_text", "")
         if parent_id:
             return {}
         if not comment_id:
@@ -371,28 +372,8 @@ class InstagramWebHookView(View):
             subscription.leads_used += 1
             subscription.save()
             print("New lead created from Instagram comment:", new_lead.id)
-
-        if (
-            not subscription
-            or not subscription.is_active()
-            or subscription.has_permission("instagram_comment_ai_response") is False
-        ):
-            print("Inactive or invalid subscription for company", self.company.id)
-            comment_reply_response = self.reply_to_instagram_comment(
-            comment_id=data["comment_id"],
-            message=self.company.detail.get("static_comment_reply", "Please check your DM"),
-            access_token=company_instagram_account.instagram_data["access_token"],
-        )
-            send_dm_response = self.send_dm_to_commenter(
-            comment_id=comment_id,
-            message=self.company.detail.get("static_comment_followup_dm_reply", "Hi, Thanks for commenting on our post. How can we assit you further on your property searchinh journey?"),
-            ig_business_account_id=company_instagram_account.fb_data[
-                "instagram_business_account_id"
-            ],
-            access_token=company_instagram_account.instagram_data["access_token"],
-        )
-            return {}
-        lead = existing_lead or new_lead
+            
+            
         company_listing_of_post_id = None
         property_context = ""
         try:
@@ -402,7 +383,39 @@ class InstagramWebHookView(View):
             property_context = company_listing_of_post_id.summarize_property()
         except PropertyListing.DoesNotExist:
             property_context = ""
-            
+            if self.company.detail.get('enable_comment_reply_only_on_linked_instagram_post_on_property_listing', True): 
+                print("Comment auto response feature not enabled for company if post not linked", self.company.id)
+                return {}
+        lisiting_specific_comment_reply = ""
+        listing_specific_dm_reply = ""
+        if company_listing_of_post_id and company_listing_of_post_id.metadata:
+            trigger_keywords : str = company_listing_of_post_id.metadata.get("instagram_comment_dm_reply_trigger_keyword", "")
+            trigger_keywords_list = [kw.strip().lower() for kw in trigger_keywords.split(",")] if trigger_keywords else []
+            if comment_text.lower() in trigger_keywords_list:
+                lisiting_specific_comment_reply = company_listing_of_post_id.metadata.get("instagram_comment_reply", "")
+                listing_specific_dm_reply = company_listing_of_post_id.metadata.get("instagram_comment_dm_reply", "")
+        if (
+            not subscription
+            or not subscription.is_active()
+            or subscription.has_permission("instagram_comment_ai_response") is False
+        ):
+            print("Inactive or invalid ai subscription for company", self.company.id)
+            comment_reply_response = self.reply_to_instagram_comment(
+            comment_id=data["comment_id"],
+            message=lisiting_specific_comment_reply or self.company.detail.get("static_comment_reply", "Please check your DM"),
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+            send_dm_response = self.send_dm_to_commenter(
+            comment_id=comment_id,
+            message=listing_specific_dm_reply or self.company.detail.get("static_comment_followup_dm_reply", "Hi, Thanks for commenting on our post. How can we assit you further on your property searchinh journey?"),
+            ig_business_account_id=company_instagram_account.fb_data[
+                "instagram_business_account_id"
+            ],
+            access_token=company_instagram_account.instagram_data["access_token"],
+        )
+            return {}
+        lead = existing_lead or new_lead
+        
         if company_listing_of_post_id and lead:
             LeadListing.objects.get_or_create(
                 lead=lead,
@@ -579,6 +592,7 @@ class InstagramConnectView(LoginRequiredMixin, View):
             "instagram_connected": instagram_connected,
             "instagram_account": instagram_account,
             "fb_connected": fb_connected,
+            "instagram_data": instagram_data,
             "webhook_subscribed": (
                 instagram_account.instagram_data.get("webhook_subscribed")
                 if instagram_connected

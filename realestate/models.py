@@ -92,6 +92,7 @@ class PropertyListing(models.Model):
 
     # AI / RAG metadata (optional for context feeding)
     ai_context_notes = models.TextField(blank=True, null=True)
+    metadata = models.JSONField(default=dict, blank=True)
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
