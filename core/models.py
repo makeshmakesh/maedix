@@ -55,6 +55,9 @@ class Subscription(models.Model):
     def is_active(self):
         return self.status == "active" and self.end_date > timezone.now()
     
+    def lead_quota_exceeded(self):
+        return (self.leads_used >= self.lead_quota)
+    
     def has_permission(self, feature_name):
         features_allowed = self.data.get("features_allowed", [])
         for feature in features_allowed:

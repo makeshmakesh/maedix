@@ -165,6 +165,7 @@ class InstagramWebHookView(View):
             not subscription
             or not subscription.is_active()
             or subscription.has_permission("instagram_dm_ai_reply") is False
+            or subscription.lead_quota_exceeded()
         ):
             # Check if we've already sent the static first DM
             if not self.lead.metadata or self.lead.metadata.get("static_first_dm") != "done":
@@ -189,7 +190,7 @@ class InstagramWebHookView(View):
             return {}
 
         # Prevent automatic reply a new lead when quota is 0
-        if subscription.leads_used >= subscription.lead_quota:
+        if subscription.lead_quota_exceeded():
             print(f"Lead quota exhausted for company {self.company.id}")
             return {}
 
@@ -394,10 +395,24 @@ class InstagramWebHookView(View):
             if comment_text.lower() in trigger_keywords_list:
                 lisiting_specific_comment_reply = company_listing_of_post_id.metadata.get("instagram_comment_reply", "")
                 listing_specific_dm_reply = company_listing_of_post_id.metadata.get("instagram_comment_dm_reply", "")
+                
+                
+        lead = existing_lead or new_lead
+        
+        if company_listing_of_post_id and lead:
+            LeadListing.objects.get_or_create(
+                lead=lead,
+                listing=company_listing_of_post_id,
+                defaults={
+                    "notes": f"From IG comment: {data.get('comment_text', '')[:200]}"
+                }
+            )   
+        
         if (
             not subscription
             or not subscription.is_active()
             or subscription.has_permission("instagram_comment_ai_response") is False
+            or subscription.lead_quota_exceeded()
         ):
             print("Inactive or invalid ai subscription for company", self.company.id)
             comment_reply_response = self.reply_to_instagram_comment(
@@ -414,17 +429,11 @@ class InstagramWebHookView(View):
             access_token=company_instagram_account.instagram_data["access_token"],
         )
             return {}
-        lead = existing_lead or new_lead
         
-        if company_listing_of_post_id and lead:
-            LeadListing.objects.get_or_create(
-                lead=lead,
-                listing=company_listing_of_post_id,
-                defaults={
-                    "notes": f"From IG comment: {data.get('comment_text', '')[:200]}"
-                }
-            )   
-        
+        if subscription.lead_quota_exceeded():
+            print(f"Lead quota exhausted for company {self.company.id}")
+            return {}
+
         response = async_to_sync(self.get_reply_from_llm_async_for_cmments)(
             data["comment_text"], property_context
         )

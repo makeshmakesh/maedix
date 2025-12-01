@@ -29,54 +29,125 @@
         margin: 0 auto;
     }
 
-    /* Pricing Cards Container - 4 cards per row */
+    /* Pricing Cards Container - Dynamic Layout */
     .pricing-container {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2rem;
         margin-bottom: 4rem;
-        align-items: stretch;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    /* Pricing Card */
+    /* Pricing Card Base */
     .pricing-card {
         background: var(--bg-card);
         backdrop-filter: blur(15px);
         border-radius: 24px;
         border: 1px solid var(--border-color);
-        padding: 2rem;
+        padding: 2.5rem;
         position: relative;
         transition: all 0.4s ease;
         display: flex;
         flex-direction: column;
-        height: 100%;
+        width: 100%;
+        max-width: 420px;
+        flex: 1 1 380px;
     }
 
     .pricing-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 25px 70px rgba(59, 130, 246, 0.5);
-        border-color: rgba(59, 130, 246, 0.5);
     }
 
-    .pricing-card.featured {
-        border: 2px solid #3b82f6;
-        box-shadow: 0 15px 50px rgba(59, 130, 246, 0.4);
+    /* Non-AI Card Styling */
+    .pricing-card.non-ai-card {
+        border: 1px solid var(--border-color);
     }
 
-    .pricing-card.featured::before {
-        content: 'MOST POPULAR';
+    .pricing-card.non-ai-card:hover {
+        box-shadow: 0 25px 70px rgba(100, 116, 139, 0.3);
+        border-color: rgba(100, 116, 139, 0.5);
+    }
+
+    .pricing-card.non-ai-card .amount {
+        background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .pricing-card.non-ai-card .plan-badge {
+        background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+    }
+
+    /* AI Card Styling */
+    .pricing-card.ai-card {
+        border: 2px solid #8b5cf6;
+        box-shadow: 0 15px 50px rgba(139, 92, 246, 0.3);
+    }
+
+    .pricing-card.ai-card:hover {
+        box-shadow: 0 25px 70px rgba(139, 92, 246, 0.5);
+        border-color: rgba(139, 92, 246, 0.8);
+    }
+
+    .pricing-card.ai-card .amount {
+        background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .pricing-card.ai-card .plan-badge {
+        background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
+    }
+
+    .pricing-card.ai-card .plan-features li.ai-feature::before {
+        content: '✨';
+    }
+
+    /* AI Glow Effect */
+    .pricing-card.ai-card::after {
+        content: '';
         position: absolute;
-        top: -12px;
+        top: -1px;
+        left: -1px;
+        right: -1px;
+        bottom: -1px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(217, 70, 239, 0.1) 100%);
+        border-radius: 24px;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .pricing-card.ai-card:hover::after {
+        opacity: 1;
+    }
+
+    /* Plan Badge */
+    .plan-badge {
+        position: absolute;
+        top: -14px;
         left: 50%;
         transform: translateX(-50%);
-        background: var(--primary-gradient);
         color: white;
-        padding: 0.4rem 1.5rem;
+        padding: 0.5rem 1.5rem;
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0.5px;
-        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+    }
+
+    /* Featured Badge Override */
+    .pricing-card.featured .plan-badge {
+        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%) !important;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
     }
 
     /* Plan Header */
@@ -85,20 +156,21 @@
         margin-bottom: 2rem;
         padding-bottom: 2rem;
         border-bottom: 1px solid var(--border-color);
+        padding-top: 0.5rem;
     }
 
     .plan-name {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
         font-weight: 700;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
 
     .plan-description {
-        font-size: 0.95rem;
+        font-size: 1rem;
         color: var(--text-muted);
         margin-bottom: 1.5rem;
-        line-height: 1.5;
+        line-height: 1.6;
     }
 
     .plan-price {
@@ -118,10 +190,6 @@
     .amount {
         font-size: 3.5rem;
         font-weight: 900;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
         line-height: 1;
     }
 
@@ -132,16 +200,14 @@
         margin-left: 0.2rem;
     }
 
-    .plan-messages {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.3rem;
+    .plan-leads {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
     }
 
-    .plan-rate {
-        font-size: 0.9rem;
-        color: var(--text-muted);
+    .plan-leads strong {
+        color: var(--text-primary);
     }
 
     /* Features List */
@@ -170,8 +236,20 @@
         content: '✓';
         color: #22c55e;
         font-weight: 700;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         flex-shrink: 0;
+    }
+
+    /* Upgrade Note */
+    .upgrade-note {
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px dashed rgba(139, 92, 246, 0.3);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
     }
 
     /* Plan CTA Button */
@@ -183,26 +261,32 @@
         width: 100%;
         padding: 1rem 2rem;
         font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    /* AI Button Styling */
+    .pricing-card.ai-card .btn-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    }
+
+    .pricing-card.ai-card .btn-primary:hover {
+        box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6);
+        transform: translateY(-2px);
     }
 
     /* Responsive Design */
-    @media (max-width: 1400px) {
+    @media (max-width: 900px) {
         .pricing-container {
-            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
         }
         
-        .amount {
-            font-size: 3rem;
-        }
-    }
-
-    @media (max-width: 992px) {
-        .pricing-container {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
-        .plans-hero h1 {
-            font-size: 3rem;
+        .pricing-card {
+            flex: 1 1 100%;
+            max-width: 450px;
         }
     }
 
@@ -216,20 +300,15 @@
         }
 
         .amount {
-            font-size: 2.8rem;
+            font-size: 3rem;
         }
 
         .period {
             font-size: 1rem;
         }
 
-        .pricing-container {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-        
         .pricing-card {
-            padding: 2.5rem;
+            padding: 2rem;
         }
     }
 </style>
@@ -239,13 +318,22 @@
 <!-- Hero Section -->
 <div class="plans-hero fade-in">
     <h1>Simple, Transparent Pricing</h1>
-    <p>Choose the perfect plan to supercharge your real estate lead generation</p>
 </div>
 
 <!-- Pricing Cards -->
 <div class="pricing-container">
     {% for plan in plans %}
-    <div class="pricing-card {% if plan.featured %}featured{% endif %} fade-in" style="animation-delay: {{ forloop.counter0|floatformat:1|add:'0.1' }}s;">
+    <div class="pricing-card {% if plan.is_ai_pack %}ai-card{% else %}non-ai-card{% endif %} {% if plan.featured %}featured{% endif %} fade-in">
+        
+        <!-- Badge -->
+        {% if plan.featured %}
+            <span class="plan-badge">🔥 Most Popular</span>
+        {% elif plan.is_ai_pack %}
+            <span class="plan-badge">✨ AI Powered</span>
+        {% else %}
+            <span class="plan-badge">Automation</span>
+        {% endif %}
+
         <div class="plan-header">
             <h2 class="plan-name">{{ plan.name }}</h2>
             <p class="plan-description">{{ plan.description }}</p>
@@ -254,33 +342,39 @@
                 <span class="amount">{{ plan.display_price }}</span>
                 <span class="period">/{{ plan.duration_period }}</span>
             </div>
+            {% if plan.is_ai_pack and plan.leads_count > 0 %}
+            <p class="plan-leads"><strong>{{ plan.leads_count_display }}</strong> AI prequalifications/month</p>
+            {% endif %}
         </div>
 
         <div class="plan-features">
             <ul>
                 {% for feature in plan.features %}
-                <li>{{ feature }}</li>
+                <li {% if plan.is_ai_pack and 'AI' in feature %}class="ai-feature"{% endif %}>{{ feature }}</li>
                 {% endfor %}
             </ul>
         </div>
+
+        {% if plan.upgrade_note %}
+        <p class="upgrade-note">{{ plan.upgrade_note }}</p>
+        {% endif %}
+
         {% if not user.is_authenticated %}
         <div class="plan-cta">
-            <a href="{% url 'signup' %}" class="btn {{ plan.button_class }}">Get Started</a>
+            <a href="{% url 'signup' %}" class="btn {% if plan.is_ai_pack %}btn-primary{% else %}btn-outline-primary{% endif %}">Get Started</a>
         </div>
         {% else %}
         <div class="plan-cta">
-            <a href="{% url 'order_confirmation' company.id plan.id %}" class="btn {{ plan.button_class }}">Choose Plan</a> 
+            <a href="{% url 'order_confirmation' company.id plan.id %}" class="btn {% if plan.is_ai_pack %}btn-primary{% else %}btn-outline-primary{% endif %}">Choose Plan</a>
         </div>
         {% endif %}
     </div>
     {% endfor %}
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Stagger animation for cards
     document.addEventListener('DOMContentLoaded', function() {
         const cards = document.querySelectorAll('.pricing-card');
         cards.forEach((card, index) => {
@@ -291,7 +385,7 @@
                 card.style.transition = 'all 0.6s ease';
                 card.style.opacity = '1';
                 card.style.transform = 'translateY(0)';
-            }, 100 + (index * 150));
+            }, 100 + (index * 200));
         });
     });
 </script>

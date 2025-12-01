@@ -5,38 +5,39 @@
 {% block extra_css %}
 <style>
     .subscription-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(59, 130, 246, 0.1);
-    border-radius: 8px;
-    font-size: 0.85rem;
-}
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
 
-.subscription-status.active {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
-}
+    .subscription-status.active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
 
-.subscription-status.inactive {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
+    .subscription-status.inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
 
-.btn-subscribe {
-    background: var(--primary-gradient);
-    color: white;
-    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
-}
+    .btn-subscribe {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+    }
 
-.btn-subscribe:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 35px rgba(0, 212, 255, 0.6);
-    color: white;
-    text-decoration: none;
-}
+    .btn-subscribe:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(0, 212, 255, 0.6);
+        color: white;
+        text-decoration: none;
+    }
+
     .instagram-container {
         padding: 3rem 0;
         min-height: calc(100vh - 400px);
@@ -111,6 +112,40 @@
         color: var(--text-secondary);
         font-size: 1.1rem;
         line-height: 1.6;
+    }
+
+    /* Device Recommendation Banner */
+    .device-banner {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .device-banner-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .device-banner-content {
+        flex: 1;
+    }
+
+    .device-banner-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .device-banner-text {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        line-height: 1.4;
     }
 
     .connection-status {
@@ -408,6 +443,12 @@
             flex-direction: column;
             align-items: flex-start;
         }
+
+        .device-banner {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
     }
 
     @media (max-width: 576px) {
@@ -442,6 +483,17 @@
                 </p>
             </div>
 
+            <!-- Device Recommendation Banner -->
+            {% if not instagram_connected %}
+            <div class="device-banner">
+                <span class="device-banner-icon">💻</span>
+                <div class="device-banner-content">
+                    <div class="device-banner-title">Use Desktop or Laptop for Best Experience</div>
+                    <div class="device-banner-text">We recommend connecting your Instagram account from a desktop or laptop computer. Mobile devices may have issues with the Facebook/Instagram authorization flow.</div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Connection Status -->
             {% if instagram_connected %}
             <div class="connection-status connected">
@@ -463,9 +515,9 @@
                     </div>
                 </div>
                 <div class="subscription-status {% if webhook_subscribed %}active{% else %}inactive{% endif %}">
-            <span>{% if webhook_subscribed %}✓{% else %}✗{% endif %}</span>
-            <span>Webhook Events: {% if webhook_subscribed %}Active{% else %}Inactive{% endif %}</span>
-        </div>
+                    <span>{% if webhook_subscribed %}✓{% else %}✗{% endif %}</span>
+                    <span>Webhook Events: {% if webhook_subscribed %}Active{% else %}Inactive{% endif %}</span>
+                </div>
                 {% endif %}
             </div>
             {% else %}
@@ -533,13 +585,13 @@
             </div>
 
             <!-- Action Button -->
-                        {% if fb_connected %}
+            {% if fb_connected %}
                 <button type="button" class="btn-instagram btn-disconnect" onclick="disconnectFB()">
                     <span>🔌</span>
                     <span>Disconnect FB</span>
                 </button>
-                    {% if instagram_account and not instagram_account.webhook_subscribed %}
-    {% endif %}
+                {% if instagram_account and not instagram_account.webhook_subscribed %}
+                {% endif %}
             {% else %}
                 <form method="post" action="{% url 'fb_oauth' company.id %}" id="connectForm">
                     {% csrf_token %}
@@ -554,12 +606,12 @@
                     <span>🔌</span>
                     <span>Disconnect Instagram</span>
                 </button>
-                    {% if instagram_account and not webhook_subscribed %}
-    <button type="button" class="btn-instagram btn-subscribe" onclick="subscribeToMessages()">
-        <span>🔔</span>
-        <span>Subscribe to Webhook Events</span>
-    </button>
-    {% endif %}
+                {% if instagram_account and not webhook_subscribed %}
+                <button type="button" class="btn-instagram btn-subscribe" onclick="subscribeToMessages()">
+                    <span>🔔</span>
+                    <span>Subscribe to Webhook Events</span>
+                </button>
+                {% endif %}
             {% else %}
                 <form method="post" action="{% url 'instagram_oauth' company.id %}" id="connectForm">
                     {% csrf_token %}
@@ -569,7 +621,6 @@
                     </button>
                 </form>
             {% endif %}
-
 
         </div>
     </div>
@@ -585,48 +636,45 @@
         btn.disabled = true;
     });
 
-
     // Subscribe to message events
-function subscribeToMessages() {
-    const btn = event.target.closest('button');
-    btn.classList.add('loading');
-    btn.disabled = true;
-    
-    fetch("{% url 'event-subscribe' company.id %}", {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Successfully subscribed to message events!');
-            window.location.reload();
-        } else {
-            alert('Failed to subscribe: ' + (data.error || 'Unknown error'));
+    function subscribeToMessages() {
+        const btn = event.target.closest('button');
+        btn.classList.add('loading');
+        btn.disabled = true;
+        
+        fetch("{% url 'event-subscribe' company.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Successfully subscribed to message events!');
+                window.location.reload();
+            } else {
+                alert('Failed to subscribe: ' + (data.error || 'Unknown error'));
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
             btn.classList.remove('loading');
             btn.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-        btn.classList.remove('loading');
-        btn.disabled = false;
-    });
-}
+        });
+    }
 
     // Disconnect Instagram
     function disconnectInstagram() {
         if (confirm('Are you sure you want to disconnect Instagram? This will stop all automated responses.')) {
-            // Add loading state
             const btn = event.target.closest('button');
             btn.classList.add('loading');
             btn.disabled = true;
             
-            // Make disconnect request
             fetch("{% url 'instagram_disconnect' company.id %}", {
                 method: 'POST',
                 headers: {
@@ -655,12 +703,10 @@ function subscribeToMessages() {
 
     function disconnectFB() {
         if (confirm('Are you sure you want to disconnect FB? This will stop all automated responses.')) {
-            // Add loading state
             const btn = event.target.closest('button');
             btn.classList.add('loading');
             btn.disabled = true;
             
-            // Make disconnect request
             fetch("{% url 'fb_disconnect' company.id %}", {
                 method: 'POST',
                 headers: {
@@ -693,7 +739,6 @@ function subscribeToMessages() {
         btn.classList.add('loading');
         btn.disabled = true;
         
-        // Redirect to Instagram OAuth
         window.location.href = "{% url 'instagram_connect' company.id %}";
     }
 </script>
