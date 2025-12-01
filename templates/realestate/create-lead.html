@@ -1,0 +1,528 @@
+{% extends "core/base.html" %}
+
+{% block title %}Create Lead - {{ company.name }} - MAEDIX{% endblock %}
+
+{% block content %}
+<div class="create-lead-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-nav">
+            <a href="{% url 'leads' company.id %}" class="back-link">← Back to Leads</a>
+        </div>
+        <div class="header-title">
+            <h1>Create New Lead</h1>
+            <p class="header-subtitle">{{ company.name }} - Add a lead manually</p>
+        </div>
+    </div>
+
+    <!-- Create Form -->
+    <div class="form-container">
+        <form method="post" id="lead-create-form">
+            {% csrf_token %}
+            
+            <div class="form-grid">
+                <!-- Customer Info Section -->
+                <div class="form-section">
+                    <h3>Customer Information</h3>
+                    <div class="form-group">
+                        <label for="instagram_username">Username <span class="required">*</span></label>
+                        <div class="input-with-prefix">
+                            <span class="input-prefix">@</span>
+                            <input type="text" id="instagram_username" name="instagram_username" class="form-input" placeholder="username" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer_name">Full Name</label>
+                        <input type="text" id="customer_name" name="customer_name" class="form-input" placeholder="Enter customer name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="customer@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="tel" id="phone_number" name="phone_number" class="form-input" placeholder="+91 98765 43210">
+                    </div>
+                </div>
+
+                <!-- Source & Status Section -->
+                <div class="form-section">
+                    <h3>Source & Status</h3>
+                    <div class="form-group">
+                        <label for="source_type">Lead Source</label>
+                        <select id="source_type" name="source_type" class="form-select">
+                            <option value="direct">Direct</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="qualification_status">Qualification Status</label>
+                        <select id="qualification_status" name="qualification_status" class="form-select">
+                            <option value="initiated">Conversation Initiated</option>
+                            <option value="in_progress">Qualifying</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="unqualified">Not Qualified</option>
+                            <option value="no_response">No Response</option>
+                            <option value="ready_for_agent" selected>Ready for Human Agent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Lead Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="active" selected>Active Conversation</option>
+                            <option value="qualified_hot">Qualified - Hot Lead</option>
+                            <option value="qualified_warm">Qualified - Warm Lead</option>
+                            <option value="qualified_cold">Qualified - Cold Lead</option>
+                            <option value="unqualified">Unqualified</option>
+                            <option value="spam">Spam</option>
+                            <option value="closed_won">Closed - Won</option>
+                            <option value="closed_lost">Closed - Lost</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="intent_level">Intent Level</label>
+                        <select id="intent_level" name="intent_level" class="form-select">
+                            <option value="low">Low Intent</option>
+                            <option value="medium" selected>Medium Intent</option>
+                            <option value="high">High Intent</option>
+                            <option value="hot">Hot Lead - Ready to Buy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Budget & Timeline Section -->
+                <div class="form-section">
+                    <h3>Budget & Timeline</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="budget_min">Minimum Budget</label>
+                            <input type="number" id="budget_min" name="budget_min" step="1000" class="form-input" placeholder="50000">
+                        </div>
+                        <div class="form-group">
+                            <label for="budget_max">Maximum Budget</label>
+                            <input type="number" id="budget_max" name="budget_max" step="1000" class="form-input" placeholder="500000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeline">Purchase Timeline</label>
+                        <select id="timeline" name="timeline" class="form-select">
+                            <option value="">Not Specified</option>
+                            <option value="immediate">Immediate (0-2 weeks)</option>
+                            <option value="short">Short-term (1-3 months)</option>
+                            <option value="medium">Medium-term (3-6 months)</option>
+                            <option value="long">Long-term (6+ months)</option>
+                            <option value="just_browsing">Just Browsing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="payment_method">Payment Method</label>
+                        <select id="payment_method" name="payment_method" class="form-select">
+                            <option value="unknown">Unknown</option>
+                            <option value="cash">Cash</option>
+                            <option value="loan">Home Loan</option>
+                            <option value="both">Both Options</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Property Info Section -->
+                <div class="form-section">
+                    <h3>Property Preferences</h3>
+                    <div class="form-group">
+                        <label for="preferred_location">Preferred Location</label>
+                        <input type="text" id="preferred_location" name="preferred_location" class="form-input" placeholder="e.g., Downtown, Suburb Area">
+                    </div>
+                    <div class="form-group">
+                        <label>Buyer Type</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox">
+                                <input type="checkbox" name="is_first_time_buyer">
+                                First-time Buyer
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="has_property_to_sell">
+                                Has Property to Sell
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Human Agent Handoff Section -->
+                <div class="form-section">
+                    <h3>Agent Assignment</h3>
+                    <div class="form-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="requires_human" name="requires_human" checked>
+                            Assign to Human Agent
+                        </label>
+                    </div>
+                    
+                    <div id="agent-assignment" class="agent-assignment-section">
+                        <div class="form-group">
+                            <label for="human_agent_assigned">Assign to Agent</label>
+                            <select id="human_agent_assigned" name="human_agent_assigned" class="form-select">
+                                <option value="">-- Select Agent --</option>
+                                {% for agent in available_agents %}
+                                    <option value="{{ agent.user.id }}">
+                                        {{ agent.user.first_name }} {{ agent.user.last_name }} ({{ agent.user.email }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="handoff_reason">Assignment Notes</label>
+                            <textarea id="handoff_reason" name="handoff_reason" class="form-textarea" placeholder="Notes about this lead assignment..." style="min-height: 80px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="form-section">
+                    <h3>Agent Notes</h3>
+                    <div class="form-group">
+                        <textarea id="agent_notes" name="agent_notes" class="form-textarea" placeholder="Add internal notes about this lead..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span>+</span> Create Lead
+                </button>
+                <a href="{% url 'leads' company.id %}" class="btn btn-outline-primary">
+                    <span>×</span> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .create-lead-container {
+        position: relative;
+        z-index: 1;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .header-nav {
+        margin-bottom: 1rem;
+    }
+
+    .back-link {
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .back-link:hover {
+        color: #60a5fa;
+    }
+
+    .header-title h1 {
+        font-size: 2.5rem;
+        font-weight: 900;
+        margin: 0 0 0.5rem 0;
+        background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header-subtitle {
+        color: #94a3b8;
+        font-size: 1rem;
+    }
+
+    .form-container {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(0, 212, 255, 0.3);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    .form-section h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin: 0 0 0.5rem 0;
+        border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+        padding-bottom: 0.8rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    .input-with-prefix {
+        display: flex;
+        align-items: center;
+    }
+
+    .input-prefix {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        padding: 0.8rem 1rem;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .input-with-prefix .form-input {
+        border-radius: 0 8px 8px 0;
+    }
+
+    .form-input, .form-select {
+        background: rgba(3, 7, 18, 0.8);
+        color: #f1f5f9;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        width: 100%;
+    }
+
+    .form-input:focus, .form-select:focus {
+        border-color: #3b82f6;
+        background: rgba(3, 7, 18, 0.95);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-input::placeholder {
+        color: #64748b;
+    }
+
+    .form-textarea {
+        background: rgba(3, 7, 18, 0.8);
+        color: #f1f5f9;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        font-size: 0.95rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 120px;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .form-textarea:focus {
+        border-color: #3b82f6;
+        background: rgba(3, 7, 18, 0.95);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-textarea::placeholder {
+        color: #64748b;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        cursor: pointer;
+        color: #cbd5e1;
+        font-weight: 500;
+    }
+
+    .checkbox input {
+        width: 18px;
+        height: 18px;
+        accent-color: #3b82f6;
+        cursor: pointer;
+    }
+
+    .agent-assignment-section {
+        padding: 1.2rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 8px;
+        border-left: 3px solid #3b82f6;
+        margin-top: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .form-actions .btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        padding: 1rem 2rem;
+    }
+
+    .btn-primary {
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        color: #94a3b8;
+        border: 2px solid rgba(100, 116, 139, 0.3);
+        border-radius: 10px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background: rgba(100, 116, 139, 0.1);
+        border-color: rgba(100, 116, 139, 0.5);
+        color: #cbd5e1;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+        }
+
+        .form-container {
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('lead-create-form');
+        const requiresHumanCheckbox = document.getElementById('requires_human');
+        const agentAssignmentSection = document.getElementById('agent-assignment');
+
+        // Toggle agent assignment section
+        function toggleAgentSection() {
+            if (requiresHumanCheckbox.checked) {
+                agentAssignmentSection.style.display = 'flex';
+            } else {
+                agentAssignmentSection.style.display = 'none';
+                document.getElementById('human_agent_assigned').value = '';
+                document.getElementById('handoff_reason').value = '';
+            }
+        }
+
+        requiresHumanCheckbox.addEventListener('change', toggleAgentSection);
+        toggleAgentSection(); // Initial state
+
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const username = document.getElementById('instagram_username').value.trim();
+            
+            if (!username) {
+                e.preventDefault();
+                alert('Instagram username is required.');
+                document.getElementById('instagram_username').focus();
+                return false;
+            }
+
+            const budgetMin = document.getElementById('budget_min').value;
+            const budgetMax = document.getElementById('budget_max').value;
+
+            if (budgetMin && budgetMax && parseFloat(budgetMin) > parseFloat(budgetMax)) {
+                e.preventDefault();
+                alert('Minimum budget cannot be greater than maximum budget.');
+                return false;
+            }
+
+            // Validate agent assignment if required
+            if (requiresHumanCheckbox.checked) {
+                const agentSelected = document.getElementById('human_agent_assigned').value;
+                if (!agentSelected) {
+                    e.preventDefault();
+                    alert('Please select an agent for assignment.');
+                    return false;
+                }
+            }
+        });
+
+        // Remove @ if user types it
+        document.getElementById('instagram_username').addEventListener('input', function() {
+            this.value = this.value.replace(/^@/, '');
+        });
+    });
+</script>
+{% endblock %}

@@ -1026,3 +1026,88 @@ class PublicLeadShareView(View):
         }
         
         return render(request, 'realestate/shared-leads-public.html', context)
+    
+    
+
+
+class CreateLeadView(LoginRequiredMixin, View):
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        available_agents = Membership.objects.filter(company=company)
+        
+        context = {
+            'company': company,
+            'available_agents': available_agents,
+        }
+        return render(request, 'realestate/create-lead.html', context)
+    
+    def post(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        
+        try:
+            # Required field
+            instagram_username = request.POST.get('instagram_username', '').strip()
+            if not instagram_username:
+                messages.error(request, 'Instagram username is required.')
+                return redirect('create-lead', company_id=company_id)
+            
+            # Check for duplicate
+            if Lead.objects.filter(company=company, instagram_username=instagram_username).exists():
+                messages.error(request, f'A lead with username @{instagram_username} already exists.')
+                return redirect('create-lead', company_id=company_id)
+            
+            # Create the lead
+            lead = Lead.objects.create(
+                company=company,
+                instagram_username=instagram_username,
+                source_type=request.POST.get('source_type', 'instagram_dm'),
+                instagram_post_id=request.POST.get('instagram_post_id', ''),
+                
+                # Customer Info
+                customer_name=request.POST.get('customer_name', '').strip() or None,
+                phone_number=request.POST.get('phone_number', '').strip() or None,
+                email=request.POST.get('email', '').strip() or None,
+                
+                # Qualification
+                qualification_status=request.POST.get('qualification_status', 'initiated'),
+                status=request.POST.get('status', 'active'),
+                intent_level=request.POST.get('intent_level', 'low'),
+                
+                # Budget & Timeline
+                budget_min=request.POST.get('budget_min') or None,
+                budget_max=request.POST.get('budget_max') or None,
+                timeline=request.POST.get('timeline') or None,
+                payment_method=request.POST.get('payment_method', 'unknown'),
+                
+                # Property Info
+                preferred_location=request.POST.get('preferred_location', '').strip(),
+                is_first_time_buyer=request.POST.get('is_first_time_buyer') == 'on',
+                has_property_to_sell=request.POST.get('has_property_to_sell') == 'on',
+                
+                # Agent Handoff
+                requires_human=request.POST.get('requires_human') == 'on',
+                handoff_reason=request.POST.get('handoff_reason', '').strip(),
+                
+                # Notes
+                agent_notes=request.POST.get('agent_notes', '').strip(),
+            )
+            
+            # Assign agent if specified
+            agent_id = request.POST.get('human_agent_assigned')
+            if agent_id and lead.requires_human:
+                from users.models import CustomUser
+                from django.utils import timezone
+                try:
+                    agent = CustomUser.objects.get(id=agent_id)
+                    lead.human_agent_assigned = agent
+                    lead.handoff_at = timezone.now()
+                    lead.save()
+                except CustomUser.DoesNotExist:
+                    pass
+            
+            messages.success(request, f'Lead @{instagram_username} created successfully!')
+            return redirect('lead-detail', company_id=company_id, lead_id=lead.id)
+            
+        except Exception as e:
+            messages.error(request, f'Failed to create lead: {str(e)}')
+            return redirect('create-lead', company_id=company_id)

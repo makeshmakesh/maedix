@@ -62,22 +62,22 @@ urlpatterns = [
     path("company-manage/<int:company_id>/", views.CompanyManageView.as_view(), name="company-manage"),
     path('api/instagram/posts/<int:company_id>/', views.get_instagram_posts, name='get_instagram_posts'),
     path('create-company/', views.create_company, name='create-company'),
-    path('realestate/<int:company_id>/listing/<int:listing_id>/add-lead/', views.add_lead_to_listing, name='add_lead_to_listing'),
-    path('realestate/<int:company_id>/listing/<int:listing_id>/remove-lead/', views.remove_lead_from_listing, name='remove_lead_from_listing'),
+    path('/<int:company_id>/listing/<int:listing_id>/add-lead/', views.add_lead_to_listing, name='add_lead_to_listing'),
+    path('/<int:company_id>/listing/<int:listing_id>/remove-lead/', views.remove_lead_from_listing, name='remove_lead_from_listing'),
     
     
     path(
-        'realestate/<int:company_id>/listing/<int:listing_id>/share/create/',
+        '/<int:company_id>/listing/<int:listing_id>/share/create/',
         views.create_lead_share,
         name='create_lead_share'
     ),
     path(
-        'realestate/<int:company_id>/listing/<int:listing_id>/shares/',
+        '/<int:company_id>/listing/<int:listing_id>/shares/',
         views.list_lead_shares,
         name='list_lead_shares'
     ),
     path(
-        'realestate/<int:company_id>/share/<int:share_id>/revoke/',
+        '/<int:company_id>/share/<int:share_id>/revoke/',
         views.revoke_lead_share,
         name='revoke_lead_share'
     ),
@@ -88,6 +88,7 @@ urlpatterns = [
         views.PublicLeadShareView.as_view(),
         name='public_lead_share'
     ),
+    path('/<int:company_id>/leads/create/', views.CreateLeadView.as_view(), name='create-lead'),
         
 ]
 

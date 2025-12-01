@@ -194,6 +194,7 @@ class Lead(models.Model):
         choices=[
             ("instagram_comment", "Instagram Comment"),
             ("instagram_dm", "Instagram DM"),
+            ("direct", "Direct"),
         ]
     )
     instagram_post_id = CharField()
@@ -286,6 +287,11 @@ class Lead(models.Model):
             ("qualified_hot", "Qualified - Hot Lead"),
             ("qualified_warm", "Qualified - Warm Lead"),
             ("qualified_cold", "Qualified - Cold Lead"),
+                    ("shared", "Shared with Owner"),
+        ("owner_contacted", "Owner Contacted Lead"),
+        
+        # Closure Stage
+        ("negotiating", "Negotiating"),
             ("unqualified", "Unqualified"),
             ("spam", "Spam"),
             ("closed_won", "Closed - Won"),
