@@ -54,6 +54,8 @@ PLANS = [
             "Unlimited property listings",
             "Multi-agent collaboration tools",
             "Lead management dashboard",
+            "Agent Inbox for human handoff",
+            "Reports & Analytics dashboard",
         ],
     },
     {
@@ -86,6 +88,7 @@ PLANS = [
             "AI-powered DM conversations",
             "AI-powered comment responses",
             "AI lead prequalification (100 leads/month)",
+            "Multi-language AI (Hindi, Tamil, Telugu...)",
             "Priority support",
         ],
         "upgrade_note": "Need more AI prequalifications? Upgrade your lead count anytime from your dashboard.",

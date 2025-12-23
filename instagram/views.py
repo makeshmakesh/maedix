@@ -463,6 +463,14 @@ class InstagramWebHookView(View):
         except json.JSONDecodeError:
             print("❌ Failed to parse LLM comment reply response as JSON:", response)
             return {}
+
+        # Extract and store detected language
+        detected_language = response.get("detected_language", "english")
+        if lead and detected_language:
+            lead.preferred_language = detected_language
+            lead.save(update_fields=['preferred_language'])
+            print(f"Detected language for lead {lead.id}: {detected_language}")
+
         comment_reply = response.get("comment_reply", "Please check your DM")
         comment_reply_response = self.reply_to_instagram_comment(
             comment_id=data["comment_id"],

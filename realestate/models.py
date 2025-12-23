@@ -206,6 +206,23 @@ class Lead(models.Model):
     instagram_username = CharField()
     phone_number = CharField(null=True, blank=True)
     email = EmailField(null=True, blank=True)
+    preferred_language = CharField(
+        choices=[
+            ("english", "English"),
+            ("hindi", "Hindi"),
+            ("tamil", "Tamil"),
+            ("malayalam", "Malayalam"),
+            ("telugu", "Telugu"),
+            ("kannada", "Kannada"),
+            ("marathi", "Marathi"),
+            ("bengali", "Bengali"),
+            ("gujarati", "Gujarati"),
+            ("hinglish", "Hinglish"),
+            ("tanglish", "Tanglish"),
+        ],
+        default="english",
+        blank=True,
+    )
 
     # Qualification Status
     qualification_status = CharField(
