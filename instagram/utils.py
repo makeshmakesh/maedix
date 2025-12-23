@@ -169,17 +169,28 @@ def summarize_property(listing: PropertyListing) -> str:
     )
     return summary
 
-def find_relevant_properties(user_message, limit=10):
-    """Find the most semantically similar properties to a user's query."""
+def find_relevant_properties(user_message, company=None, limit=10):
+    """Find the most semantically similar properties to a user's query.
+
+    Args:
+        user_message: The user's query text
+        company: Optional Company instance to filter properties by
+        limit: Maximum number of properties to return
+    """
     client = OpenAI()
     query_embedding = client.embeddings.create(
         model="text-embedding-3-large",
         input=user_message
     ).data[0].embedding
 
+    queryset = PropertyListing.objects.exclude(embedding=None)
+
+    # Filter by company if provided - IMPORTANT: prevents cross-company data leakage
+    if company:
+        queryset = queryset.filter(company=company)
+
     listings = (
-        PropertyListing.objects
-        .exclude(embedding=None)
+        queryset
         .annotate(similarity=CosineDistance("embedding", query_embedding))
         .order_by("similarity")[:limit]
     )

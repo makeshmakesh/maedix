@@ -67,7 +67,8 @@ class InstagramWebHookView(View):
     async def get_reply_from_llm_async(self, conversation_id, user_message):
         """Uses OpenAI Agent to get a contextual LLM reply."""
         session = MyCustomSession(conversation_id, self.lead)
-        context_snippets = await sync_to_async(find_relevant_properties)(user_message)
+        # Pass company to filter properties - prevents cross-company data leakage
+        context_snippets = await sync_to_async(find_relevant_properties)(user_message, company=self.company)
         context_text = "\n".join(context_snippets)
         messages = await session.get_items()
         print("History going to LLM:", messages)
@@ -131,10 +132,11 @@ class InstagramWebHookView(View):
         ):
             print("No active subscription to handle DM")
             return {}
+        # Lookup by BOTH conversation_id AND company to ensure lead isolation per company
         lead, created = Lead.objects.get_or_create(
             instagram_conversation_id=conversation_id,
+            company=company_instagram_account.company,
             defaults={
-                "company": company_instagram_account.company,
                 "source_type": "instagram_dm",
                 "instagram_username": str(data["sender"]),
                 "qualification_status": "initiated",
@@ -364,8 +366,10 @@ class InstagramWebHookView(View):
 
         conversation_id = str(data["recipient"]) + "_" + str(data["sender"])
         self.company = company_instagram_account.company
+        # Lookup by BOTH conversation_id AND company to ensure lead isolation per company
         existing_lead = Lead.objects.filter(
-            instagram_conversation_id=conversation_id
+            instagram_conversation_id=conversation_id,
+            company=self.company
         ).first()
         new_lead = None
         subscription = Subscription.objects.filter(company=self.company).first()
@@ -377,6 +381,7 @@ class InstagramWebHookView(View):
             print("Comment auto response feature not enabled")
             return {}
         if not existing_lead:
+            # Create new lead with company - ensures isolation per company
             new_lead = Lead.objects.create(
                 instagram_conversation_id=conversation_id,
                 company=self.company,
