@@ -864,7 +864,7 @@ class SendMessageView(LoginRequiredMixin, View):
 
         recipient_id = parts[1]  # The lead's Instagram ID
         business_account_id = instagram_account.fb_data.get('instagram_business_account_id')
-        access_token = instagram_account.fb_data.get('access_token')
+        access_token = instagram_account.instagram_data["access_token"]
 
         if not all([recipient_id, business_account_id, access_token]):
             return JsonResponse({
