@@ -33,7 +33,10 @@ class MyCustomSession:
         res = []
         for m in messages:
             if m.message_text:
-                res.append({"role": m.sender_type, "content": m.message_text})
+                # Map sender_type to OpenAI-compatible roles
+                # 'user' -> 'user', 'assistant'/'human_agent' -> 'assistant'
+                role = 'user' if m.sender_type == 'user' else 'assistant'
+                res.append({"role": role, "content": m.message_text})
         return res
 
     async def add_items(self, items: List[dict]) -> None:
