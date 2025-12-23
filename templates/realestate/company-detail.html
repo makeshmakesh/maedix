@@ -571,6 +571,14 @@
                     <span>👥</span>
                     <span>Leads</span>
                 </a>
+                <a href="{% url 'reports' company.id %}" class="quick-action-btn">
+                    <span>📈</span>
+                    <span>Reports</span>
+                </a>
+                <a href="{% url 'inbox' company.id %}" class="quick-action-btn">
+                    <span>💬</span>
+                    <span>Inbox</span>
+                </a>
             </div>
         </div>
 
@@ -625,6 +633,32 @@
                     </p>
                     <span class="nav-arrow">
                         <span>Manage Invitations</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- Reports & Analytics -->
+                <a href="{% url 'reports' company.id %}" class="nav-card">
+                    <div class="nav-icon">📈</div>
+                    <h3 class="nav-title">Reports & Analytics</h3>
+                    <p class="nav-description">
+                        View comprehensive analytics, conversion funnels, lead sources, and performance metrics.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>View Reports</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- Inbox -->
+                <a href="{% url 'inbox' company.id %}" class="nav-card">
+                    <div class="nav-icon">💬</div>
+                    <h3 class="nav-title">Agent Inbox</h3>
+                    <p class="nav-description">
+                        Chat with leads assigned to human agents. View and respond to Instagram DMs directly.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>Open Inbox</span>
                         <span>→</span>
                     </span>
                 </a>

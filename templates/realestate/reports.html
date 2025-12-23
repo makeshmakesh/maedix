@@ -1,0 +1,1067 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Reports - {{ company.name }} - MAEDIX{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-container {
+        padding: 2rem 0;
+        min-height: calc(100vh - 400px);
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
+    .reports-header {
+        margin-bottom: 2rem;
+    }
+
+    .reports-title {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .reports-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .reports-meta {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* Section Styles */
+    .report-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .section-icon.leads {
+        background: rgba(59, 130, 246, 0.15);
+    }
+
+    .section-icon.listings {
+        background: rgba(34, 197, 94, 0.15);
+    }
+
+    .section-icon.team {
+        background: rgba(168, 85, 247, 0.15);
+    }
+
+    .section-icon.performance {
+        background: rgba(245, 158, 11, 0.15);
+    }
+
+    .section-icon.activity {
+        background: rgba(236, 72, 153, 0.15);
+    }
+
+    /* Overview Cards */
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .overview-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .overview-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+    }
+
+    .overview-card.highlight {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .card-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .card-value.gradient {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .card-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .card-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .card-change.positive {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .card-change.neutral {
+        background: rgba(107, 114, 128, 0.15);
+        color: #9ca3af;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stats-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+    }
+
+    .stats-card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stats-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: rgba(15, 23, 42, 0.4);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .stat-row:hover {
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .stat-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .stat-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .stat-dot.dm { background: #3b82f6; }
+    .stat-dot.comment { background: #a855f7; }
+    .stat-dot.direct { background: #22c55e; }
+    .stat-dot.hot { background: #ef4444; }
+    .stat-dot.high { background: #f59e0b; }
+    .stat-dot.medium { background: #eab308; }
+    .stat-dot.low { background: #6b7280; }
+    .stat-dot.residential { background: #3b82f6; }
+    .stat-dot.commercial { background: #8b5cf6; }
+    .stat-dot.land { background: #22c55e; }
+    .stat-dot.other { background: #6b7280; }
+    .stat-dot.available { background: #22c55e; }
+    .stat-dot.sold { background: #ef4444; }
+    .stat-dot.rented { background: #3b82f6; }
+    .stat-dot.unavailable { background: #6b7280; }
+
+    .stat-value {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    /* Progress Bars */
+    .progress-container {
+        margin-top: 1rem;
+    }
+
+    .progress-item {
+        margin-bottom: 1rem;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .progress-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+
+    .progress-fill.blue { background: linear-gradient(90deg, #00d4ff, #3b82f6); }
+    .progress-fill.green { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .progress-fill.purple { background: linear-gradient(90deg, #a855f7, #7c3aed); }
+    .progress-fill.orange { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+    /* Conversion Funnel */
+    .funnel-container {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+    }
+
+    .funnel-stages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .funnel-stage {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .funnel-bar {
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        min-width: 60px;
+    }
+
+    .funnel-bar:hover {
+        transform: scaleX(1.02);
+    }
+
+    .funnel-bar.total { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+    .funnel-bar.qualified { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .funnel-bar.won { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+    .funnel-label {
+        min-width: 120px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .funnel-count {
+        font-weight: 700;
+        color: var(--text-primary);
+        min-width: 60px;
+        text-align: right;
+    }
+
+    /* Recent Activity */
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:hover {
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateX(5px);
+    }
+
+    .activity-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .activity-icon.lead {
+        background: rgba(59, 130, 246, 0.15);
+    }
+
+    .activity-icon.listing {
+        background: rgba(34, 197, 94, 0.15);
+    }
+
+    .activity-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .activity-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .activity-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .activity-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .activity-badge.hot {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .activity-badge.warm {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+
+    .activity-badge.cold {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .activity-badge.active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .activity-badge.available {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .activity-badge.sold {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    /* Team Stats */
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .team-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 1.25rem;
+        text-align: center;
+    }
+
+    .team-value {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .team-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    /* Two Column Layout */
+    .two-col {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* Empty State */
+    .empty-data {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .reports-title {
+            font-size: 2rem;
+        }
+
+        .overview-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .two-col {
+            grid-template-columns: 1fr;
+        }
+
+        .funnel-label {
+            min-width: 80px;
+            font-size: 0.8rem;
+        }
+
+        .reports-meta {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .overview-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .team-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <div class="container">
+        <a href="{% url 'company-detail' company.id %}" class="back-button">
+            <span>←</span>
+            <span>Back to Company</span>
+        </a>
+
+        <div class="reports-header">
+            <h1 class="reports-title">Analytics & Reports</h1>
+            <p class="reports-subtitle">{{ company.name }} - Comprehensive insights and performance metrics</p>
+            <div class="reports-meta">
+                <span class="meta-item">
+                    <span>📅</span>
+                    <span>Active for {{ days_active }} days</span>
+                </span>
+                <span class="meta-item">
+                    <span>👤</span>
+                    <span>{{ membership.get_role_display }}</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Key Performance Overview -->
+        <section class="report-section">
+            <h2 class="section-title">
+                <span class="section-icon performance">📈</span>
+                Key Performance Indicators
+            </h2>
+            <div class="overview-grid">
+                <div class="overview-card highlight">
+                    <div class="card-icon">👥</div>
+                    <div class="card-value gradient">{{ total_leads }}</div>
+                    <div class="card-label">Total Leads</div>
+                    <div class="card-change positive">+{{ leads_last_7_days }} this week</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">🏠</div>
+                    <div class="card-value">{{ total_listings }}</div>
+                    <div class="card-label">Property Listings</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">🎯</div>
+                    <div class="card-value">{{ qualification_rate }}%</div>
+                    <div class="card-label">Qualification Rate</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">💰</div>
+                    <div class="card-value">{{ conversion_rate }}%</div>
+                    <div class="card-label">Conversion Rate</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">💬</div>
+                    <div class="card-value">{{ total_messages }}</div>
+                    <div class="card-label">Total Messages</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-value">{{ avg_leads_per_day }}</div>
+                    <div class="card-label">Avg Leads/Day</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leads Analytics -->
+        <section class="report-section">
+            <h2 class="section-title">
+                <span class="section-icon leads">👥</span>
+                Leads Analytics
+            </h2>
+
+            <!-- Time-based Lead Stats -->
+            <div class="overview-grid" style="margin-bottom: 1.5rem;">
+                <div class="overview-card">
+                    <div class="card-icon">📅</div>
+                    <div class="card-value">{{ leads_today }}</div>
+                    <div class="card-label">Today</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">📆</div>
+                    <div class="card-value">{{ leads_last_7_days }}</div>
+                    <div class="card-label">Last 7 Days</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">🗓️</div>
+                    <div class="card-value">{{ leads_last_30_days }}</div>
+                    <div class="card-label">Last 30 Days</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-value">{{ leads_last_90_days }}</div>
+                    <div class="card-label">Last 90 Days</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Leads by Source -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>📱</span> Leads by Source
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot dm"></span>
+                                Instagram DM
+                            </span>
+                            <span class="stat-value">{{ leads_by_source.instagram_dm }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot comment"></span>
+                                Instagram Comment
+                            </span>
+                            <span class="stat-value">{{ leads_by_source.instagram_comment }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot direct"></span>
+                                Direct
+                            </span>
+                            <span class="stat-value">{{ leads_by_source.direct }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leads by Intent -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>🔥</span> Leads by Intent Level
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot hot"></span>
+                                Hot (Ready to Buy)
+                            </span>
+                            <span class="stat-value">{{ leads_by_intent.hot }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot high"></span>
+                                High Intent
+                            </span>
+                            <span class="stat-value">{{ leads_by_intent.high }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot medium"></span>
+                                Medium Intent
+                            </span>
+                            <span class="stat-value">{{ leads_by_intent.medium }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot low"></span>
+                                Low Intent
+                            </span>
+                            <span class="stat-value">{{ leads_by_intent.low }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leads by Status -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>📋</span> Leads by Status
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">Active</span>
+                            <span class="stat-value">{{ leads_by_status.active }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Qualified Hot</span>
+                            <span class="stat-value">{{ leads_by_status.qualified_hot }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Qualified Warm</span>
+                            <span class="stat-value">{{ leads_by_status.qualified_warm }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Qualified Cold</span>
+                            <span class="stat-value">{{ leads_by_status.qualified_cold }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Closed Won</span>
+                            <span class="stat-value">{{ leads_by_status.closed_won }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Closed Lost</span>
+                            <span class="stat-value">{{ leads_by_status.closed_lost }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leads by Timeline -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>⏰</span> Leads by Timeline
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">Immediate (0-2 weeks)</span>
+                            <span class="stat-value">{{ leads_by_timeline.immediate }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Short-term (1-3 months)</span>
+                            <span class="stat-value">{{ leads_by_timeline.short }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Medium-term (3-6 months)</span>
+                            <span class="stat-value">{{ leads_by_timeline.medium }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Long-term (6+ months)</span>
+                            <span class="stat-value">{{ leads_by_timeline.long }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Just Browsing</span>
+                            <span class="stat-value">{{ leads_by_timeline.just_browsing }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Funnel -->
+            <div class="funnel-container" style="margin-top: 1.5rem;">
+                <h3 class="stats-card-title">
+                    <span>🎯</span> Conversion Funnel
+                </h3>
+                <div class="funnel-stages">
+                    <div class="funnel-stage">
+                        <span class="funnel-label">Total Leads</span>
+                        <div class="funnel-bar total" style="width: 100%;">{{ total_leads }}</div>
+                        <span class="funnel-count">100%</span>
+                    </div>
+                    <div class="funnel-stage">
+                        <span class="funnel-label">Qualified</span>
+                        <div class="funnel-bar qualified" style="width: {% if total_leads > 0 %}{{ qualified_leads|floatformat:0 }}{% else %}0{% endif %}%;">{{ qualified_leads }}</div>
+                        <span class="funnel-count">{{ qualification_rate }}%</span>
+                    </div>
+                    <div class="funnel-stage">
+                        <span class="funnel-label">Closed Won</span>
+                        <div class="funnel-bar won" style="width: {% if total_leads > 0 %}{{ conversion_rate|floatformat:0 }}{% else %}0{% endif %}%;">{{ closed_won }}</div>
+                        <span class="funnel-count">{{ conversion_rate }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget & Handoff Stats -->
+            <div class="two-col" style="margin-top: 1.5rem;">
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>💰</span> Budget Analytics
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">Avg Min Budget</span>
+                            <span class="stat-value">₹{{ avg_budget_min|floatformat:0 }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Avg Max Budget</span>
+                            <span class="stat-value">₹{{ avg_budget_max|floatformat:0 }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Avg Messages/Lead</span>
+                            <span class="stat-value">{{ avg_messages_per_lead }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Response Rate</span>
+                            <span class="stat-value">{{ response_rate }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>🤝</span> Human Handoff
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">Requires Human Attention</span>
+                            <span class="stat-value">{{ requires_human }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Agent Assigned</span>
+                            <span class="stat-value">{{ human_assigned }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Listings Analytics -->
+        <section class="report-section">
+            <h2 class="section-title">
+                <span class="section-icon listings">🏠</span>
+                Listings Analytics
+            </h2>
+
+            <div class="overview-grid" style="margin-bottom: 1.5rem;">
+                <div class="overview-card">
+                    <div class="card-icon">🏠</div>
+                    <div class="card-value">{{ total_listings }}</div>
+                    <div class="card-label">Total Listings</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">📸</div>
+                    <div class="card-value">{{ instagram_connected }}</div>
+                    <div class="card-label">Instagram Connected</div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon">💵</div>
+                    <div class="card-value">₹{{ avg_price|floatformat:0 }}</div>
+                    <div class="card-label">Avg Listing Price</div>
+                </div>
+                <div class="overview-card highlight">
+                    <div class="card-icon">📊</div>
+                    <div class="card-value gradient">₹{{ total_inventory_value|floatformat:0 }}</div>
+                    <div class="card-label">Total Inventory Value</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Listings by Type -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>🏗️</span> Listings by Type
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot residential"></span>
+                                Residential
+                            </span>
+                            <span class="stat-value">{{ listings_by_type.residential }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot commercial"></span>
+                                Commercial
+                            </span>
+                            <span class="stat-value">{{ listings_by_type.commercial }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot land"></span>
+                                Land
+                            </span>
+                            <span class="stat-value">{{ listings_by_type.land }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot other"></span>
+                                Other
+                            </span>
+                            <span class="stat-value">{{ listings_by_type.other }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Listings by Status -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>📋</span> Listings by Status
+                    </h3>
+                    <div class="stats-list">
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot available"></span>
+                                Available
+                            </span>
+                            <span class="stat-value">{{ listings_by_status.available }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot sold"></span>
+                                Sold
+                            </span>
+                            <span class="stat-value">{{ listings_by_status.sold }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot rented"></span>
+                                Rented
+                            </span>
+                            <span class="stat-value">{{ listings_by_status.rented }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">
+                                <span class="stat-dot unavailable"></span>
+                                Unavailable
+                            </span>
+                            <span class="stat-value">{{ listings_by_status.unavailable }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instagram Connection -->
+                <div class="stats-card">
+                    <h3 class="stats-card-title">
+                        <span>📸</span> Instagram Integration
+                    </h3>
+                    <div class="progress-container">
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Connected</span>
+                                <span class="progress-value">{{ instagram_connected }} / {{ total_listings }}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill purple" style="width: {% if total_listings > 0 %}{{ instagram_connected|floatformat:0 }}{% else %}0{% endif %}%;"></div>
+                            </div>
+                        </div>
+                        <div class="stats-list" style="margin-top: 1rem;">
+                            <div class="stat-row">
+                                <span class="stat-label">Connected to Posts</span>
+                                <span class="stat-value">{{ instagram_connected }}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Not Connected</span>
+                                <span class="stat-value">{{ instagram_not_connected }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Analytics -->
+        <section class="report-section">
+            <h2 class="section-title">
+                <span class="section-icon team">👥</span>
+                Team Overview
+            </h2>
+            <div class="team-grid">
+                <div class="team-card">
+                    <div class="team-value">{{ total_team }}</div>
+                    <div class="team-label">Total Members</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-value">{{ admins }}</div>
+                    <div class="team-label">Admins</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-value">{{ managers }}</div>
+                    <div class="team-label">Managers</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-value">{{ agents }}</div>
+                    <div class="team-label">Agents</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="report-section">
+            <h2 class="section-title">
+                <span class="section-icon activity">⚡</span>
+                Recent Activity
+            </h2>
+            <div class="two-col">
+                <!-- Recent Leads -->
+                <div>
+                    <h3 class="stats-card-title" style="margin-bottom: 1rem;">
+                        <span>👥</span> Latest Leads
+                    </h3>
+                    {% if recent_leads %}
+                    <div class="activity-list">
+                        {% for lead in recent_leads %}
+                        <a href="{% url 'lead-detail' company.id lead.id %}" class="activity-item" style="text-decoration: none;">
+                            <div class="activity-icon lead">👤</div>
+                            <div class="activity-content">
+                                <div class="activity-title">@{{ lead.instagram_username }}</div>
+                                <div class="activity-meta">
+                                    {{ lead.get_source_type_display }} • {{ lead.created_at|timesince }} ago
+                                    {% if lead.calculated_score %} • Score: {{ lead.calculated_score }}{% endif %}
+                                </div>
+                            </div>
+                            <span class="activity-badge {% if lead.status == 'qualified_hot' %}hot{% elif lead.status == 'qualified_warm' %}warm{% elif lead.status == 'qualified_cold' %}cold{% else %}active{% endif %}">
+                                {{ lead.get_status_display }}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-data">No leads yet</div>
+                    {% endif %}
+                </div>
+
+                <!-- Recent Listings -->
+                <div>
+                    <h3 class="stats-card-title" style="margin-bottom: 1rem;">
+                        <span>🏠</span> Latest Listings
+                    </h3>
+                    {% if recent_listings %}
+                    <div class="activity-list">
+                        {% for listing in recent_listings %}
+                        <a href="{% url 'edit_listing' company.id listing.id %}" class="activity-item" style="text-decoration: none;">
+                            <div class="activity-icon listing">🏠</div>
+                            <div class="activity-content">
+                                <div class="activity-title">{{ listing.title }}</div>
+                                <div class="activity-meta">
+                                    {{ listing.get_property_type_display }} • {{ listing.location|truncatechars:25 }}
+                                    {% if listing.price %} • ₹{{ listing.price|floatformat:0 }}{% endif %}
+                                </div>
+                            </div>
+                            <span class="activity-badge {% if listing.status == 'available' %}available{% elif listing.status == 'sold' %}sold{% else %}active{% endif %}">
+                                {{ listing.get_status_display }}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-data">No listings yet</div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+{% endblock %}

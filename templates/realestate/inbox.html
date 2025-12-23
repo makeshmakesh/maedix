@@ -1,0 +1,360 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Inbox - {{ company.name }} - MAEDIX{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inbox-container {
+        padding: 2rem 0;
+        min-height: calc(100vh - 400px);
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
+    .inbox-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .inbox-title {
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .inbox-stats {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .stat-badge {
+        padding: 0.5rem 1rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .stat-badge strong {
+        color: #00d4ff;
+    }
+
+    .conversations-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .conversation-item {
+        background: var(--bg-card);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .conversation-item:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: translateX(5px);
+        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .conversation-item.unread {
+        border-left: 4px solid #00d4ff;
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, transparent 100%);
+    }
+
+    .conversation-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .conversation-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .conversation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.35rem;
+    }
+
+    .conversation-name {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+
+    .conversation-time {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .conversation-preview {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 500px;
+    }
+
+    .conversation-meta {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-tag {
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .meta-tag.source-dm {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .meta-tag.source-comment {
+        background: rgba(168, 85, 247, 0.15);
+        color: #a855f7;
+    }
+
+    .meta-tag.status-hot {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .meta-tag.status-warm {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+
+    .meta-tag.status-active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+    }
+
+    .conversation-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.5rem;
+    }
+
+    .unread-badge {
+        width: 24px;
+        height: 24px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .btn-chat {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .btn-chat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+        color: var(--text-secondary);
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+        .inbox-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .conversation-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .conversation-actions {
+            width: 100%;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+        }
+
+        .conversation-preview {
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox-container">
+    <div class="container">
+        <a href="{% url 'company-detail' company.id %}" class="back-button">
+            <span>←</span>
+            <span>Back to Company</span>
+        </a>
+
+        <div class="inbox-header">
+            <h1 class="inbox-title">Inbox</h1>
+            <div class="inbox-stats">
+                <span class="stat-badge">
+                    <strong>{{ total_conversations }}</strong> Conversations
+                </span>
+            </div>
+        </div>
+
+        {% if leads_list %}
+        <div class="conversations-list">
+            {% for item in leads_list %}
+            <a href="{% url 'chat' company.id item.lead.id %}" class="conversation-item {% if item.unread > 0 %}unread{% endif %}">
+                <div class="conversation-avatar">
+                    👤
+                </div>
+                <div class="conversation-content">
+                    <div class="conversation-header">
+                        <span class="conversation-name">
+                            {{ item.lead.customer_name|default:item.lead.instagram_username }}
+                        </span>
+                        <span class="conversation-time">
+                            {% if item.last_message %}
+                                {{ item.last_message.timestamp|timesince }} ago
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="conversation-preview">
+                        {% if item.last_message %}
+                            {% if item.last_message.sender_type == 'user' %}
+                                {{ item.last_message.message_text|truncatechars:80 }}
+                            {% else %}
+                                <span style="color: var(--text-muted);">You:</span> {{ item.last_message.message_text|truncatechars:70 }}
+                            {% endif %}
+                        {% else %}
+                            No messages yet
+                        {% endif %}
+                    </div>
+                    <div class="conversation-meta">
+                        <span class="meta-tag {% if item.lead.source_type == 'instagram_dm' %}source-dm{% else %}source-comment{% endif %}">
+                            {{ item.lead.get_source_type_display }}
+                        </span>
+                        <span class="meta-tag {% if item.lead.status == 'qualified_hot' %}status-hot{% elif item.lead.status == 'qualified_warm' %}status-warm{% else %}status-active{% endif %}">
+                            {{ item.lead.get_status_display }}
+                        </span>
+                        {% if item.lead.human_agent_assigned %}
+                        <span class="meta-tag" style="background: rgba(107, 114, 128, 0.15); color: #9ca3af;">
+                            Assigned: {{ item.lead.human_agent_assigned.email|truncatechars:20 }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="conversation-actions">
+                    {% if item.unread > 0 %}
+                    <span class="unread-badge">{{ item.unread }}</span>
+                    {% endif %}
+                    <span class="btn-chat">
+                        <span>💬</span>
+                        <span>Open Chat</span>
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3 class="empty-title">No Conversations Yet</h3>
+            <p class="empty-text">
+                {% if membership.role == 'agent' %}
+                    You don't have any leads assigned to you yet. Ask your manager to assign leads.
+                {% else %}
+                    No leads have been assigned to human agents yet. Assign agents from the lead detail page.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

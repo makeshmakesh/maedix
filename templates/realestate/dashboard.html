@@ -46,6 +46,12 @@
         margin: 0;
     }
 
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
     .btn-create-company {
         background: var(--primary-gradient);
         color: white;
@@ -259,8 +265,12 @@
             align-items: stretch;
         }
 
-        .btn-create-company {
+        .action-buttons {
             width: 100%;
+        }
+
+        .btn-create-company {
+            flex: 1;
             justify-content: center;
         }
 
@@ -346,15 +356,16 @@
         <!-- Dashboard Actions -->
         <div class="dashboard-actions">
             <h2 class="section-title">My Companies</h2>
-            <a href="{% url 'my-invitations' %}" class="btn-create-company">
-                <span>📩</span>
-                <span>My Invitations</span>
-            </a>
-                        <a href="{% url 'create-company' %}" class="btn-create-company">
-                <span>➕</span>
-                <span>Create Company</span>
-            </a>
-            
+            <div class="action-buttons">
+                <a href="{% url 'my-invitations' %}" class="btn-create-company">
+                    <span>📩</span>
+                    <span>My Invitations</span>
+                </a>
+                <a href="{% url 'create-company' %}" class="btn-create-company">
+                    <span>➕</span>
+                    <span>Create Company</span>
+                </a>
+            </div>
         </div>
         
 

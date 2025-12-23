@@ -11,7 +11,7 @@ from django.contrib import messages
 import requests
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
+from django.db.models import Q, Count, Sum, Avg
 from django.utils import timezone
 from datetime import timedelta
 from instagram.models import InstagramAccount
@@ -336,6 +336,8 @@ class CompanyDetailView(LoginRequiredMixin, View):
 
 
 class ListingsView(LoginRequiredMixin, View):
+    paginate_by = 12  # Listings per page
+
     def get(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
 
@@ -344,12 +346,74 @@ class ListingsView(LoginRequiredMixin, View):
             "-created_at"
         )
 
+        # Calculate stats (before filtering for accurate totals)
+        total_count = listings.count()
+        available_count = listings.filter(status='available').count()
+        sold_count = listings.filter(status='sold').count()
+
+        # Apply filters
+        listings = self._apply_filters(listings, request)
+        filtered_count = listings.count()
+
+        # Calculate connected count after filtering
+        listings_list = list(listings)
+        connected_count = sum(1 for l in listings_list if l.is_instagram_connected)
+
+        # Pagination
+        paginator = Paginator(listings_list, self.paginate_by)
+        page = request.GET.get('page', 1)
+
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
         context = {
             "company": company,
-            "listings": listings,
+            "listings": page_obj.object_list,
+            "page_obj": page_obj,
+            "paginator": paginator,
+            "is_paginated": paginator.num_pages > 1,
+            "total_count": total_count,
+            "filtered_count": filtered_count,
+            "available_count": available_count,
+            "sold_count": sold_count,
+            "connected_count": connected_count,
         }
 
         return render(request, "realestate/listings.html", context)
+
+    def _apply_filters(self, queryset, request):
+        """Apply filtering based on query parameters"""
+
+        # Property type filter
+        property_type = request.GET.get('type')
+        if property_type:
+            queryset = queryset.filter(property_type=property_type)
+
+        # Status filter
+        status = request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        # Instagram connection filter
+        instagram = request.GET.get('instagram')
+        if instagram == 'connected':
+            queryset = queryset.exclude(instagram_post_id__isnull=True).exclude(instagram_post_id='')
+        elif instagram == 'not-connected':
+            queryset = queryset.filter(Q(instagram_post_id__isnull=True) | Q(instagram_post_id=''))
+
+        # Search filter (title or location)
+        search = request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) |
+                Q(location__icontains=search)
+            )
+
+        return queryset
 
 class LeadsView(LoginRequiredMixin, View):
     paginate_by = 15  # Leads per page
@@ -420,6 +484,10 @@ class LeadsView(LoginRequiredMixin, View):
             queryset = queryset.filter(intent_level=intent)
 
         # Source filter
+        source = request.GET.get('source')
+        if source:
+            queryset = queryset.filter(source_type=source)
+
         # Search filter (username or email)
         search = request.GET.get('search')
         if search:
@@ -429,6 +497,498 @@ class LeadsView(LoginRequiredMixin, View):
                 Q(customer_name__icontains=search)
             )
         return queryset
+
+
+class ReportsView(LoginRequiredMixin, View):
+    """Comprehensive reports and analytics for a company"""
+
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+
+        # Verify membership
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        if membership.role not in ['admin', 'manager']:
+            messages.error(request, "You don't have permission to view reports.")
+            return redirect('company-detail', company_id=company_id)
+
+        # Date ranges for time-based analytics
+        now = timezone.now()
+        today = now.date()
+        last_7_days = now - timedelta(days=7)
+        last_30_days = now - timedelta(days=30)
+        last_90_days = now - timedelta(days=90)
+
+        # ============================================
+        # LEADS ANALYTICS
+        # ============================================
+        all_leads = Lead.objects.filter(company=company)
+        total_leads = all_leads.count()
+
+        # Leads by source
+        leads_by_source = {
+            'instagram_dm': all_leads.filter(source_type='instagram_dm').count(),
+            'instagram_comment': all_leads.filter(source_type='instagram_comment').count(),
+            'direct': all_leads.filter(source_type='direct').count(),
+        }
+
+        # Leads by status
+        leads_by_status = {
+            'active': all_leads.filter(status='active').count(),
+            'qualified_hot': all_leads.filter(status='qualified_hot').count(),
+            'qualified_warm': all_leads.filter(status='qualified_warm').count(),
+            'qualified_cold': all_leads.filter(status='qualified_cold').count(),
+            'unqualified': all_leads.filter(status='unqualified').count(),
+            'closed_won': all_leads.filter(status='closed_won').count(),
+            'closed_lost': all_leads.filter(status='closed_lost').count(),
+            'spam': all_leads.filter(status='spam').count(),
+        }
+
+        # Leads by intent level
+        leads_by_intent = {
+            'hot': all_leads.filter(intent_level='hot').count(),
+            'high': all_leads.filter(intent_level='high').count(),
+            'medium': all_leads.filter(intent_level='medium').count(),
+            'low': all_leads.filter(intent_level='low').count(),
+        }
+
+        # Leads by timeline
+        leads_by_timeline = {
+            'immediate': all_leads.filter(timeline='immediate').count(),
+            'short': all_leads.filter(timeline='short').count(),
+            'medium': all_leads.filter(timeline='medium').count(),
+            'long': all_leads.filter(timeline='long').count(),
+            'just_browsing': all_leads.filter(timeline='just_browsing').count(),
+        }
+
+        # Time-based lead metrics
+        leads_last_7_days = all_leads.filter(created_at__gte=last_7_days).count()
+        leads_last_30_days = all_leads.filter(created_at__gte=last_30_days).count()
+        leads_last_90_days = all_leads.filter(created_at__gte=last_90_days).count()
+        leads_today = all_leads.filter(created_at__date=today).count()
+
+        # Conversion metrics
+        qualified_leads = all_leads.filter(status__in=['qualified_hot', 'qualified_warm', 'qualified_cold']).count()
+        closed_won = all_leads.filter(status='closed_won').count()
+        conversion_rate = round((closed_won / total_leads * 100), 1) if total_leads > 0 else 0
+        qualification_rate = round((qualified_leads / total_leads * 100), 1) if total_leads > 0 else 0
+
+        # Human handoff metrics
+        requires_human = all_leads.filter(requires_human=True).count()
+        human_assigned = all_leads.exclude(human_agent_assigned__isnull=True).count()
+
+        # Budget analytics
+        leads_with_budget = all_leads.exclude(budget_max__isnull=True)
+        avg_budget_max = leads_with_budget.aggregate(avg=Avg('budget_max'))['avg'] or 0
+        avg_budget_min = leads_with_budget.exclude(budget_min__isnull=True).aggregate(avg=Avg('budget_min'))['avg'] or 0
+
+        # Message analytics
+        total_messages = ConversationMessage.objects.filter(lead__company=company).count()
+        avg_messages_per_lead = round(total_messages / total_leads, 1) if total_leads > 0 else 0
+
+        # ============================================
+        # LISTINGS ANALYTICS
+        # ============================================
+        all_listings = PropertyListing.objects.filter(company=company)
+        total_listings = all_listings.count()
+
+        # Listings by type
+        listings_by_type = {
+            'residential': all_listings.filter(property_type='residential').count(),
+            'commercial': all_listings.filter(property_type='commercial').count(),
+            'land': all_listings.filter(property_type='land').count(),
+            'other': all_listings.filter(property_type='other').count(),
+        }
+
+        # Listings by status
+        listings_by_status = {
+            'available': all_listings.filter(status='available').count(),
+            'sold': all_listings.filter(status='sold').count(),
+            'rented': all_listings.filter(status='rented').count(),
+            'unavailable': all_listings.filter(status='unavailable').count(),
+        }
+
+        # Instagram connection
+        listings_list = list(all_listings)
+        instagram_connected = sum(1 for l in listings_list if l.is_instagram_connected)
+        instagram_not_connected = total_listings - instagram_connected
+
+        # Price analytics
+        listings_with_price = all_listings.exclude(price__isnull=True)
+        avg_price = listings_with_price.aggregate(avg=Avg('price'))['avg'] or 0
+        total_inventory_value = listings_with_price.filter(status='available').aggregate(total=Sum('price'))['total'] or 0
+
+        # ============================================
+        # TEAM ANALYTICS
+        # ============================================
+        team_members = Membership.objects.filter(company=company)
+        total_team = team_members.count()
+        admins = team_members.filter(role='admin').count()
+        managers = team_members.filter(role='manager').count()
+        agents = team_members.filter(role='agent').count()
+
+        # ============================================
+        # RECENT ACTIVITY
+        # ============================================
+        recent_leads = all_leads.order_by('-created_at')[:5]
+        recent_listings = all_listings.order_by('-created_at')[:5]
+
+        # Calculate lead scores for recent leads
+        for lead in recent_leads:
+            lead.calculated_score = calculate_lead_score(lead)
+
+        # ============================================
+        # PERFORMANCE METRICS
+        # ============================================
+        # Daily averages
+        days_active = (now - company.created_at).days or 1
+        avg_leads_per_day = round(total_leads / days_active, 2)
+
+        # Response metrics (leads with interaction)
+        leads_with_response = all_leads.exclude(last_interaction_at__isnull=True).count()
+        response_rate = round((leads_with_response / total_leads * 100), 1) if total_leads > 0 else 0
+
+        context = {
+            'company': company,
+            'membership': membership,
+
+            # Lead totals
+            'total_leads': total_leads,
+            'leads_by_source': leads_by_source,
+            'leads_by_status': leads_by_status,
+            'leads_by_intent': leads_by_intent,
+            'leads_by_timeline': leads_by_timeline,
+
+            # Time-based leads
+            'leads_today': leads_today,
+            'leads_last_7_days': leads_last_7_days,
+            'leads_last_30_days': leads_last_30_days,
+            'leads_last_90_days': leads_last_90_days,
+
+            # Conversion metrics
+            'qualified_leads': qualified_leads,
+            'closed_won': closed_won,
+            'conversion_rate': conversion_rate,
+            'qualification_rate': qualification_rate,
+
+            # Human handoff
+            'requires_human': requires_human,
+            'human_assigned': human_assigned,
+
+            # Budget
+            'avg_budget_min': avg_budget_min,
+            'avg_budget_max': avg_budget_max,
+
+            # Messages
+            'total_messages': total_messages,
+            'avg_messages_per_lead': avg_messages_per_lead,
+
+            # Listings
+            'total_listings': total_listings,
+            'listings_by_type': listings_by_type,
+            'listings_by_status': listings_by_status,
+            'instagram_connected': instagram_connected,
+            'instagram_not_connected': instagram_not_connected,
+            'avg_price': avg_price,
+            'total_inventory_value': total_inventory_value,
+
+            # Team
+            'total_team': total_team,
+            'admins': admins,
+            'managers': managers,
+            'agents': agents,
+
+            # Recent activity
+            'recent_leads': recent_leads,
+            'recent_listings': recent_listings,
+
+            # Performance
+            'days_active': days_active,
+            'avg_leads_per_day': avg_leads_per_day,
+            'response_rate': response_rate,
+        }
+
+        return render(request, 'realestate/reports.html', context)
+
+
+class InboxView(LoginRequiredMixin, View):
+    """Inbox for agents to view and respond to assigned leads"""
+
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+
+        # Get leads based on role
+        if membership.role == 'agent':
+            # Agents only see leads assigned to them
+            leads = Lead.objects.filter(
+                company=company,
+                human_agent_assigned=request.user
+            ).order_by('-last_interaction_at')
+        else:
+            # Admin/Manager see all leads with human agents assigned
+            leads = Lead.objects.filter(
+                company=company,
+                human_agent_assigned__isnull=False
+            ).order_by('-last_interaction_at')
+
+        # Add unread count and last message for each lead
+        leads_list = []
+        for lead in leads:
+            last_message = ConversationMessage.objects.filter(
+                lead=lead
+            ).order_by('-timestamp').first()
+
+            leads_list.append({
+                'lead': lead,
+                'last_message': last_message,
+                'unread': lead.metadata.get('unread_count', 0) if lead.metadata else 0
+            })
+
+        context = {
+            'company': company,
+            'membership': membership,
+            'leads_list': leads_list,
+            'total_conversations': len(leads_list),
+        }
+
+        return render(request, 'realestate/inbox.html', context)
+
+
+class ChatView(LoginRequiredMixin, View):
+    """Chat view for a specific lead conversation"""
+
+    def get(self, request, company_id, lead_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        lead = get_object_or_404(Lead, id=lead_id, company=company)
+
+        # Check if human agent is assigned
+        if not lead.human_agent_assigned:
+            messages.error(request, "No human agent assigned to this lead. Chat is disabled.")
+            return redirect('lead-detail', company_id=company_id, lead_id=lead_id)
+
+        # Check permission - agent can only chat with their assigned leads
+        if membership.role == 'agent' and lead.human_agent_assigned != request.user:
+            messages.error(request, "You are not assigned to this lead.")
+            return redirect('inbox', company_id=company_id)
+
+        # Get conversation messages
+        conversations = ConversationMessage.objects.filter(
+            lead=lead
+        ).order_by('timestamp')
+
+        # Mark as read (reset unread count)
+        if lead.metadata is None:
+            lead.metadata = {}
+        lead.metadata['unread_count'] = 0
+        lead.save(update_fields=['metadata'])
+
+        # Check if Instagram is connected for sending messages
+        instagram_account = InstagramAccount.objects.filter(company=company).first()
+        can_send_messages = (
+            instagram_account and
+            instagram_account.fb_data and
+            instagram_account.fb_data.get('instagram_business_account_id')
+        )
+
+        context = {
+            'company': company,
+            'membership': membership,
+            'lead': lead,
+            'conversations': conversations,
+            'can_send_messages': can_send_messages,
+        }
+
+        return render(request, 'realestate/chat.html', context)
+
+
+class SendMessageView(LoginRequiredMixin, View):
+    """API endpoint to send DM to lead via Instagram"""
+
+    def post(self, request, company_id, lead_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+        lead = get_object_or_404(Lead, id=lead_id, company=company)
+
+        # Check if human agent is assigned
+        if not lead.human_agent_assigned:
+            return JsonResponse({
+                'success': False,
+                'error': 'No human agent assigned to this lead'
+            }, status=403)
+
+        # Check permission
+        if membership.role == 'agent' and lead.human_agent_assigned != request.user:
+            return JsonResponse({
+                'success': False,
+                'error': 'You are not assigned to this lead'
+            }, status=403)
+
+        # Get message from request
+        import json
+        try:
+            data = json.loads(request.body)
+            message_text = data.get('message', '').strip()
+        except json.JSONDecodeError:
+            message_text = request.POST.get('message', '').strip()
+
+        if not message_text:
+            return JsonResponse({
+                'success': False,
+                'error': 'Message cannot be empty'
+            }, status=400)
+
+        # Get Instagram account
+        instagram_account = InstagramAccount.objects.filter(company=company).first()
+        if not instagram_account or not instagram_account.fb_data:
+            return JsonResponse({
+                'success': False,
+                'error': 'Instagram not connected'
+            }, status=400)
+
+        # Extract conversation IDs
+        conversation_id = lead.instagram_conversation_id
+        if not conversation_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'No Instagram conversation found for this lead'
+            }, status=400)
+
+        # Parse sender ID from conversation_id (format: recipient_sender)
+        parts = conversation_id.split('_')
+        if len(parts) != 2:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid conversation ID format'
+            }, status=400)
+
+        recipient_id = parts[1]  # The lead's Instagram ID
+        business_account_id = instagram_account.fb_data.get('instagram_business_account_id')
+        access_token = instagram_account.fb_data.get('access_token')
+
+        if not all([recipient_id, business_account_id, access_token]):
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing Instagram credentials'
+            }, status=400)
+
+        # Send message via Instagram API
+        url = f"https://graph.instagram.com/v24.0/{business_account_id}/messages"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "recipient": {"id": recipient_id},
+            "message": {"text": message_text}
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response_data = response.json()
+
+            if response.status_code == 200:
+                # Save message to database
+                ConversationMessage.objects.create(
+                    lead=lead,
+                    conversation_id=conversation_id,
+                    sender_type='human_agent',
+                    message_text=message_text,
+                    message_type='follow_up',
+                    is_from_instagram=True,
+                    instagram_message_id=response_data.get('message_id'),
+                )
+
+                # Update lead's last interaction
+                lead.last_bot_message = message_text
+                lead.last_interaction_at = timezone.now()
+                lead.save(update_fields=['last_bot_message', 'last_interaction_at'])
+
+                return JsonResponse({
+                    'success': True,
+                    'message_id': response_data.get('message_id'),
+                    'timestamp': timezone.now().isoformat()
+                })
+            else:
+                error_msg = response_data.get('error', {}).get('message', 'Failed to send message')
+                return JsonResponse({
+                    'success': False,
+                    'error': error_msg
+                }, status=400)
+
+        except requests.RequestException as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Network error: {str(e)}'
+            }, status=500)
+
+
+class AssignAgentView(LoginRequiredMixin, View):
+    """Assign or unassign human agent to a lead"""
+
+    def post(self, request, company_id, lead_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+
+        # Only admin/manager can assign agents
+        if membership.role not in ['admin', 'manager']:
+            return JsonResponse({
+                'success': False,
+                'error': 'Only admin or manager can assign agents'
+            }, status=403)
+
+        lead = get_object_or_404(Lead, id=lead_id, company=company)
+
+        import json
+        try:
+            data = json.loads(request.body)
+            agent_id = data.get('agent_id')
+            action = data.get('action', 'assign')  # 'assign' or 'unassign'
+        except json.JSONDecodeError:
+            agent_id = request.POST.get('agent_id')
+            action = request.POST.get('action', 'assign')
+
+        if action == 'unassign':
+            lead.human_agent_assigned = None
+            lead.requires_human = False
+            lead.handoff_at = None
+            lead.save(update_fields=['human_agent_assigned', 'requires_human', 'handoff_at'])
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Agent unassigned successfully'
+            })
+
+        if not agent_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Agent ID is required'
+            }, status=400)
+
+        # Verify agent belongs to company
+        try:
+            agent = CustomUser.objects.get(id=agent_id)
+            agent_membership = Membership.objects.get(user=agent, company=company)
+        except (CustomUser.DoesNotExist, Membership.DoesNotExist):
+            return JsonResponse({
+                'success': False,
+                'error': 'Agent not found in this company'
+            }, status=404)
+
+        # Assign agent
+        lead.human_agent_assigned = agent
+        lead.requires_human = True
+        lead.handoff_at = timezone.now()
+        lead.handoff_reason = f"Assigned by {request.user.email}"
+        lead.save(update_fields=['human_agent_assigned', 'requires_human', 'handoff_at', 'handoff_reason'])
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Lead assigned to {agent.email}',
+            'agent_name': agent.get_full_name() or agent.email
+        })
+
+
 class LeadDetailView(LoginRequiredMixin, View):
     def format_conversation_messages(self, messages):
         formatted_strings = []

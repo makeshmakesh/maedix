@@ -40,6 +40,31 @@ urlpatterns = [
         name="leads",
     ),
     path(
+        "company/<int:company_id>/reports/",
+        views.ReportsView.as_view(),
+        name="reports",
+    ),
+    path(
+        "company/<int:company_id>/inbox/",
+        views.InboxView.as_view(),
+        name="inbox",
+    ),
+    path(
+        "company/<int:company_id>/chat/<int:lead_id>/",
+        views.ChatView.as_view(),
+        name="chat",
+    ),
+    path(
+        "company/<int:company_id>/chat/<int:lead_id>/send/",
+        views.SendMessageView.as_view(),
+        name="send-message",
+    ),
+    path(
+        "company/<int:company_id>/lead/<int:lead_id>/assign-agent/",
+        views.AssignAgentView.as_view(),
+        name="assign-agent",
+    ),
+    path(
         "company/<int:company_id>/lead-detail/<int:lead_id>",
         views.LeadDetailView.as_view(),
         name="lead-detail",

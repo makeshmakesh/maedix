@@ -10,6 +10,23 @@
         padding: 2rem 1rem;
     }
 
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        color: var(--text-primary);
+        gap: 1rem;
+        text-decoration: none;
+    }
+
     .company-card {
         background: var(--bg-card);
         backdrop-filter: blur(20px);
@@ -316,6 +333,11 @@
 
 {% block content %}
 <div class="create-company-container">
+    <a href="{% url 'dashboard' %}" class="back-button">
+        <span>←</span>
+        <span>Back to Dashboard</span>
+    </a>
+
     <div class="company-card fade-in">
         <div class="form-header">
             <div class="form-icon">🏢</div>

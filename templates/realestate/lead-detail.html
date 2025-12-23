@@ -12,6 +12,17 @@
         <div class="header-title">
             <h1>Lead: @{{ lead.instagram_username }}</h1>
             <span class="status-badge status-{{ lead.status }}">{{ lead.get_status_display }}</span>
+            {% if lead.human_agent_assigned %}
+            <a href="{% url 'chat' lead.company.id lead.id %}" class="btn-open-chat">
+                <span>💬</span>
+                <span>Open Chat</span>
+            </a>
+            {% else %}
+            <span class="btn-open-chat disabled" title="Assign a human agent to enable chat">
+                <span>💬</span>
+                <span>Chat Disabled</span>
+            </span>
+            {% endif %}
         </div>
     </div>
 
@@ -417,6 +428,41 @@
 
     .back-link:hover {
         color: #60a5fa;
+    }
+
+    .btn-open-chat {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        background: linear-gradient(135deg, #00d4ff 0%, #3b82f6 100%);
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        margin-left: auto;
+    }
+
+    .btn-open-chat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-open-chat.disabled {
+        background: rgba(107, 114, 128, 0.3);
+        color: #9ca3af;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .btn-open-chat.disabled:hover {
+        transform: none;
+        box-shadow: none;
     }
 
     .header-title {
