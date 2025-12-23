@@ -158,8 +158,28 @@ class InstagramWebHookView(View):
             subscription.save()
             print("New lead created from Instagram DM:", lead.id)
         self.lead = lead
+
+        # If human agent is assigned, store the message but skip AI reply
         if self.lead.human_agent_assigned:
-            print("Human agent assigned so ignoring ai reply")
+            print("Human agent assigned - storing message but skipping AI reply")
+            # Store the user's message
+            ConversationMessage.objects.create(
+                lead=self.lead,
+                conversation_id=conversation_id,
+                sender_type='user',
+                message_text=str(data["message"]),
+                message_type='information_response',
+                is_from_instagram=True,
+                instagram_message_id=message_id,
+            )
+            # Update unread count for inbox
+            if self.lead.metadata is None:
+                self.lead.metadata = {}
+            self.lead.metadata['unread_count'] = self.lead.metadata.get('unread_count', 0) + 1
+            self.lead.last_customer_message = str(data["message"])
+            self.lead.last_interaction_at = timezone.now()
+            self.lead.save(update_fields=['metadata', 'last_customer_message', 'last_interaction_at'])
+            print(f"Message stored for lead {self.lead.id}, unread count: {self.lead.metadata['unread_count']}")
             return {}
         if (
             not subscription
