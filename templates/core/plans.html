@@ -173,6 +173,51 @@
         line-height: 1.6;
     }
 
+    /* Offer Pricing Styles */
+    .offer-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+        animation: pulse-offer 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-offer {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .original-price {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .original-price .struck {
+        font-size: 1.25rem;
+        color: var(--text-muted);
+        text-decoration: line-through;
+        text-decoration-color: #ef4444;
+        text-decoration-thickness: 2px;
+    }
+
+    .discount-badge {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
     .plan-price {
         display: flex;
         align-items: baseline;
@@ -337,6 +382,15 @@
         <div class="plan-header">
             <h2 class="plan-name">{{ plan.name }}</h2>
             <p class="plan-description">{{ plan.description }}</p>
+
+            {% if plan.original_price %}
+            <span class="offer-badge">{{ plan.offer_label }}</span>
+            <div class="original-price">
+                <span class="struck">{{ plan.currency_symbol }}{{ plan.original_display_price }}</span>
+                <span class="discount-badge">{{ plan.discount_percent }}% OFF</span>
+            </div>
+            {% endif %}
+
             <div class="plan-price">
                 <span class="currency">{{ plan.currency_symbol }}</span>
                 <span class="amount">{{ plan.display_price }}</span>

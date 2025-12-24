@@ -4,11 +4,29 @@
 
 {% block extra_css %}
 <style>
-    .inbox-container {
-        padding: 2rem 0;
-        min-height: calc(100vh - 400px);
+    :root {
+        --inbox-bg: #0a0f1a;
+        --card-bg: rgba(17, 24, 39, 0.8);
+        --border-color: rgba(59, 130, 246, 0.2);
+        --text-primary: #ffffff;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --accent-blue: #3b82f6;
+        --accent-cyan: #00d4ff;
+        --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #00d4ff 100%);
     }
 
+    * {
+        box-sizing: border-box;
+    }
+
+    .inbox-container {
+        padding: 1rem;
+        min-height: calc(100vh - 120px);
+        background: var(--inbox-bg);
+    }
+
+    /* Back Button */
     .back-button {
         display: inline-flex;
         align-items: center;
@@ -16,67 +34,70 @@
         color: var(--text-secondary);
         text-decoration: none;
         font-weight: 600;
-        margin-bottom: 2rem;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
         transition: all 0.3s ease;
     }
 
     .back-button:hover {
         color: var(--text-primary);
-        gap: 1rem;
         text-decoration: none;
     }
 
+    /* Header */
     .inbox-header {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
     }
 
     .inbox-title {
-        font-size: 2rem;
-        font-weight: 900;
-        background: var(--primary-gradient);
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: var(--gradient-primary);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        margin: 0;
     }
 
     .inbox-stats {
         display: flex;
-        gap: 1rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .stat-badge {
-        padding: 0.5rem 1rem;
+        padding: 0.375rem 0.75rem;
         background: rgba(59, 130, 246, 0.1);
         border: 1px solid rgba(59, 130, 246, 0.3);
         border-radius: 20px;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         color: var(--text-secondary);
     }
 
     .stat-badge strong {
-        color: #00d4ff;
+        color: var(--accent-cyan);
     }
 
+    /* Conversations List */
     .conversations-list {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .conversation-item {
-        background: var(--bg-card);
+        background: var(--card-bg);
         backdrop-filter: blur(15px);
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid var(--border-color);
-        padding: 1.25rem;
+        padding: 1rem;
         display: flex;
-        align-items: center;
-        gap: 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
         transition: all 0.3s ease;
         text-decoration: none;
         color: inherit;
@@ -84,30 +105,36 @@
 
     .conversation-item:hover {
         border-color: rgba(59, 130, 246, 0.5);
-        transform: translateX(5px);
-        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.15);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
         text-decoration: none;
         color: inherit;
     }
 
     .conversation-item.unread {
-        border-left: 4px solid #00d4ff;
+        border-left: 3px solid var(--accent-cyan);
         background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, transparent 100%);
     }
 
+    /* Conversation Top Row */
+    .conversation-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
     .conversation-avatar {
-        width: 50px;
-        height: 50px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
         border-radius: 50%;
-        background: var(--primary-gradient);
+        background: var(--gradient-primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
-        flex-shrink: 0;
+        font-size: 1.125rem;
     }
 
-    .conversation-content {
+    .conversation-info {
         flex: 1;
         min-width: 0;
     }
@@ -115,42 +142,54 @@
     .conversation-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.35rem;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
     }
 
     .conversation-name {
         font-weight: 700;
         color: var(--text-primary);
-        font-size: 1rem;
+        font-size: 0.95rem;
+        line-height: 1.3;
+        word-break: break-word;
     }
 
     .conversation-time {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .conversation-preview {
         color: var(--text-secondary);
-        font-size: 0.9rem;
-        white-space: nowrap;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 500px;
     }
 
+    .conversation-preview .you-prefix {
+        color: var(--text-muted);
+    }
+
+    /* Meta Tags */
     .conversation-meta {
         display: flex;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
+        gap: 0.375rem;
         flex-wrap: wrap;
     }
 
     .meta-tag {
-        padding: 0.25rem 0.5rem;
+        padding: 0.2rem 0.5rem;
         border-radius: 6px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
     }
 
     .meta-tag.source-dm {
@@ -178,62 +217,83 @@
         color: #22c55e;
     }
 
+    .meta-tag.assigned {
+        background: rgba(107, 114, 128, 0.15);
+        color: #9ca3af;
+    }
+
+    /* Action Row */
     .conversation-actions {
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.5rem;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .unread-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
     }
 
     .unread-badge {
-        width: 24px;
-        height: 24px;
-        background: var(--primary-gradient);
+        width: 22px;
+        height: 22px;
+        background: var(--gradient-primary);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 700;
         color: white;
+    }
+
+    .unread-text {
+        font-size: 0.75rem;
+        color: var(--accent-cyan);
+        font-weight: 600;
     }
 
     .btn-chat {
         padding: 0.5rem 1rem;
         border-radius: 8px;
-        background: var(--primary-gradient);
+        background: var(--gradient-primary);
         color: white;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         text-decoration: none;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.375rem;
+        min-height: 36px;
     }
 
     .btn-chat:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
         color: white;
         text-decoration: none;
     }
 
+    /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 4rem 2rem;
-        background: var(--bg-card);
-        border-radius: 20px;
+        padding: 3rem 1.5rem;
+        background: var(--card-bg);
+        border-radius: 16px;
         border: 1px solid var(--border-color);
     }
 
     .empty-icon {
-        font-size: 4rem;
+        font-size: 3rem;
         margin-bottom: 1rem;
     }
 
     .empty-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
@@ -241,30 +301,128 @@
 
     .empty-text {
         color: var(--text-secondary);
-        max-width: 400px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        max-width: 300px;
         margin: 0 auto;
     }
 
-    @media (max-width: 768px) {
+    /* Tablet+ Styles (640px+) */
+    @media (min-width: 640px) {
+        .inbox-container {
+            padding: 1.5rem;
+        }
+
         .inbox-header {
-            flex-direction: column;
-            align-items: flex-start;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .inbox-title {
+            font-size: 1.75rem;
         }
 
         .conversation-item {
-            flex-direction: column;
-            align-items: flex-start;
+            flex-direction: row;
+            align-items: center;
+            padding: 1.25rem;
+        }
+
+        .conversation-top {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-meta {
+            flex-shrink: 0;
         }
 
         .conversation-actions {
-            width: 100%;
-            flex-direction: row;
-            justify-content: space-between;
-            margin-top: 0.5rem;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+            padding-top: 0;
+            border-top: none;
+            padding-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            min-width: 100px;
+        }
+    }
+
+    /* Desktop Styles (1024px+) */
+    @media (min-width: 1024px) {
+        .inbox-container {
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            margin-bottom: 1.5rem;
+        }
+
+        .inbox-header {
+            margin-bottom: 2rem;
+        }
+
+        .inbox-title {
+            font-size: 2rem;
+        }
+
+        .conversations-list {
+            gap: 1rem;
+        }
+
+        .conversation-item {
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .conversation-item:hover {
+            transform: translateX(5px);
+        }
+
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            font-size: 1.25rem;
+        }
+
+        .conversation-name {
+            font-size: 1rem;
         }
 
         .conversation-preview {
-            max-width: 100%;
+            font-size: 0.9rem;
+            -webkit-line-clamp: 1;
+        }
+
+        .meta-tag {
+            font-size: 0.75rem;
+        }
+
+        .btn-chat {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+        }
+
+        .empty-text {
+            max-width: 400px;
         }
     }
 </style>
@@ -272,29 +430,29 @@
 
 {% block content %}
 <div class="inbox-container">
-    <div class="container">
-        <a href="{% url 'company-detail' company.id %}" class="back-button">
-            <span>←</span>
-            <span>Back to Company</span>
-        </a>
+    <a href="{% url 'company-detail' company.id %}" class="back-button">
+        <span>&larr;</span>
+        <span>Back to Company</span>
+    </a>
 
-        <div class="inbox-header">
-            <h1 class="inbox-title">Inbox</h1>
-            <div class="inbox-stats">
-                <span class="stat-badge">
-                    <strong>{{ total_conversations }}</strong> Conversations
-                </span>
-            </div>
+    <div class="inbox-header">
+        <h1 class="inbox-title">Inbox</h1>
+        <div class="inbox-stats">
+            <span class="stat-badge">
+                <strong>{{ total_conversations }}</strong> Conversations
+            </span>
         </div>
+    </div>
 
-        {% if leads_list %}
-        <div class="conversations-list">
-            {% for item in leads_list %}
-            <a href="{% url 'chat' company.id item.lead.id %}" class="conversation-item {% if item.unread > 0 %}unread{% endif %}">
+    {% if leads_list %}
+    <div class="conversations-list">
+        {% for item in leads_list %}
+        <a href="{% url 'chat' company.id item.lead.id %}" class="conversation-item {% if item.unread > 0 %}unread{% endif %}">
+            <div class="conversation-top">
                 <div class="conversation-avatar">
-                    👤
+                    <span role="img" aria-label="User">&#128100;</span>
                 </div>
-                <div class="conversation-content">
+                <div class="conversation-info">
                     <div class="conversation-header">
                         <span class="conversation-name">
                             {{ item.lead.customer_name|default:item.lead.instagram_username }}
@@ -308,9 +466,9 @@
                     <div class="conversation-preview">
                         {% if item.last_message %}
                             {% if item.last_message.sender_type == 'user' %}
-                                {{ item.last_message.message_text|truncatechars:80 }}
+                                {{ item.last_message.message_text|truncatechars:100 }}
                             {% else %}
-                                <span style="color: var(--text-muted);">You:</span> {{ item.last_message.message_text|truncatechars:70 }}
+                                <span class="you-prefix">You:</span> {{ item.last_message.message_text|truncatechars:90 }}
                             {% endif %}
                         {% else %}
                             No messages yet
@@ -324,37 +482,39 @@
                             {{ item.lead.get_status_display }}
                         </span>
                         {% if item.lead.human_agent_assigned %}
-                        <span class="meta-tag" style="background: rgba(107, 114, 128, 0.15); color: #9ca3af;">
-                            Assigned: {{ item.lead.human_agent_assigned.email|truncatechars:20 }}
+                        <span class="meta-tag assigned">
+                            {{ item.lead.human_agent_assigned.email|truncatechars:15 }}
                         </span>
                         {% endif %}
                     </div>
                 </div>
-                <div class="conversation-actions">
+            </div>
+            <div class="conversation-actions">
+                <div class="unread-indicator">
                     {% if item.unread > 0 %}
                     <span class="unread-badge">{{ item.unread }}</span>
+                    <span class="unread-text">new</span>
                     {% endif %}
-                    <span class="btn-chat">
-                        <span>💬</span>
-                        <span>Open Chat</span>
-                    </span>
                 </div>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state">
-            <div class="empty-icon">📭</div>
-            <h3 class="empty-title">No Conversations Yet</h3>
-            <p class="empty-text">
-                {% if membership.role == 'agent' %}
-                    You don't have any leads assigned to you yet. Ask your manager to assign leads.
-                {% else %}
-                    No leads have been assigned to human agents yet. Assign agents from the lead detail page.
-                {% endif %}
-            </p>
-        </div>
-        {% endif %}
+                <span class="btn-chat">
+                    Open
+                </span>
+            </div>
+        </a>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">&#128237;</div>
+        <h3 class="empty-title">No Conversations Yet</h3>
+        <p class="empty-text">
+            {% if membership.role == 'agent' %}
+                You don't have any leads assigned to you yet. Ask your manager to assign leads.
+            {% else %}
+                No leads have been assigned to human agents yet. Assign agents from the lead detail page.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
