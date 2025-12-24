@@ -39,7 +39,7 @@ from core.models import Subscription, EventRegister
 from .session import MyCustomSession
 from .agent_instructions import AGENT_1, AGENT_2
 
-
+GPT_MODEL_NAME = "gpt-5-mini"
 @method_decorator(csrf_exempt, name="dispatch")
 class InstagramWebHookView(View):
 
@@ -74,7 +74,7 @@ class InstagramWebHookView(View):
         print("History going to LLM:", messages)
         agent = Agent(
             name="Instagram Real Estate Assistant",
-            model="gpt-4-turbo",
+            model=GPT_MODEL_NAME,
             instructions=AGENT_1.format(
                 company_name=self.company.name, context_text=context_text
             ),
@@ -267,7 +267,7 @@ class InstagramWebHookView(View):
         print("Generating comment reply for message:", user_message, property_context)
         agent = Agent(
             name="Instagram Real Estate Assistant",
-            model="gpt-4-turbo",
+            model=GPT_MODEL_NAME,
             instructions=AGENT_2.format(property_context=property_context),
         )
         result = await Runner.run(agent, input=user_message)
