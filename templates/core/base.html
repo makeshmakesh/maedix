@@ -276,12 +276,27 @@
         /* Content Area */
         .content {
             flex: 1;
-            padding: 2rem;
-            max-width: 1400px;
+            padding: 0.5rem;
+            max-width: 100%;
             margin: 0 auto;
             width: 100%;
             position: relative;
             z-index: 1;
+        }
+
+        /* Tablet+ content padding */
+        @media (min-width: 640px) {
+            .content {
+                padding: 1rem;
+            }
+        }
+
+        /* Desktop content padding */
+        @media (min-width: 1024px) {
+            .content {
+                padding: 2rem;
+                max-width: 1400px;
+            }
         }
 
         /* Card Styles */
@@ -392,11 +407,7 @@
             .navbar-brand {
                 font-size: 1.6rem;
             }
-            
-            .content {
-                padding: 1.5rem;
-            }
-            
+
             .btn {
                 padding: 0.7rem 1.8rem;
                 font-size: 0.95rem;

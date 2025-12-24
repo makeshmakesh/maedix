@@ -21,12 +21,6 @@
         box-sizing: border-box;
     }
 
-    /* Override content padding for chat */
-    .content {
-        padding: 0 !important;
-        max-width: 100% !important;
-    }
-
     /* Chat Container */
     .chat-wrapper {
         height: calc(100vh - 70px);
@@ -422,14 +416,10 @@
 
     /* Desktop (1024px+) */
     @media (min-width: 1024px) {
-        .content {
-            padding: 1rem !important;
-            max-width: 1000px !important;
-            margin: 0 auto;
-        }
-
         .chat-wrapper {
             height: calc(100vh - 120px);
+            max-width: 900px;
+            margin: 0 auto;
             border-radius: 16px;
             border: 1px solid var(--border-color);
             overflow: hidden;
