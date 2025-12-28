@@ -38,8 +38,8 @@ from .utils import (
 from core.models import Subscription, EventRegister
 from .session import MyCustomSession
 from .agent_instructions import AGENT_1, AGENT_2
-
-GPT_MODEL_NAME = "gpt-5-mini"
+GPT_MODEL_NAME = "gpt-5"
+# GPT_MODEL_NAME = "gpt-5-mini"
 @method_decorator(csrf_exempt, name="dispatch")
 class InstagramWebHookView(View):
 
