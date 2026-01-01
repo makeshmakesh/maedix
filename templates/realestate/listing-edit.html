@@ -659,6 +659,78 @@
     transform: scale(1.1);
 }
 
+/* Owner Card Styles */
+.owner-card-item {
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.owner-card-item:hover {
+    border-color: rgba(34, 197, 94, 0.5);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-remove-owner {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.owner-card-item:hover .btn-remove-owner {
+    opacity: 1;
+}
+
+.btn-remove-owner:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.1);
+}
+
+.owner-name-display {
+    font-weight: 700;
+    color: #22c55e;
+    font-size: 1rem;
+}
+
+.btn-create-new {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: rgba(34, 197, 94, 0.15);
+    border: 2px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.btn-create-new:hover {
+    background: rgba(34, 197, 94, 0.25);
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #22c55e;
+    text-decoration: none;
+}
+
 .lead-header {
     display: flex;
     justify-content: space-between;
@@ -1378,10 +1450,74 @@
                 </div>
 
 
+<!-- Property Owners Section -->
+<div class="form-section">
+    <h3 class="section-title">Property Owners (<span id="owners-count">{{ property_owners|length }}</span>)</h3>
+
+    <!-- Add Owner Control -->
+    <div class="add-lead-control">
+        <select id="owner-select" class="form-select">
+            <option value="">-- Select an owner to link --</option>
+            {% for owner in available_owners %}
+            <option value="{{ owner.id }}" data-name="{{ owner.name }}" data-phone="{{ owner.phone|default:'' }}" data-email="{{ owner.email|default:'' }}">
+                {{ owner.name }}{% if owner.phone %} - {{ owner.phone }}{% endif %}
+            </option>
+            {% endfor %}
+        </select>
+        <button type="button" id="add-owner-btn" class="btn-add-lead" disabled>
+            <span>➕</span> Link Owner
+        </button>
+        <a href="{% url 'create-owner' company.id %}" class="btn-create-new" title="Create new owner">
+            <span>+</span> New
+        </a>
+    </div>
+
+    {% if not available_owners %}
+    <p class="no-leads-hint">All owners are already linked to this property, or no owners exist for this company.</p>
+    {% endif %}
+
+    <!-- Owners Grid -->
+    <div class="leads-grid" id="owners-grid">
+        {% for po in property_owners %}
+        <div class="owner-card-item" data-owner-id="{{ po.owner.id }}">
+            <button type="button" class="btn-remove-owner" data-owner-id="{{ po.owner.id }}" title="Unlink owner">×</button>
+            <a href="{% url 'owner-detail' company.id po.owner.id %}" class="lead-card-link">
+                <div class="lead-header">
+                    <span class="owner-name-display">{{ po.owner.name }}</span>
+                </div>
+                <div class="lead-details">
+                    {% if po.owner.phone %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">📞</span>
+                        <span>{{ po.owner.phone }}</span>
+                    </div>
+                    {% endif %}
+                    {% if po.owner.email %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">📧</span>
+                        <span>{{ po.owner.email }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="lead-detail-row">
+                        <span class="detail-label">🏠</span>
+                        <span>{{ po.owner.listings_count }} listing{{ po.owner.listings_count|pluralize }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="empty-leads-state" id="empty-owners-state">
+            <p>👤 No owners linked to this property yet.</p>
+            <p class="hint">Select an owner from the dropdown above or create a new one.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 <!-- Associated Leads Section -->
 <div class="form-section">
     <h3 class="section-title">Interested Leads (<span id="leads-count">{{ lead_listings|length }}</span>)</h3>
-    
+
     <!-- Add Lead Control -->
     <div class="add-lead-control">
         <select id="lead-select" class="form-select">
@@ -2134,6 +2270,166 @@ const response = await fetch("{% url 'remove_lead_from_listing' company.id listi
 
     // Attach handlers to existing remove buttons
     document.querySelectorAll('.btn-remove-lead').forEach(attachRemoveHandler);
+
+    // ========== Owner Linking Functionality ==========
+    const ownerSelect = document.getElementById('owner-select');
+    const addOwnerBtn = document.getElementById('add-owner-btn');
+    const ownersGrid = document.getElementById('owners-grid');
+    const ownersCount = document.getElementById('owners-count');
+
+    // Enable/disable add button based on selection
+    if (ownerSelect) {
+        ownerSelect.addEventListener('change', function() {
+            addOwnerBtn.disabled = !this.value;
+        });
+    }
+
+    // Add owner to listing
+    if (addOwnerBtn) {
+        addOwnerBtn.addEventListener('click', async function() {
+            const ownerId = ownerSelect.value;
+            if (!ownerId) return;
+
+            addOwnerBtn.disabled = true;
+            addOwnerBtn.innerHTML = '<span>⏳</span> Linking...';
+
+            try {
+                const response = await fetch("{% url 'add-owner-to-listing' company.id listing.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: `owner_id=${ownerId}`
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const emptyState = document.getElementById('empty-owners-state');
+                    if (emptyState) emptyState.remove();
+
+                    const owner = data.owner;
+                    const newCard = createOwnerCard(owner);
+                    ownersGrid.insertAdjacentHTML('beforeend', newCard);
+
+                    const newCardEl = ownersGrid.lastElementChild;
+                    const removeBtn = newCardEl.querySelector('.btn-remove-owner');
+                    if (removeBtn) attachOwnerRemoveHandler(removeBtn);
+
+                    ownerSelect.querySelector(`option[value="${ownerId}"]`).remove();
+                    ownerSelect.value = '';
+
+                    ownersCount.textContent = parseInt(ownersCount.textContent) + 1;
+
+                    showToast('Owner linked successfully!', 'success');
+                } else {
+                    showToast(data.error || 'Failed to link owner', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            } finally {
+                addOwnerBtn.disabled = !ownerSelect.value;
+                addOwnerBtn.innerHTML = '<span>➕</span> Link Owner';
+            }
+        });
+    }
+
+    // Remove owner from listing
+    function attachOwnerRemoveHandler(btn) {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!confirm('Unlink this owner from the property?')) return;
+
+            const ownerId = this.dataset.ownerId;
+            const card = this.closest('.owner-card-item');
+
+            try {
+                const response = await fetch("{% url 'remove-owner-from-listing' company.id listing.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: `owner_id=${ownerId}`
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const ownerName = card.querySelector('.owner-name-display').textContent;
+
+                    card.style.transition = 'all 0.2s ease';
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+
+                    setTimeout(() => {
+                        card.remove();
+
+                        const newCount = parseInt(ownersCount.textContent) - 1;
+                        ownersCount.textContent = newCount;
+
+                        if (newCount === 0) {
+                            ownersGrid.innerHTML = `
+                                <div class="empty-leads-state" id="empty-owners-state">
+                                    <p>👤 No owners linked to this property yet.</p>
+                                    <p class="hint">Select an owner from the dropdown above or create a new one.</p>
+                                </div>
+                            `;
+                        }
+
+                        // Add back to select
+                        if (ownerSelect) {
+                            const option = document.createElement('option');
+                            option.value = ownerId;
+                            option.textContent = ownerName;
+                            ownerSelect.appendChild(option);
+                        }
+                    }, 200);
+
+                    showToast('Owner unlinked successfully!', 'success');
+                } else {
+                    showToast(data.error || 'Failed to unlink owner', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            }
+        });
+    }
+
+    // Attach handlers to existing owner remove buttons
+    document.querySelectorAll('.btn-remove-owner').forEach(attachOwnerRemoveHandler);
+
+    // Helper to create owner card HTML
+    function createOwnerCard(owner) {
+        return `
+            <div class="owner-card-item" data-owner-id="${owner.id}">
+                <button type="button" class="btn-remove-owner" data-owner-id="${owner.id}" title="Unlink owner">×</button>
+                <a href="/realestate/company/${companyId}/owners/${owner.id}/" class="lead-card-link">
+                    <div class="lead-header">
+                        <span class="owner-name-display">${owner.name}</span>
+                    </div>
+                    <div class="lead-details">
+                        ${owner.phone ? `
+                        <div class="lead-detail-row">
+                            <span class="detail-label">📞</span>
+                            <span>${owner.phone}</span>
+                        </div>
+                        ` : ''}
+                        ${owner.email ? `
+                        <div class="lead-detail-row">
+                            <span class="detail-label">📧</span>
+                            <span>${owner.email}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </a>
+            </div>
+        `;
+    }
 
     // Helper to create lead card HTML
     function createLeadCard(lead) {

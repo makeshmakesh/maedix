@@ -1,0 +1,540 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Edit {{ owner.name }} - MAEDIX{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <div class="edit-header">
+        <a href="{% url 'owner-detail' company.id owner.id %}" class="back-link">← Back to Owner</a>
+        <h1 class="page-title">Edit Owner</h1>
+        <p class="page-subtitle">{{ company.name }} - Update owner information and manage listings</p>
+    </div>
+
+    <div class="edit-grid">
+        <!-- Owner Information Form -->
+        <div class="edit-section">
+            <form method="post" class="owner-form">
+                {% csrf_token %}
+                <div class="form-card">
+                    <h2 class="section-title">Owner Information</h2>
+
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="name" class="form-label">Owner Name <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" class="form-input" value="{{ owner.name }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" class="form-input" value="{{ owner.phone|default:'' }}" placeholder="+91 98765 43210">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-input" value="{{ owner.email|default:'' }}" placeholder="owner@example.com">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea id="notes" name="notes" class="form-textarea" rows="3" placeholder="Any additional notes...">{{ owner.notes }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{% url 'owner-detail' company.id owner.id %}" class="btn btn-outline-primary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Manage Listings Section -->
+        <div class="edit-section">
+            <div class="form-card">
+                <h2 class="section-title">Manage Listings</h2>
+                <p class="section-description">Add or remove property listings associated with this owner</p>
+
+                <!-- Add Listing -->
+                {% if available_listings %}
+                <div class="add-listing-section">
+                    <label class="form-label">Add Listing</label>
+                    <div class="add-listing-form">
+                        <select id="listing-select" class="form-select">
+                            <option value="">Select a listing...</option>
+                            {% for listing in available_listings %}
+                            <option value="{{ listing.id }}" data-title="{{ listing.title }}" data-location="{{ listing.location }}" data-status="{{ listing.get_status_display }}" data-price="{{ listing.price|default:'' }}" data-currency="{{ listing.currency }}">
+                                {{ listing.title }} - {{ listing.location }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="add-listing-btn" class="btn btn-primary">Add</button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Current Listings -->
+                <div class="current-listings">
+                    <h3 class="subsection-title">Current Listings ({{ property_owners|length }})</h3>
+                    <div id="listings-container">
+                        {% if property_owners %}
+                            {% for po in property_owners %}
+                            <div class="listing-row" data-listing-id="{{ po.listing.id }}">
+                                <div class="listing-row-info">
+                                    <span class="listing-row-title">{{ po.listing.title }}</span>
+                                    <span class="listing-row-location">{{ po.listing.location }}</span>
+                                </div>
+                                <div class="listing-row-meta">
+                                    <span class="listing-status status-{{ po.listing.status }}">{{ po.listing.get_status_display }}</span>
+                                    {% if po.listing.price %}
+                                    <span class="listing-price">{{ po.listing.currency }} {{ po.listing.price|floatformat:0 }}</span>
+                                    {% endif %}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger remove-listing-btn" data-listing-id="{{ po.listing.id }}">Remove</button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="empty-listings" id="empty-message">
+                            <p>No listings associated with this owner yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .edit-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .edit-header {
+        margin-bottom: 2rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #60a5fa;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .page-subtitle {
+        color: #cbd5e1;
+        font-size: 1rem;
+    }
+
+    .edit-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 1.5rem;
+        height: fit-content;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .section-description {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .subsection-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #cbd5e1;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #cbd5e1;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    .form-input, .form-textarea, .form-select {
+        background: rgba(3, 7, 18, 0.8);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        padding: 0.875rem 1rem;
+        color: #f1f5f9;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(59, 130, 246, 0.1);
+    }
+
+    .add-listing-section {
+        margin-bottom: 1rem;
+    }
+
+    .add-listing-form {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .add-listing-form .form-select {
+        flex: 1;
+    }
+
+    .current-listings {
+        border-top: 1px solid rgba(59, 130, 246, 0.1);
+        padding-top: 1rem;
+    }
+
+    #listings-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .listing-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(3, 7, 18, 0.6);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .listing-row:hover {
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .listing-row-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .listing-row-title {
+        display: block;
+        font-weight: 600;
+        color: #f1f5f9;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .listing-row-location {
+        display: block;
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    .listing-row-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+    }
+
+    .listing-status {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .listing-status.status-available {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+    }
+
+    .listing-status.status-sold {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .listing-status.status-rented {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+    }
+
+    .listing-price {
+        color: #00d4ff;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .btn-danger {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        flex-shrink: 0;
+    }
+
+    .btn-danger:hover {
+        background: rgba(239, 68, 68, 0.3);
+    }
+
+    .empty-listings {
+        text-align: center;
+        padding: 2rem;
+        color: #64748b;
+    }
+
+    .empty-listings p {
+        margin: 0;
+    }
+
+    @media (max-width: 1024px) {
+        .edit-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .add-listing-form {
+            flex-direction: column;
+        }
+
+        .listing-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .listing-row-meta {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .listing-row .btn {
+            width: 100%;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const listingSelect = document.getElementById('listing-select');
+    const addListingBtn = document.getElementById('add-listing-btn');
+    const listingsContainer = document.getElementById('listings-container');
+    const emptyMessage = document.getElementById('empty-message');
+
+    // Add listing
+    if (addListingBtn) {
+        addListingBtn.addEventListener('click', async function() {
+            const listingId = listingSelect.value;
+            if (!listingId) {
+                alert('Please select a listing');
+                return;
+            }
+
+            const selectedOption = listingSelect.options[listingSelect.selectedIndex];
+            const listingData = {
+                id: listingId,
+                title: selectedOption.dataset.title,
+                location: selectedOption.dataset.location,
+                status: selectedOption.dataset.status,
+                price: selectedOption.dataset.price,
+                currency: selectedOption.dataset.currency,
+            };
+
+            try {
+                const response = await fetch("{% url 'add-listing-to-owner' company.id owner.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: `listing_id=${listingId}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Remove empty message if exists
+                    if (emptyMessage) {
+                        emptyMessage.remove();
+                    }
+
+                    // Add new listing row
+                    const listingRow = document.createElement('div');
+                    listingRow.className = 'listing-row';
+                    listingRow.dataset.listingId = listingId;
+                    listingRow.innerHTML = `
+                        <div class="listing-row-info">
+                            <span class="listing-row-title">${listingData.title}</span>
+                            <span class="listing-row-location">${listingData.location}</span>
+                        </div>
+                        <div class="listing-row-meta">
+                            <span class="listing-status">${listingData.status}</span>
+                            ${listingData.price ? `<span class="listing-price">${listingData.currency} ${parseFloat(listingData.price).toLocaleString()}</span>` : ''}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger remove-listing-btn" data-listing-id="${listingId}">Remove</button>
+                    `;
+                    listingsContainer.appendChild(listingRow);
+
+                    // Remove from select
+                    selectedOption.remove();
+                    listingSelect.value = '';
+
+                    // Update count in subsection title
+                    const subsectionTitle = document.querySelector('.subsection-title');
+                    const currentCount = listingsContainer.querySelectorAll('.listing-row').length;
+                    subsectionTitle.textContent = `Current Listings (${currentCount})`;
+                } else {
+                    alert(result.error || 'Failed to add listing');
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+                console.error(error);
+            }
+        });
+    }
+
+    // Remove listing (event delegation)
+    listingsContainer.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('remove-listing-btn')) {
+            if (!confirm('Remove this listing from the owner?')) return;
+
+            const listingId = e.target.dataset.listingId;
+            const listingRow = e.target.closest('.listing-row');
+
+            try {
+                const response = await fetch("{% url 'remove-listing-from-owner' company.id owner.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: `listing_id=${listingId}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Get listing info before removing
+                    const title = listingRow.querySelector('.listing-row-title').textContent;
+                    const location = listingRow.querySelector('.listing-row-location').textContent;
+
+                    // Remove the row
+                    listingRow.remove();
+
+                    // Add back to select if exists
+                    if (listingSelect) {
+                        const option = document.createElement('option');
+                        option.value = listingId;
+                        option.textContent = `${title} - ${location}`;
+                        option.dataset.title = title;
+                        option.dataset.location = location;
+                        listingSelect.appendChild(option);
+                    }
+
+                    // Update count
+                    const subsectionTitle = document.querySelector('.subsection-title');
+                    const currentCount = listingsContainer.querySelectorAll('.listing-row').length;
+                    subsectionTitle.textContent = `Current Listings (${currentCount})`;
+
+                    // Show empty message if no listings
+                    if (currentCount === 0) {
+                        listingsContainer.innerHTML = `
+                            <div class="empty-listings" id="empty-message">
+                                <p>No listings associated with this owner yet.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    alert(result.error || 'Failed to remove listing');
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+                console.error(error);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

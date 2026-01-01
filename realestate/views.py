@@ -3,7 +3,7 @@ from django.views import View
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST, require_GET
 from users.models import CustomUser
-from .models import Membership, Company, PropertyListing, Lead, ConversationMessage, CompanyInvitation,LeadListing, LeadShare
+from .models import Membership, Company, PropertyListing, Lead, ConversationMessage, CompanyInvitation, LeadListing, LeadShare, Owner, PropertyOwner
 from core.models import Subscription
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -1139,7 +1139,16 @@ class ListingCreateView(LoginRequiredMixin, View):
                     "instagram_comment_dm_reply_trigger_keyword": instagram_comment_dm_reply_trigger_keyword,
                 }
             )
-            
+
+            # Associate selected owners
+            owner_ids = request.POST.getlist('owners')
+            for owner_id in owner_ids:
+                try:
+                    owner = Owner.objects.get(id=owner_id, company=company)
+                    PropertyOwner.objects.create(owner=owner, listing=listing)
+                except Owner.DoesNotExist:
+                    pass
+
             messages.success(request, f"Property listing '{title}' created successfully!")
             return redirect('listings', company_id=company_id)
             
@@ -1149,24 +1158,35 @@ class ListingCreateView(LoginRequiredMixin, View):
     
     def get(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
+        owners = Owner.objects.filter(company=company).order_by('name')
         context = {
             'company': company,
+            'owners': owners,
         }
         return render(request, "realestate/listing-create.html", context)
+
 
 class ListingEditView(LoginRequiredMixin, View):
     def get(self, request, company_id, listing_id):
         company = get_object_or_404(Company, id=company_id)
         listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
         lead_listings = LeadListing.objects.filter(listing=listing).select_related('lead')
-        
+
         associated_lead_ids = lead_listings.values_list('lead_id', flat=True)
         available_leads = Lead.objects.filter(company=company).exclude(id__in=associated_lead_ids)
+
+        # Get owners associated with this listing
+        property_owners = PropertyOwner.objects.filter(listing=listing).select_related('owner')
+        associated_owner_ids = property_owners.values_list('owner_id', flat=True)
+        available_owners = Owner.objects.filter(company=company).exclude(id__in=associated_owner_ids)
+
         context = {
             'company': company,
             'listing': listing,
-            "lead_listings" :lead_listings,
+            "lead_listings": lead_listings,
             "available_leads": available_leads,
+            "property_owners": property_owners,
+            "available_owners": available_owners,
         }
         return render(request, "realestate/listing-edit.html", context)
     
@@ -1671,3 +1691,334 @@ class CreateLeadView(LoginRequiredMixin, View):
         except Exception as e:
             messages.error(request, f'Failed to create lead: {str(e)}')
             return redirect('create-lead', company_id=company_id)
+
+
+# ============================================
+# OWNER VIEWS
+# ============================================
+
+class OwnersView(LoginRequiredMixin, View):
+    """List all owners for a company"""
+    paginate_by = 12
+
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        membership = get_object_or_404(Membership, user=request.user, company=company)
+
+        # Get all owners for this company
+        owners = Owner.objects.filter(company=company).order_by('-created_at')
+
+        # Apply search filter
+        search = request.GET.get('search')
+        if search:
+            owners = owners.filter(
+                Q(name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(phone__icontains=search)
+            )
+
+        # Calculate stats
+        total_count = Owner.objects.filter(company=company).count()
+        filtered_count = owners.count()
+
+        # Pagination
+        owners_list = list(owners)
+        paginator = Paginator(owners_list, self.paginate_by)
+        page = request.GET.get('page', 1)
+
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        context = {
+            'company': company,
+            'owners': page_obj.object_list,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'is_paginated': paginator.num_pages > 1,
+            'total_count': total_count,
+            'filtered_count': filtered_count,
+        }
+
+        return render(request, 'realestate/owners.html', context)
+
+
+class OwnerCreateView(LoginRequiredMixin, View):
+    """Create a new owner"""
+
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        listings = PropertyListing.objects.filter(company=company).order_by('-created_at')
+
+        context = {
+            'company': company,
+            'listings': listings,
+        }
+        return render(request, 'realestate/owner-create.html', context)
+
+    def post(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+
+        try:
+            name = request.POST.get('name', '').strip()
+            if not name:
+                messages.error(request, 'Owner name is required.')
+                return redirect('create-owner', company_id=company_id)
+
+            # Create the owner
+            owner = Owner.objects.create(
+                company=company,
+                name=name,
+                phone=request.POST.get('phone', '').strip() or None,
+                email=request.POST.get('email', '').strip() or None,
+                notes=request.POST.get('notes', '').strip(),
+            )
+
+            # Associate selected listings
+            listing_ids = request.POST.getlist('listings')
+            for listing_id in listing_ids:
+                try:
+                    listing = PropertyListing.objects.get(id=listing_id, company=company)
+                    PropertyOwner.objects.create(owner=owner, listing=listing)
+                except PropertyListing.DoesNotExist:
+                    pass
+
+            messages.success(request, f'Owner "{name}" created successfully!')
+            return redirect('owner-detail', company_id=company_id, owner_id=owner.id)
+
+        except Exception as e:
+            messages.error(request, f'Failed to create owner: {str(e)}')
+            return redirect('create-owner', company_id=company_id)
+
+
+class OwnerDetailView(LoginRequiredMixin, View):
+    """View owner details"""
+
+    def get(self, request, company_id, owner_id):
+        company = get_object_or_404(Company, id=company_id)
+        owner = get_object_or_404(Owner, id=owner_id, company=company)
+
+        # Get associated listings
+        property_owners = PropertyOwner.objects.filter(owner=owner).select_related('listing')
+
+        context = {
+            'company': company,
+            'owner': owner,
+            'property_owners': property_owners,
+        }
+        return render(request, 'realestate/owner-detail.html', context)
+
+
+class OwnerEditView(LoginRequiredMixin, View):
+    """Edit owner and manage listing associations"""
+
+    def get(self, request, company_id, owner_id):
+        company = get_object_or_404(Company, id=company_id)
+        owner = get_object_or_404(Owner, id=owner_id, company=company)
+
+        # Get current associations
+        property_owners = PropertyOwner.objects.filter(owner=owner).select_related('listing')
+        associated_listing_ids = property_owners.values_list('listing_id', flat=True)
+
+        # Get available listings (not yet associated)
+        available_listings = PropertyListing.objects.filter(company=company).exclude(id__in=associated_listing_ids)
+
+        context = {
+            'company': company,
+            'owner': owner,
+            'property_owners': property_owners,
+            'available_listings': available_listings,
+        }
+        return render(request, 'realestate/owner-edit.html', context)
+
+    def post(self, request, company_id, owner_id):
+        company = get_object_or_404(Company, id=company_id)
+        owner = get_object_or_404(Owner, id=owner_id, company=company)
+
+        try:
+            name = request.POST.get('name', '').strip()
+            if not name:
+                messages.error(request, 'Owner name is required.')
+                return redirect('owner-edit', company_id=company_id, owner_id=owner_id)
+
+            # Update owner info
+            owner.name = name
+            owner.phone = request.POST.get('phone', '').strip() or None
+            owner.email = request.POST.get('email', '').strip() or None
+            owner.notes = request.POST.get('notes', '').strip()
+            owner.save()
+
+            messages.success(request, f'Owner "{name}" updated successfully!')
+            return redirect('owner-detail', company_id=company_id, owner_id=owner_id)
+
+        except Exception as e:
+            messages.error(request, f'Failed to update owner: {str(e)}')
+            return redirect('owner-edit', company_id=company_id, owner_id=owner_id)
+
+
+class OwnerDeleteView(LoginRequiredMixin, View):
+    """Delete an owner"""
+
+    def post(self, request, company_id, owner_id):
+        try:
+            company = get_object_or_404(Company, id=company_id)
+            membership = get_object_or_404(Membership, user=request.user, company=company)
+
+            if membership.role not in ['admin', 'manager']:
+                messages.error(request, 'You do not have permission to delete owners.')
+                return redirect('owners', company_id=company_id)
+
+            owner = get_object_or_404(Owner, id=owner_id, company=company)
+            owner_name = owner.name
+            owner.delete()
+
+            messages.success(request, f'Owner "{owner_name}" deleted successfully!')
+            return redirect('owners', company_id=company_id)
+
+        except Exception as e:
+            messages.error(request, f'Failed to delete owner: {str(e)}')
+            return redirect('owners', company_id=company_id)
+
+    def get(self, request, company_id, owner_id):
+        messages.warning(request, 'Invalid delete request. Please use the delete button.')
+        return redirect('owners', company_id=company_id)
+
+
+# ============================================
+# OWNER-LISTING ASSOCIATION API ENDPOINTS
+# ============================================
+
+@login_required
+@require_POST
+def add_listing_to_owner(request, company_id, owner_id):
+    """Add a listing to an owner (from owner edit page)"""
+    try:
+        listing_id = request.POST.get('listing_id')
+        if not listing_id:
+            return JsonResponse({'success': False, 'error': 'Listing ID required'})
+
+        company = get_object_or_404(Company, id=company_id)
+        owner = get_object_or_404(Owner, id=owner_id, company=company)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+
+        property_owner, created = PropertyOwner.objects.get_or_create(
+            owner=owner,
+            listing=listing,
+            defaults={'notes': 'Linked from owner page'}
+        )
+
+        if created:
+            return JsonResponse({
+                'success': True,
+                'message': f'Listing "{listing.title}" linked to owner',
+                'listing': {
+                    'id': listing.id,
+                    'title': listing.title,
+                    'location': listing.location,
+                    'property_type': listing.property_type,
+                    'property_type_display': listing.get_property_type_display(),
+                    'status': listing.status,
+                    'status_display': listing.get_status_display(),
+                    'price': str(listing.price) if listing.price else '',
+                    'currency': listing.currency,
+                },
+                'property_owner_id': property_owner.id,
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Listing already linked'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def remove_listing_from_owner(request, company_id, owner_id):
+    """Remove a listing from an owner"""
+    try:
+        listing_id = request.POST.get('listing_id')
+        if not listing_id:
+            return JsonResponse({'success': False, 'error': 'Listing ID required'})
+
+        company = get_object_or_404(Company, id=company_id)
+        owner = get_object_or_404(Owner, id=owner_id, company=company)
+
+        deleted, _ = PropertyOwner.objects.filter(
+            owner=owner,
+            listing_id=listing_id
+        ).delete()
+
+        if deleted:
+            return JsonResponse({'success': True, 'message': 'Listing unlinked from owner'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Association not found'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def add_owner_to_listing(request, company_id, listing_id):
+    """Add an owner to a listing (from listing edit page)"""
+    try:
+        owner_id = request.POST.get('owner_id')
+        if not owner_id:
+            return JsonResponse({'success': False, 'error': 'Owner ID required'})
+
+        company = get_object_or_404(Company, id=company_id)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+        owner = get_object_or_404(Owner, id=owner_id, company=company)
+
+        property_owner, created = PropertyOwner.objects.get_or_create(
+            owner=owner,
+            listing=listing,
+            defaults={'notes': 'Linked from listing page'}
+        )
+
+        if created:
+            return JsonResponse({
+                'success': True,
+                'message': f'Owner "{owner.name}" linked to listing',
+                'owner': {
+                    'id': owner.id,
+                    'name': owner.name,
+                    'phone': owner.phone or '',
+                    'email': owner.email or '',
+                },
+                'property_owner_id': property_owner.id,
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Owner already linked'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def remove_owner_from_listing(request, company_id, listing_id):
+    """Remove an owner from a listing"""
+    try:
+        owner_id = request.POST.get('owner_id')
+        if not owner_id:
+            return JsonResponse({'success': False, 'error': 'Owner ID required'})
+
+        company = get_object_or_404(Company, id=company_id)
+        listing = get_object_or_404(PropertyListing, id=listing_id, company=company)
+
+        deleted, _ = PropertyOwner.objects.filter(
+            listing=listing,
+            owner_id=owner_id
+        ).delete()
+
+        if deleted:
+            return JsonResponse({'success': True, 'message': 'Owner unlinked from listing'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Association not found'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

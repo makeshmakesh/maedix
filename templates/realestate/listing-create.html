@@ -574,6 +574,65 @@
             max-height: 95vh;
         }
     }
+
+    /* Owner Selection Styles */
+    .owners-select-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+
+    .owner-checkbox-card {
+        display: block;
+        cursor: pointer;
+    }
+
+    .owner-checkbox-card input[type="checkbox"] {
+        display: none;
+    }
+
+    .owner-checkbox-content {
+        background: rgba(3, 7, 18, 0.6);
+        border: 2px solid rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .owner-checkbox-card input[type="checkbox"]:checked + .owner-checkbox-content {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+    }
+
+    .owner-checkbox-content:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .owner-checkbox-header {
+        margin-bottom: 0.5rem;
+    }
+
+    .owner-checkbox-name {
+        font-weight: 600;
+        color: #f1f5f9;
+        font-size: 1rem;
+    }
+
+    .owner-checkbox-detail {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .owners-select-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -651,6 +710,36 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Property Owners -->
+                {% if owners %}
+                <div class="form-section">
+                    <h3 class="section-title">Property Owners <span class="optional">(optional)</span></h3>
+                    <p class="form-help" style="margin-bottom: 1rem;">Select the owner(s) of this property</p>
+
+                    <div class="owners-select-grid">
+                        {% for owner in owners %}
+                        <label class="owner-checkbox-card">
+                            <input type="checkbox" name="owners" value="{{ owner.id }}">
+                            <div class="owner-checkbox-content">
+                                <div class="owner-checkbox-header">
+                                    <span class="owner-checkbox-name">{{ owner.name }}</span>
+                                </div>
+                                {% if owner.phone %}
+                                <div class="owner-checkbox-detail">📞 {{ owner.phone }}</div>
+                                {% endif %}
+                                {% if owner.email %}
+                                <div class="owner-checkbox-detail">📧 {{ owner.email }}</div>
+                                {% endif %}
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <p class="form-help" style="margin-top: 1rem;">
+                        <a href="{% url 'create-owner' company.id %}" target="_blank" style="color: #22c55e;">+ Create a new owner</a> if not listed above
+                    </p>
+                </div>
+                {% endif %}
 
                 <!-- Land Details -->
                 <div class="form-section" id="land-details-section">

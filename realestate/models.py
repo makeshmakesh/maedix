@@ -643,3 +643,58 @@ class LeadShare(models.Model):
             listing=self.listing
         ).select_related('lead')
         return [ll.lead for ll in lead_listings]
+
+
+class Owner(models.Model):
+    """Property owner information."""
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name='owners'
+    )
+    name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Owner"
+        verbose_name_plural = "Owners"
+
+    def __str__(self):
+        return f"{self.name} ({self.company.name})"
+
+    @property
+    def listings_count(self):
+        return self.property_owners.count()
+
+
+class PropertyOwner(models.Model):
+    """Junction table linking owners to property listings (many-to-many)."""
+
+    owner = models.ForeignKey(
+        Owner,
+        on_delete=models.CASCADE,
+        related_name='property_owners'
+    )
+    listing = models.ForeignKey(
+        PropertyListing,
+        on_delete=models.CASCADE,
+        related_name='property_owners'
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('owner', 'listing')
+        ordering = ['-created_at']
+        verbose_name = "Property Owner"
+        verbose_name_plural = "Property Owners"
+
+    def __str__(self):
+        return f"{self.owner.name} → {self.listing.title}"

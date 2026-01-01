@@ -571,6 +571,10 @@
                     <span>👥</span>
                     <span>Leads</span>
                 </a>
+                <a href="{% url 'owners' company.id %}" class="quick-action-btn">
+                    <span>👤</span>
+                    <span>Owners</span>
+                </a>
                 <a href="{% url 'reports' company.id %}" class="quick-action-btn">
                     <span>📈</span>
                     <span>Reports</span>
@@ -595,6 +599,19 @@
                     </p>
                     <span class="nav-arrow">
                         <span>View all leads</span>
+                        <span>→</span>
+                    </span>
+                </a>
+
+                <!-- Property Owners -->
+                <a href="{% url 'owners' company.id %}" class="nav-card">
+                    <div class="nav-icon">👤</div>
+                    <h3 class="nav-title">Property Owners</h3>
+                    <p class="nav-description">
+                        Manage property owners and their associated listings. Track owner contact information.
+                    </p>
+                    <span class="nav-arrow">
+                        <span>View owners</span>
                         <span>→</span>
                     </span>
                 </a>

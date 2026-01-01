@@ -114,7 +114,55 @@ urlpatterns = [
         name='public_lead_share'
     ),
     path('/<int:company_id>/leads/create/', views.CreateLeadView.as_view(), name='create-lead'),
-        
+
+    # Owner management
+    path(
+        'company/<int:company_id>/owners/',
+        views.OwnersView.as_view(),
+        name='owners'
+    ),
+    path(
+        'company/<int:company_id>/owners/create/',
+        views.OwnerCreateView.as_view(),
+        name='create-owner'
+    ),
+    path(
+        'company/<int:company_id>/owners/<int:owner_id>/',
+        views.OwnerDetailView.as_view(),
+        name='owner-detail'
+    ),
+    path(
+        'company/<int:company_id>/owners/<int:owner_id>/edit/',
+        views.OwnerEditView.as_view(),
+        name='owner-edit'
+    ),
+    path(
+        'company/<int:company_id>/owners/<int:owner_id>/delete/',
+        views.OwnerDeleteView.as_view(),
+        name='owner-delete'
+    ),
+
+    # Owner-Listing association APIs
+    path(
+        'company/<int:company_id>/owners/<int:owner_id>/add-listing/',
+        views.add_listing_to_owner,
+        name='add-listing-to-owner'
+    ),
+    path(
+        'company/<int:company_id>/owners/<int:owner_id>/remove-listing/',
+        views.remove_listing_from_owner,
+        name='remove-listing-from-owner'
+    ),
+    path(
+        'company/<int:company_id>/listings/<int:listing_id>/add-owner/',
+        views.add_owner_to_listing,
+        name='add-owner-to-listing'
+    ),
+    path(
+        'company/<int:company_id>/listings/<int:listing_id>/remove-owner/',
+        views.remove_owner_from_listing,
+        name='remove-owner-from-listing'
+    ),
 ]
 
 
