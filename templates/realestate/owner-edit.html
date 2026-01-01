@@ -363,35 +363,147 @@
     }
 
     @media (max-width: 768px) {
+        .edit-container {
+            padding: 0 1rem;
+        }
+
+        .edit-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .form-card {
+            padding: 1.25rem;
+            border-radius: 12px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+        }
+
         .form-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            padding: 0.75rem;
+            font-size: 16px; /* Prevents zoom on iOS */
         }
 
         .add-listing-form {
             flex-direction: column;
         }
 
+        .add-listing-form .btn {
+            width: 100%;
+        }
+
         .listing-row {
             flex-direction: column;
             align-items: stretch;
+            gap: 0.75rem;
+            padding: 0.875rem;
+        }
+
+        .listing-row-info {
+            order: 1;
+        }
+
+        .listing-row-title {
+            white-space: normal;
+            font-size: 0.9rem;
+        }
+
+        .listing-row-location {
+            font-size: 0.8rem;
         }
 
         .listing-row-meta {
+            order: 2;
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
+            gap: 0.75rem;
         }
 
         .listing-row .btn {
+            order: 3;
             width: 100%;
         }
 
         .form-actions {
             flex-direction: column;
+            gap: 0.75rem;
         }
 
         .form-actions .btn {
             width: 100%;
+            padding: 0.875rem;
+        }
+
+        .subsection-title {
+            font-size: 0.95rem;
+            margin: 1rem 0 0.75rem 0;
+        }
+
+        #listings-container {
+            max-height: none;
+        }
+
+        .empty-listings {
+            padding: 1.5rem 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .edit-container {
+            padding: 0 0.75rem;
+        }
+
+        .page-title {
+            font-size: 1.3rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .form-card {
+            padding: 1rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+        }
+
+        .section-description {
+            font-size: 0.85rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .listing-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .listing-price {
+            font-size: 0.8rem;
+        }
+
+        .btn-sm {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
         }
     }
 </style>
